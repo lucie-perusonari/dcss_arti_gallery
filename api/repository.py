@@ -10,7 +10,7 @@ from api.presenter import present_artifact_document
 
 
 DEFAULT_MONGO_URI = "mongodb://localhost:27017"
-DEFAULT_MONGO_DATABASE = "dcss_best_arti"
+DEFAULT_MONGO_DATABASE = "dcss_arti_gallery"
 DEFAULT_MONGO_COLLECTION = "artifacts"
 
 

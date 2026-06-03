@@ -9,7 +9,7 @@ from api.admin_models import CrawlError, CrawlStatus, LatestActivity, RawFileSta
 
 
 DEFAULT_MONGO_URI = "mongodb://localhost:27017"
-DEFAULT_MONGO_DATABASE = "dcss_best_arti"
+DEFAULT_MONGO_DATABASE = "dcss_arti_gallery"
 DEFAULT_MONGO_COLLECTION = "artifacts"
 DEFAULT_MONGO_CRAWL_FILES_COLLECTION = "crawl_files"
 DEFAULT_MONGO_CRAWL_USERS_COLLECTION = "crawl_users"

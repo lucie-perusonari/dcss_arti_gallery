@@ -1,4 +1,4 @@
-# DCSS Best Artifact Gallery
+# DCSS Arti Gallery
 
 Dungeon Crawl Stone Soup morgue 로그와 lst 파일에서 랜덤 아티팩트 정보를 수집하고,
 원본 아이템에는 없는 랜덤 속성을 분리해 갤러리로 보여주는 저장소입니다.

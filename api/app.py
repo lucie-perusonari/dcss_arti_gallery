@@ -22,7 +22,7 @@ def create_app(
     artifact_repository = repository or repository_from_env()
     crawl_status_repository = admin_repository or admin_repository_from_env()
 
-    app = FastAPI(title="DCSS Best Artifact Gallery API")
+    app = FastAPI(title="DCSS Arti Gallery API")
     app.add_middleware(
         CORSMiddleware,
         allow_origins=_allowed_origins(),
