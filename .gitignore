@@ -1,0 +1,30 @@
+# Local workspaces and generated analysis
+_workspace/
+.understand-anything/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Node
+node_modules/
+package-lock.json
+
+# Frontend build outputs
+dist/
+*.tsbuildinfo
+
+# Generated Vite artifacts
+vite.config.js
+vite.config.d.ts
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
