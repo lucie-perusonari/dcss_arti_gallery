@@ -1,4 +1,4 @@
-# Current UI Screenshots
+# 현재 UI 스크린샷
 
 이 디렉터리는 로컬 mock API 데이터로 확인한 현재 React 화면 흐름입니다.
 실제 DCSS 디자인 reference가 아니며, 구현 변경 전후 회귀 비교용으로만 사용합니다.

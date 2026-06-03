@@ -1,11 +1,11 @@
-# DCSS Frontend References
+# DCSS 프론트엔드 참고 자료
 
 이 디렉터리는 프론트엔드 디자인 구현 때 참고할 실제 DCSS 화면 자료입니다.
 자료 출처는 DCInside 로그라이크 갤러리로 제한합니다.
 
 현재 React 구현 결과 스크린샷은 reference가 아니므로 `frontend/screenshots/current-ui/`에 따로 둡니다.
 
-## Primary Item Descriptions
+## 주요 아이템 설명
 
 아이템 상세 패널 구현은 아래 이미지를 우선 기준으로 삼습니다.
 
@@ -57,7 +57,7 @@
 
    ![Korean jewellery description](./dcinside-log-gallery/jewellery-description-korean.png)
 
-## Lists, Menus, And Rows
+## 목록, 메뉴, 행
 
 갤러리 리스트, 카드, 필터 결과, 모바일 행 밀도를 조정할 때 참고합니다.
 
@@ -91,7 +91,7 @@
 
    ![Message log artifact link](./dcinside-log-gallery/message-log-artifact-link.png)
 
-## WebTiles Shell
+## WebTiles 셸
 
 전체 화면 구성, 우측 상태 패널, 팝업 overlay, 검은 여백, 지도/메시지 밀도를 조정할 때 참고합니다.
 
@@ -119,7 +119,7 @@
 
    ![Legacy Korean tiles inventory](./dcinside-log-gallery/legacy-korean-tiles-inventory.png)
 
-## Source Notes
+## 출처 메모
 
 - `artifact-gloves-description.png`: DCInside 로그라이크 갤러리 `ㄷㅈ)상급장갑`, <https://gall.dcinside.com/board/view/?id=rlike&no=511423&page=1>.
 - `mobile-artifact-row.jpg`: DCInside 로그라이크 갤러리 `ㄷㅈ) 그래서 이거 들고 승천하면 되죠?`, <https://gall.dcinside.com/board/view/?id=rlike&no=518762&page=1>.
@@ -137,7 +137,7 @@
 - `equipment-list-mobile.png`: DCInside 로그라이크 갤러리 `ㄷㅈ) 문어 탈리스만 선택존`, <https://gall.dcinside.com/board/view/?id=rlike&no=518522&page=1>.
 - `legacy-korean-tiles-inventory.png`: DCInside 로그라이크 갤러리 `ㄷㅈ) 0.13 버전 오랫만에 클리어 해본 후기`, <https://gall.dcinside.com/board/view/?id=rlike&no=389186&page=1>.
 
-## Design Use
+## 디자인 사용
 
 - Use `artifact-gloves-description.png`, `armour-description-large.png`, and `jewellery-description-english.png` before changing `DcssItemDescription`.
 - Preserve the real DCSS structure: item tile plus title row, black background, monospace body, property explanation rows, acquisition/source lines, search prefix lines, and bottom action row.

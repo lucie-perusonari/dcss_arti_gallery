@@ -1,9 +1,9 @@
-# Docs Index
+# 문서 인덱스
 
-이 디렉터리는 모듈 문서로 가는 인덱스와 root-level 운영/harness 문서를 둡니다.
+이 디렉터리는 모듈 문서로 가는 인덱스와 루트 수준 운영/harness 문서를 둡니다.
 모듈별 실행 방법, 내부 구조, 타입, 처리 계층 문서는 각 모듈의 `README.md`와 `docs/`를 기준으로 봅니다.
 
-## Module Docs
+## 모듈 문서
 
 - [crawl_service README](../crawl_service/README.md)
 - [crawl_service Reference](../crawl_service/docs/reference/processing-layers.md)
@@ -15,11 +15,11 @@
 - [admin-frontend README](../admin-frontend/README.md)
 - [admin-frontend Reference](../admin-frontend/docs/reference/processing-layers.md)
 
-## Cross-Module Reference
+## 모듈 간 참고
 
 - [Reference Index](./reference/README.md): 모듈별 reference 문서 링크
 
-## Operations
+## 운영
 
 운영 기준, 검증, 후속 작업처럼 수시로 바뀔 수 있는 root-level 문서입니다.
 

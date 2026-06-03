@@ -1,6 +1,6 @@
-# Reference Index
+# 참고 문서 인덱스
 
-상세 reference 문서는 각 모듈 `docs/reference`에 둡니다.
+상세 참고 문서는 각 모듈 `docs/reference`에 둡니다.
 두 개 이상의 모듈을 함께 바꾸는 작업에서는 관련 모듈 문서를 모두 확인합니다.
 
 ## Crawl Service

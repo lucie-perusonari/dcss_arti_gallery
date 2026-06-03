@@ -1,21 +1,19 @@
-# DCSS Item Data
+# DCSS 아이템 데이터
 
-This project supplements hand-written artifact constants with generated data
-from the official Dungeon Crawl: Stone Soup source tree.
+# DCSS item 상수는 수기로 작성된 기본값에, 공식 Dungeon Crawl: Stone Soup 소스 트리에서 생성한 데이터로 보강합니다.
 
 ## Source
 
-- Repository: <https://github.com/crawl/crawl>
-- Current generated version: `0.34.1`
-- Source files:
+- 저장소: <https://github.com/crawl/crawl>
+- 현재 생성 버전: `0.34.1`
+- 소스 파일:
   - `crawl-ref/source/dat/descript/items.txt`
   - `crawl-ref/source/art-data.txt`
   - `crawl-ref/source/item-prop.cc`
 
-The official Crawl README notes that current item descriptions are available
-in-game through `?/` and out-of-game under `dat/descript/`.
+공식 Crawl README에는 최신 아이템 설명이 게임 내 `?/`와 `dat/descript/`(게임 외부)에서 확인된다고 나옵니다.
 
-## Generated Module
+## 생성 모듈
 
 Run:
 
@@ -23,12 +21,11 @@ Run:
 python3 scripts/update_dcss_item_data.py --version 0.34.1
 ```
 
-This updates `crawl_service/domain/generated_dcss_data.py` with:
+실행 시 `crawl_service/domain/generated_dcss_data.py`가 다음 항목으로 갱신됩니다.
 
-- `DCSS_ITEM_FLAVOUR_TEXT`: item description text keyed by normalized item name.
-- `DCSS_UNRANDART_NAMES`: unrandart names parsed from `art-data.txt`.
-- `DCSS_EQUIPMENT_NAMES`: equipment names grouped by broad item class.
-- `DCSS_ARMOUR_SLOTS`: armour item names mapped to Crawl slot names.
+- `DCSS_ITEM_FLAVOUR_TEXT`: 정규화된 아이템명 기준의 아이템 설명 텍스트.
+- `DCSS_UNRANDART_NAMES`: `art-data.txt`에서 파싱한 unrandart 이름.
+- `DCSS_EQUIPMENT_NAMES`: 대분류 기준 장비명 목록.
+- `DCSS_ARMOUR_SLOTS`: Crawl 슬롯명으로 매핑한 방어구 아이템명.
 
-`crawl_service/domain/constants.py` imports this generated module and merges it
-with local compatibility aliases and scoring-specific constants.
+`crawl_service/domain/constants.py`가 이 생성 모듈을 import해 로컬 호환 별칭과 점수용 상수와 병합합니다.

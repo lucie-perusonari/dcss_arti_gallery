@@ -1,7 +1,7 @@
-# API Data Types
+# API 데이터 타입
 
-이 문서는 `api`가 소유하는 public response DTO를 정의합니다.
-`api` 모델은 MongoDB에 저장된 crawl artifact document와 모양이 비슷해도 API public contract로 따로 관리합니다.
+이 문서는 `api`가 소유하는 공개 응답 DTO를 정의합니다.
+`api` 모델은 MongoDB에 저장된 crawl artifact 문서와 모양이 비슷해도 API 공개 계약으로 별도로 관리합니다.
 
 `api`는 `crawl_service`를 import하지 않습니다.
 
@@ -57,7 +57,7 @@
 ## `CrawlStatus`
 
 - 정의 위치: `api.admin_models.CrawlStatus`
-- 용도: admin dashboard status response
+- 용도: admin dashboard 상태 응답
 - 필드:
   - `artifactCount: int`
   - `rawFiles: RawFileStatus`
@@ -66,7 +66,7 @@
   - `latest: LatestActivity`
   - `recentErrors: list[CrawlError]`
 
-## Related Docs
+## 연계 문서
 
 - [API Processing Layers](./processing-layers.md)
 - [Frontend Data Types](../../../frontend/docs/reference/data-types.md)

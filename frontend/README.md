@@ -1,20 +1,20 @@
-# DCSS Artifact Gallery Frontend
+# DCSS 아티팩트 갤러리 프론트엔드
 
-`frontend`는 React + TypeScript + Vite 기반 WebTiles-style artifact gallery입니다.
+`frontend`는 React + TypeScript + Vite 기반 WebTiles 스타일 artifact 갤러리입니다.
 persisted artifact data는 Gallery API에서 읽고, `VITE_ARTIFACT_API_URL`이 없으면 local mock data로 fallback합니다.
 
-## Responsibilities
+## 책임
 
-- `src/api`: frontend API boundary. `VITE_ARTIFACT_API_URL`로 artifact repository reads를 호출합니다.
-- `src/types`: API response와 gallery rendering에 쓰는 TypeScript artifact types
-- `src/data`: local mock artifact data와 DCSS tile mapping
-- `src/components`: WebTiles-style panels, filters, cards, item details, nickname crawl UI
-- `public/tiles`: local DCSS tile PNG assets
-- `public/STYLE_SOURCES.md`: DCSS popup look을 맞추기 위한 WebTiles CSS/font source 기록
-- `reference`: DCInside 로그라이크 갤러리 기반 DCSS item UI design reference
-- `screenshots/current-ui`: regression comparison용 현재 UI snapshots
+- `src/api`: frontend API 경계. `VITE_ARTIFACT_API_URL`로 artifact repository read를 호출합니다.
+- `src/types`: API 응답과 갤러리 렌더링에 쓰는 TypeScript artifact 타입
+- `src/data`: 로컬 mock artifact 데이터와 DCSS 타일 매핑
+- `src/components`: WebTiles 스타일 패널, 필터, 카드, 아이템 상세, 닉네임 크롤 UI
+- `public/tiles`: 로컬 DCSS 타일 PNG 자산
+- `public/STYLE_SOURCES.md`: DCSS 팝업 스타일 재현을 위한 WebTiles CSS/font 출처
+- `reference`: DCInside 로그라이크 갤러리 기반 DCSS 아이템 UI 레퍼런스
+- `screenshots/current-ui`: 회귀 비교용 현재 UI 스냅샷
 
-## Runtime
+## 실행
 
 dependencies:
 
@@ -22,7 +22,7 @@ dependencies:
 npm install
 ```
 
-API에 연결하지 않는 mock gallery:
+API를 연결하지 않는 mock gallery:
 
 ```sh
 npm run dev
@@ -40,7 +40,7 @@ VITE_ARTIFACT_API_URL=http://127.0.0.1:8000 npm run dev -- --host 127.0.0.1 --po
 ./scripts/run_frontend.sh
 ```
 
-## Build
+## 빌드
 
 ```sh
 npm run build
@@ -50,14 +50,14 @@ API/frontend contract 변경은 [Frontend Data Types](docs/reference/data-types.
 [API Data Types](../api/docs/reference/data-types.md)를 확인하고,
 API 테스트와 frontend build를 함께 실행합니다.
 
-## Mock Screen States
+## Mock 화면 상태
 
-- `/`: full gallery
-- `/?type=jewellery&selected=keod`: type-filtered jewellery detail
-- `/?type=weapon&selected=ashenzari-axe`: weapon detail
-- `/?search=regen&selected=ceguteof`: search flow
+- `/`: 전체 갤러리
+- `/?type=jewellery&selected=keod`: type 필터링된 장신구 상세
+- `/?type=weapon&selected=ashenzari-axe`: 무기 상세
+- `/?search=regen&selected=ceguteof`: 검색 흐름
 
-## Related Shared Docs
+## 연계 문서
 
 - [Processing Layers](docs/reference/processing-layers.md)
 - [Data Types](docs/reference/data-types.md)

@@ -1,8 +1,8 @@
-# DCSS Randart Corpus Report
+# DCSS Randart 코퍼스 보고서
 
 실제 DCSS public morgue archive에서 수집한 randart 평가 연구용 표본입니다.
 
-## Collection
+## 수집
 
 | Field | Value |
 | --- | --- |
@@ -13,7 +13,7 @@
 | Failures | 0 |
 | Parser | `crawl_service.processor.artifact_documents_from_raw_text` |
 
-## Score Summary
+## 점수 요약
 
 | Metric | Value |
 | --- | ---: |
@@ -21,7 +21,7 @@
 | Min | 30 |
 | Average | 48.3 |
 
-## Grades
+## 등급
 
 | Value | Count |
 | --- | ---: |
@@ -29,7 +29,7 @@
 | `돌품` | 55 |
 | `실전템` | 6 |
 
-## Item Classes
+## 아이템 분류
 
 | Value | Count |
 | --- | ---: |
@@ -39,7 +39,7 @@
 | `talisman` | 21 |
 | `staff` | 2 |
 
-## Common Base Items
+## 자주 나오는 기본 아이템
 
 | Value | Count |
 | --- | ---: |
@@ -59,7 +59,7 @@
 | `morningstar` | 3 |
 | `scimitar` | 2 |
 
-## Common Random Attributes
+## 자주 나오는 랜덤 속성
 
 | Value | Count |
 | --- | ---: |
@@ -89,7 +89,7 @@
 | `Dex+4` | 6 |
 | `rF-` | 5 |
 
-## Top Scored Artifacts
+## 최고 점수 아티팩트
 
 1. **74 실전템** `the +3 scimitar of Doom {elec, rElec rPois rC+ Int+4}` (weapon, scimitar) - elec, rElec, rPois, rC+, Int+4 [Gripp / morgue-Gripp-20260531-063950.lst:4308](https://archive.nemelex.cards/morgue/Gripp/morgue-Gripp-20260531-063950.lst)
 2. **67 실전템** `the +4 robe of the Other Side {-Tele Str+6 Slay+6 Archmagi}` (armour, robe) - -Tele, Str+6, Slay+6, Archmagi [archmaggie / morgue-archmaggie-20260601-135044.lst:3114](https://archive.nemelex.cards/morgue/archmaggie/morgue-archmaggie-20260601-135044.lst)
@@ -112,7 +112,7 @@
 19. **59 애매템** `the +11 long sword of Rynuxkuf {elec, *Noise rPois rC+++ Int-2}` (weapon, long sword) - elec, *Noise, rPois, rC+++, Int-2 [aaam / morgue-aaam-20260601-112822.lst:1934](https://archive.nemelex.cards/morgue/aaam/morgue-aaam-20260601-112822.lst)
 20. **58 애매템** `the amulet "Coicka" {^Contam Rampage +Blink +Inv RegenMP+ Slay+2}` (jewellery, amulet) - ^Contam, Rampage, +Blink, +Inv, Slay+2 [aaam / morgue-aaam-20260602-081845.txt:121](https://archive.nemelex.cards/morgue/aaam/morgue-aaam-20260602-081845.txt)
 
-## Notes
+## 메모
 
 - 이 corpus는 MongoDB에 저장하지 않은 문서형 스냅샷입니다.
 - 점수는 현재 `crawl_service.domain.evaluation.evaluator` 기준입니다.

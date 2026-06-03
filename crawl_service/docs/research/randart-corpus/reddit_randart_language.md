@@ -1,11 +1,11 @@
-# Reddit Randart Language And Examples
+# Reddit Randart 언어와 예시
 
 이 문서는 Reddit `r/dcss`에서 좋은 랜덤 아티팩트(randart)를 표현할 때 쓰이는
 영어 표현과, 성능이 좋다고 평가된 아이템 패턴을 정리한 참고 자료다.
 
 조사일: `2026-06-02`
 
-## Purpose
+## 목적
 
 한국 커뮤니티의 `돌품명품`은 "성능이 좋고 자랑할 만한 랜덤 아티팩트"를
 말한다. Reddit에는 같은 의미의 고정 용어 하나가 있다기보다, 아이템의 성능,
@@ -17,7 +17,7 @@
 - 좋은 randart 사례의 feature 추출
 - frontend copy, 검색 태그, 평가 설명 문구 작성
 
-## English Expressions
+## 영어 표현
 
 | Korean sense | Reddit-style expression | Usage note |
 | --- | --- | --- |
@@ -40,7 +40,7 @@
 | 돌품 | `trap` | 좋아 보이지만 페널티/anti-synergy 때문에 위험한 아이템 |
 | 돌품 | `unusable` | 종족/빌드/슬롯 때문에 못 쓰는 고성능 아이템 |
 
-## High-Performance Patterns
+## 고성능 패턴
 
 ### 1. Strong base plus high enchantment
 
@@ -145,7 +145,7 @@ Scoring implication:
 - 종족이 못 입는 armour처럼 `unusable`한 고성능 아이템은 성능 점수와 실사용
   점수를 분리해야 한다.
 
-## Phrase-To-Grade Mapping
+## 표현-등급 매핑
 
 | Reddit phrase | Suggested Korean grade | Score hint |
 | --- | --- | ---: |
@@ -156,7 +156,7 @@ Scoring implication:
 | `good enough`, `more than sufficient` | `실전템` | `65..80` |
 | `trap`, `unusable`, `trash`, `crap` | `돌품` 또는 특수 사례 | `0..50` |
 
-## Practical Scoring Notes
+## 실전 점수 메모
 
 - Reddit 평가는 "아이템 자체의 절대 수치"보다 "이 캐릭터가 이 시점에 쓰면
   게임을 바꾸는가"를 자주 본다.
@@ -168,7 +168,7 @@ Scoring implication:
 - `Will-`, `*Corrode`, `*Fragile`, `-Tele`, `Inacc`, `Harm` 같은 페널티는 빌드와
   swap 가능성에 따라 감점 폭이 크게 달라진다.
 
-## Source Index
+## 출처 인덱스
 
 - <https://www.reddit.com/r/dcss/comments/c9avq3>
 - <https://www.reddit.com/r/dcss/comments/14t8dro>

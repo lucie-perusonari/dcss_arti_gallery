@@ -1,4 +1,4 @@
-# Community Luxury Randart Examples
+# 커뮤니티 명품 Randart 예시
 
 이 문서는 Reddit `r/dcss`, 공개 morgue, DCSS Search에서 확인한 진짜
 `돌품명품`급 randart 사례를 정리한다.
@@ -45,7 +45,7 @@
 | `ring "Quki"` | `rElec`, `rN++`, `Int+3`, `Dex-5`, `Slay+4`, `Stlth+` | [DCSS Search seed 10028434178169788803](https://dcss.vercel.app/items/0.33.1/10028434178169788803) | rElec/rN++/Slay+4 조합. Dex penalty가 있지만 압축 가치는 높다. |
 | `ring "Ituaciav"` | `rF+`, `rC+`, `Will+`, `AC+4` | [DCSS Search seed 15718624834356676502](https://dcss.vercel.app/items/0.33.1/15718624834356676502) | 저항 2개, Will, AC+4. 방어형 ring의 명품 기준선. |
 
-## 보조 방어구 Spike
+## 보조 방어구 고점
 
 | Item | Properties | Source | Note |
 | --- | --- | --- | --- |
@@ -64,7 +64,7 @@
 | `+11 great mace "Olerouk"` | `heavy`, `*Slow`, `Str+5`, `Dex+3`, `Stlth+` | [DCSS Search seed 18377260917943808802](https://dcss.vercel.app/items/0.31.0/18377260917943808802) | heavy great mace +11에 Str+5. `*Slow`가 있어도 raw damage brag가 크다. |
 | `+12 shortbow of Vykywnef` | `heavy`, `rC++`, `rN++`, `Stlth+` | [DCSS Search seed 15718624834356676502](https://dcss.vercel.app/items/0.33.1/15718624834356676502) | +12 ranged weapon에 heavy, rC++, rN++가 붙은 압축형 무기. |
 
-## Benchmarks
+## 기준선
 
 이 정도가 아니면 `돌품명품`이라고 부르기 어렵다.
 

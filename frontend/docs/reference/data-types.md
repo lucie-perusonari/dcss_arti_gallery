@@ -1,7 +1,7 @@
-# Frontend Data Types
+# Frontend 데이터 타입
 
 이 문서는 gallery frontend가 소비하는 artifact 타입을 정의합니다.
-TypeScript 타입은 Gallery API response와 정렬되어야 합니다.
+TypeScript 타입은 Gallery API 응답과 정렬되어야 합니다.
 
 ## `ArtifactType`
 
@@ -32,7 +32,7 @@ TypeScript 타입은 Gallery API response와 정렬되어야 합니다.
 ## `Artifact`
 
 - 정의 위치: `frontend/src/types/artifact.ts`
-- 용도: gallery list/detail rendering state
+  - 용도: 갤러리 목록/상세 렌더링 상태
 - 주요 필드:
   - `id`, `name`, `baseItem`, `type`, `subtype`, `tile`
   - `enchantment`, `brand`, `origin`
@@ -43,7 +43,7 @@ TypeScript 타입은 Gallery API response와 정렬되어야 합니다.
   - `evaluation`, `score`
   - `rawDescription`, `dcssDescription`
 
-## Related Docs
+## 연계 문서
 
 - [Frontend Processing Layers](./processing-layers.md)
 - [API Data Types](../../../api/docs/reference/data-types.md)

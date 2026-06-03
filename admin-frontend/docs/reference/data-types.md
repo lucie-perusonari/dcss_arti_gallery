@@ -1,4 +1,4 @@
-# Admin Frontend Data Types
+# Admin Frontend 데이터 타입
 
 이 문서는 crawl operations dashboard가 소비하는 status 타입을 정의합니다.
 
@@ -42,7 +42,7 @@
   - `latest: LatestActivity`
   - `recentErrors: CrawlError[]`
 
-## Related Docs
+## 연계 문서
 
 - [Admin Frontend Processing Layers](./processing-layers.md)
 - [API Data Types](../../../api/docs/reference/data-types.md)

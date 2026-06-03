@@ -1,4 +1,4 @@
-# Randart Luxury Classification
+# Randart 명품 분류
 
 이 문서는 `crawl_service/docs/research/randart-corpus/corpus.json`의 실제 morgue randart 표본을
 커뮤니티식 `명품` 관점으로 다시 분류한 메모다.
@@ -7,14 +7,14 @@
 randart`, 한국 DCSS 커뮤니티의 `돌품명품` 감각에 맞춰 "그 슬롯에서 정상적인
 기대치를 얼마나 벗어났는가"를 더 크게 본다.
 
-## Classification Rule
+## 분류 규칙
 
 | Grade | Meaning |
 | --- | --- |
 | `돌품명품 후보` | 자랑감은 강하지만 페널티, base, 빌드 의존성 때문에 논쟁이 생길 물건 |
 | `명품` | 대부분의 관련 빌드가 진지하게 채용할 강한 물건 |
 
-## Corpus Result Summary
+## 코퍼스 결과 요약
 
 이 표본에서 `명품` 수준으로 남길 만한 물건은 장신구의 Slay 압축, 방어구 슬롯의
 Slay, 특수한 caster/melee 혼합 옵션에 몰려 있다.

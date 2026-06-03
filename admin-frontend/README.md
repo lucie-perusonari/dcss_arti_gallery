@@ -1,16 +1,16 @@
-# Crawl Admin Frontend
+# 크롤 Admin Frontend
 
-`admin-frontend`는 React + TypeScript + Vite 기반 crawl operations dashboard입니다.
+`admin-frontend`는 React + TypeScript + Vite 기반 crawl 운영 대시보드입니다.
 Gallery API의 admin endpoint에서 crawl file/user/raw file 상태를 읽어 운영 상태를 보여줍니다.
 
-## Responsibilities
+## 책임
 
 - `src/App.tsx`: crawl status dashboard 화면
 - `src/api/status.ts`: `VITE_ADMIN_API_URL` 기반 admin API client
 - `src/styles.css`: dashboard layout과 상태 표시 스타일
-- `vite.config.ts`: Vite build/dev configuration
+- `vite.config.ts`: Vite build/dev 설정
 
-## Runtime
+## 실행 방법
 
 dependencies:
 
@@ -32,7 +32,7 @@ VITE_ADMIN_API_URL=http://127.0.0.1:8000 npm run dev -- --host 127.0.0.1 --port 
 
 기본 Admin URL은 `http://127.0.0.1:5174`입니다.
 
-## Build
+## 빌드
 
 ```sh
 npm run build
@@ -40,7 +40,7 @@ npm run build
 
 admin API contract 변경은 `python3 -m unittest discover -s api/tests -t .`와 admin frontend build를 함께 확인합니다.
 
-## Related Shared Docs
+## 연계 문서
 
 - [Processing Layers](docs/reference/processing-layers.md)
 - [Data Types](docs/reference/data-types.md)

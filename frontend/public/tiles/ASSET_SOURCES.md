@@ -1,23 +1,24 @@
-# DCSS Tile Sources
+# DCSS 타일 출처
 
-These PNG files are copied from the official Dungeon Crawl Stone Soup repository:
+아래 PNG 파일은 공식 Dungeon Crawl Stone Soup 저장소에서 가져온 것입니다.
 
-- Repository: <https://github.com/crawl/crawl>
-- Source directory: `crawl-ref/source/rltiles/item`
-- Local names normalize DCSS tile filenames to API-friendly kebab-case names.
-- Tile selection logic source: `crawl-ref/source/tilepick.cc`
+- 저장소: <https://github.com/crawl/crawl>
+- 소스 디렉터리: `crawl-ref/source/rltiles/item`
+- 로컬 파일명은 API에서 쓰기 편한 kebab-case로 정규화했습니다.
+- 타일 선택 로직 출처: `crawl-ref/source/tilepick.cc`
 
-The gallery uses these official DCSS tiles for item-type and subtype-specific artifact images:
+갤러리는 아이템 타입/세부 타입별 아티팩트 이미지에 공식 DCSS 타일을 사용합니다.
 
-- `weapon/` and `weapon/ranged/`: melee and ranged weapon base item tile families. Randart weapon variants are copied to `randart/weapon/<base>-*.png`.
-- `armour/`, `armour/headgear/`, and `armour/shields/`: body armour, cloaks, boots, gloves, helmets, hats, shields, and orbs. Boots, gloves, helmets, robes, and orbs with official artefact/enchant variants are copied to `randart/armour/<slot>-*.png`.
-- `ring/randarts/` and `amulet/randarts/`: jewellery randart tile sets copied to `randart/ring/ring-*.png` and `randart/amulet/amulet-*.png`.
-- `staff/`: staff randart variants copied from `staff-artefact*.png` to `randart/staff/staff-*.png`.
-- `talisman/`: talisman subtype tiles.
+- `weapon/`, `weapon/ranged/`: 근접/원거리 무기의 기본 타일 모음. randart 무기 변형은 `randart/weapon/<base>-*.png`로 복사.
+- `armour/`, `armour/headgear/`, `armour/shields/`: 갑옷, 망토, 부츠, 장갑, 투구, 모자, 방패, 구체(orb) 타일. Boots/gloves/helmets/robes/orbs의 공식 artefact/enchant 변형은 `randart/armour/<slot>-*.png`로 복사.
+- `ring/randarts/`, `amulet/randarts/`: 장신구 randart 타일 세트는 각각 `randart/ring/ring-*.png`, `randart/amulet/amulet-*.png`에 복사.
+- `staff/`: staff randart 변형은 `staff-artefact*.png`에서 `randart/staff/staff-*.png`로 복사.
+- `talisman/`: talisman subtype 타일.
 
-Crawl normally chooses randart tile variants with `item.rnd`. Morgue artifact documents do not preserve that field, so the API and frontend mock data choose a deterministic variant from the artifact id/name hash. This keeps the same artifact stable across renders while allowing same-base randarts to display different official DCSS tiles.
+기본적으로 Crawl은 `item.rnd`로 randart 타일 변형을 고릅니다. 그러나 morgue artifact 문서에는 이 값이 보존되지 않기 때문에, API와 프론트엔드 mock 데이터에서는 artifact id/name 해시로 결정적 변형을 선택합니다.
+이렇게 하면 같은 아티팩트는 렌더링마다 동일하게 유지되면서도, 동일 base randart 간에는 서로 다른 공식 DCSS 타일이 보일 수 있습니다.
 
-Notable normalized filenames:
+주요 정규화 파일명 예시:
 
 - `executioner's axe`: `weapon/executioner_axe1.png` -> `executioners-axe.png`
 - `great mace`: `weapon/mace_large1.png` -> `great-mace.png`

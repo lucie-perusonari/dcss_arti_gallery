@@ -1,9 +1,9 @@
-# Randart Rarity and Luxury Report
+# Randart 희소도 및 명품 보고서
 
 이 문서는 DCSS randart 속성 생성 메커니즘을 단순 Monte Carlo로 재현해,
 현재 repo의 실전성/희소도/명품 판정 사이의 관계를 정리한다.
 
-## Scope
+## 범위
 
 - Source baseline: Crawl `0.34.1` `artefact.cc` randart property generation.
 - Source URL: <https://github.com/crawl/crawl/blob/0.34.1/crawl-ref/source/artefact.cc>
@@ -13,7 +13,7 @@
 - Weapon brand generation and item-specific artprop eligibility are approximated from `artefact.cc`; fixed props, god gifts, unrand replacement, and full ego/base generation are out of scope.
 - High enchantment is included as a luxury signal for fixed representative profiles and real corpus items. Whole-game probability for those enchantment/base outcomes still requires the full item generator.
 
-## Mechanism Rarity
+## 메커니즘 희소도
 
 Before item class or scoring is considered, the source quality roll is already strongly low-biased.
 `quality = 1 + Binomial(6, 1/21)`, and bad props are `Binomial(2, 1/21)`.
@@ -42,7 +42,7 @@ Before item class or scoring is considered, the source quality roll is already s
 | `>= 6` | 0.0012% |
 | `>= 7` | <0.0001% |
 
-## Aggregate Simulation
+## 집계 시뮬레이션
 
 | Metric | Value |
 | --- | ---: |
@@ -78,7 +78,7 @@ Before item class or scoring is considered, the source quality roll is already s
 | `무페널티` | 1,269,495 | 90.68% |
 | `저항 3종 이상` | 3,975 | 0.284% |
 
-## By Item Profile
+## 아이템 프로필별
 
 | Profile | Avg | Max | practical 실전템+ | luxury 명품+ | 돌품명품 후보+ | Slay+4+ | Slay+6+ |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
@@ -90,7 +90,7 @@ Before item class or scoring is considered, the source quality roll is already s
 | +9 eveningstar | 55.87 | 78 | 3.13% | 3.02% | 0.178% | 0% | 0% |
 | +3 scimitar | 49.86 | 72 | 0.110% | 0.0035% | 0% | 0% | 0% |
 
-## Real Morgue Corpus Comparison
+## 실제 Morgue 코퍼스 비교
 
 기존 `crawl_service/docs/research/randart-corpus/corpus.json` 150개 표본은 생성 확률 표본이 아니라
 실제 morgue에서 관측된 아이템 표본이다. 그래도 시뮬레이션 결과의 고점 희소성과
@@ -134,7 +134,7 @@ Before item class or scoring is considered, the source quality roll is already s
 | `저항 3종 이상` | 5 | 3.33% |
 | `중갑/방패 +10 이상` | 2 | 1.33% |
 
-## Interpretation
+## 해석
 
 - `grade`는 실전성 등급이고, `luxury_grade`는 실전성에 `rarity_score`를 결합한 커뮤니티식 명품 판정이다.
 - 명품 등급은 단순히 좋은 속성이 하나 붙는 사건이 아니다. 품질값이 3 이상으로 올라갈 확률부터 약 5%대이고, 4회 이상 좋은 속성/강화 기회는 약 0.5%대다.
@@ -143,7 +143,7 @@ Before item class or scoring is considered, the source quality roll is already s
 - 무기는 `Slay`가 randart property로 붙지 않기 때문에 명품 판정이 base, enchantment, brand, 저항 압축에 더 의존한다. 같은 점수라도 장신구/보조 방어구의 `Slay` spike와 성격이 다르다.
 - 이 결과는 randart 하나당 조건부 확률이다. 한 게임에서 체감되는 희소도는 randart 생성 기회 수, branch/shop/acquirement, base item 분포까지 곱해져 더 낮아진다.
 
-## Reproduction
+## 재현
 
 ```sh
 python3 scripts/simulate_randart_rarity.py --samples 200000 --seed 20260602
