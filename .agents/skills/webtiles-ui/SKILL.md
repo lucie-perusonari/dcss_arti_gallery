@@ -17,8 +17,8 @@ Route here for:
 - `frontend/src/components/ArtifactCard.tsx`
 - `frontend/src/styles/app.css`
 - `frontend/public/tiles/*`
-- `frontend/public/STYLE_SOURCES.md`
-- `frontend/reference/*`
+- `frontend/docs/ko/style-sources.md`
+- `frontend/reference/dcinside-log-gallery/*`
 
 Use `bugfix` as well when the UI issue depends on backend API shape or data generation.
 
@@ -27,8 +27,8 @@ Use `bugfix` as well when the UI issue depends on backend API shape or data gene
 - User-facing screen or component to change
 - Current `ArtifactDocument` fields from `frontend/src/types/artifact.ts`
 - Existing WebTiles style references:
-  - `frontend/public/STYLE_SOURCES.md`
-  - `frontend/reference/`
+  - `frontend/docs/ko/style-sources.md`
+  - `frontend/reference/dcinside-log-gallery/`
 - Mock state or API data that exercises the target view
 
 ## Workflow

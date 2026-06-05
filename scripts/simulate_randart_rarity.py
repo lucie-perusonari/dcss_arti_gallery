@@ -22,8 +22,8 @@ if str(ROOT) not in sys.path:
 from crawl_service.domain.evaluation.evaluator import evaluate_artifact
 
 
-REPORT_PATH = Path("crawl_service/docs/research/randart-corpus/rarity_report.md")
-RESULTS_PATH = Path("crawl_service/docs/research/randart-corpus/rarity_simulation.json")
+REPORT_PATH = Path("crawl_service/docs/ko/research/randart-corpus/rarity_report.md")
+RESULTS_PATH = Path("crawl_service/docs/ko/research/randart-corpus/rarity_simulation.json")
 SOURCE_VERSION = "0.34.1"
 SOURCE_URL = (
     "https://github.com/crawl/crawl/blob/0.34.1/"
@@ -497,7 +497,7 @@ def _aggregate(profile_results: list[dict]) -> dict:
 
 
 def _load_corpus_summary() -> dict:
-    corpus_path = Path("crawl_service/docs/research/randart-corpus/corpus.json")
+    corpus_path = Path("crawl_service/docs/ko/research/randart-corpus/corpus.json")
     if not corpus_path.exists():
         return {}
     corpus = json.loads(corpus_path.read_text(encoding="utf-8"))
@@ -618,7 +618,7 @@ def _render_report(results: dict) -> str:
             "",
             "## Real Morgue Corpus Comparison",
             "",
-            "기존 `crawl_service/docs/research/randart-corpus/corpus.json` 150개 표본은 생성 확률 표본이 아니라",
+            "기존 `crawl_service/docs/ko/research/randart-corpus/corpus.json` 150개 표본은 생성 확률 표본이 아니라",
             "실제 morgue에서 관측된 아이템 표본이다. 그래도 시뮬레이션 결과의 고점 희소성과",
             "현실 관측의 온도를 비교하는 참고값으로 쓸 수 있다.",
             "",
@@ -657,7 +657,7 @@ def _render_report(results: dict) -> str:
             f"python3 scripts/simulate_randart_rarity.py --samples {meta['samples_per_profile']} --seed {meta['seed']}",
             "```",
             "",
-            f"Raw simulation output: `crawl_service/docs/research/randart-corpus/rarity_simulation.json`.",
+            f"Raw simulation output: `crawl_service/docs/ko/research/randart-corpus/rarity_simulation.json`.",
             "",
         ]
     )

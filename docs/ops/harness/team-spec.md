@@ -26,17 +26,17 @@ source-of-truth 흐름은 `raw file` 우선, `process` 나중 순서로,
 
 계약의 기준 문서는 아래를 참고합니다.
 
-- `docs/reference/README.md`
-- `crawl_service/docs/reference/data-types.md`
-- `crawl_service/docs/reference/processing-layers.md`
-- `crawl_service/docs/reference/artifact_scoring_formula.md`
-- `crawl_service/docs/reference/randart_properties.md`
-- `api/docs/reference/data-types.md`
-- `api/docs/reference/processing-layers.md`
-- `frontend/docs/reference/data-types.md`
-- `frontend/docs/reference/processing-layers.md`
-- `admin-frontend/docs/reference/data-types.md`
-- `admin-frontend/docs/reference/processing-layers.md`
+- `docs/README.md`
+- `crawl_service/docs/ko/data-types.md`
+- `crawl_service/docs/ko/processing-layers.md`
+- `crawl_service/docs/ko/artifact_scoring_formula.md`
+- `crawl_service/docs/ko/randart_properties.md`
+- `api/docs/ko/data-types.md`
+- `api/docs/ko/processing-layers.md`
+- `frontend/docs/ko/data-types.md`
+- `frontend/docs/ko/processing-layers.md`
+- `admin-frontend/docs/ko/data-types.md`
+- `admin-frontend/docs/ko/processing-layers.md`
 - `README.md`
 - `crawl_service/README.md`
 - `api/README.md`
@@ -61,5 +61,5 @@ source-of-truth 흐름은 `raw file` 우선, `process` 나중 순서로,
 - 옛 루트 패키지 `morgue`, `application`, `artifacts`, `evaluation`, `documents`, `repositories`, `cli`를 다시 도입하지 않습니다.
 - 네트워크 동작 확인이 필요하거나 사용자가 명시적으로 요청하지 않으면 라이브 morgue 크롤은 실행하지 않습니다.
 - parser/importer/repository/API 동작은 우선 fixture 기반 또는 mock 테스트로 검증합니다.
-- 점수 변경이 있을 경우 `crawl_service/docs/reference/artifact_scoring_formula.md`와 비교 검증합니다.
+- 점수 변경이 있을 경우 `crawl_service/docs/ko/artifact_scoring_formula.md`와 비교 검증합니다.
 - TODO: formatter, linter, 커버리지 임계값, CI 구성, 배포 게이트, 릴리스 타깃은 아직 정의되지 않았습니다.

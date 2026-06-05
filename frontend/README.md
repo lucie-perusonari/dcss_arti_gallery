@@ -3,6 +3,8 @@
 `frontend`는 React + TypeScript + Vite 기반 WebTiles 스타일 artifact 갤러리입니다.
 persisted artifact data는 Gallery API에서 읽고, `VITE_ARTIFACT_API_URL`이 없으면 local mock data로 fallback합니다.
 
+English version: [README.en.md](README.en.md)
+
 ## 책임
 
 - `src/api`: frontend API 경계. `VITE_ARTIFACT_API_URL`로 artifact repository read를 호출합니다.
@@ -10,9 +12,9 @@ persisted artifact data는 Gallery API에서 읽고, `VITE_ARTIFACT_API_URL`이 
 - `src/data`: 로컬 mock artifact 데이터와 DCSS 타일 매핑
 - `src/components`: WebTiles 스타일 패널, 필터, 카드, 아이템 상세, 닉네임 크롤 UI
 - `public/tiles`: 로컬 DCSS 타일 PNG 자산
-- `public/STYLE_SOURCES.md`: DCSS 팝업 스타일 재현을 위한 WebTiles CSS/font 출처
-- `reference`: DCInside 로그라이크 갤러리 기반 DCSS 아이템 UI 레퍼런스
-- `screenshots/current-ui`: 회귀 비교용 현재 UI 스냅샷
+- `docs/ko/style-sources.md`: DCSS 팝업 스타일 재현을 위한 WebTiles CSS/font 출처
+- `reference/dcinside-log-gallery`: DCInside 로그라이크 갤러리 기반 DCSS 아이템 UI 이미지 레퍼런스
+- `reference/screenshots/current-ui`: 회귀 비교용 현재 UI 스냅샷
 
 ## 실행
 
@@ -46,8 +48,8 @@ VITE_ARTIFACT_API_URL=http://127.0.0.1:8000 npm run dev -- --host 127.0.0.1 --po
 npm run build
 ```
 
-API/frontend contract 변경은 [Frontend Data Types](docs/reference/data-types.md)와
-[API Data Types](../api/docs/reference/data-types.md)를 확인하고,
+API/frontend contract 변경은 [Frontend Data Types](docs/ko/data-types.md)와
+[API Data Types](../api/docs/ko/data-types.md)를 확인하고,
 API 테스트와 frontend build를 함께 실행합니다.
 
 ## Mock 화면 상태
@@ -59,6 +61,6 @@ API 테스트와 frontend build를 함께 실행합니다.
 
 ## 연계 문서
 
-- [Processing Layers](docs/reference/processing-layers.md)
-- [Data Types](docs/reference/data-types.md)
+- [Processing Layers](docs/ko/processing-layers.md)
+- [Data Types](docs/ko/data-types.md)
 - [Harness Validation](../docs/ops/harness/validation.md)

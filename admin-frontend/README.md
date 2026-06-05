@@ -3,6 +3,8 @@
 `admin-frontend`는 React + TypeScript + Vite 기반 crawl 운영 대시보드입니다.
 Gallery API의 admin endpoint에서 crawl file/user/raw file 상태를 읽어 운영 상태를 보여줍니다.
 
+English version: [README.en.md](README.en.md)
+
 ## 책임
 
 - `src/App.tsx`: crawl status dashboard 화면
@@ -42,6 +44,6 @@ admin API contract 변경은 `python3 -m unittest discover -s api/tests -t .`와
 
 ## 연계 문서
 
-- [Processing Layers](docs/reference/processing-layers.md)
-- [Data Types](docs/reference/data-types.md)
+- [Processing Layers](docs/ko/processing-layers.md)
+- [Data Types](docs/ko/data-types.md)
 - [Harness Validation](../docs/ops/harness/validation.md)

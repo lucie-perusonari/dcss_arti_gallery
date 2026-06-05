@@ -16,12 +16,12 @@ This is a findings-first review. Do not rewrite code unless the user explicitly 
 - The user request and review scope
 - Current diff or named files
 - Relevant docs for the touched layer:
-  - `docs/reference/README.md`
-  - relevant module `docs/reference/data-types.md`
-  - relevant module `docs/reference/processing-layers.md`
-  - `crawl_service/docs/reference/artifact_scoring_formula.md`
-  - `crawl_service/docs/reference/randart_properties.md`
-  - `frontend/public/STYLE_SOURCES.md` for WebTiles UI changes
+  - `docs/README.md`
+  - relevant module `docs/ko/data-types.md`
+  - relevant module `docs/ko/processing-layers.md`
+  - `crawl_service/docs/ko/artifact_scoring_formula.md`
+  - `crawl_service/docs/ko/randart_properties.md`
+  - `frontend/docs/ko/style-sources.md` for WebTiles UI changes
 - Relevant tests and validation output, if available
 
 ## Workflow

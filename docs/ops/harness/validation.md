@@ -21,7 +21,7 @@
 | --- | --- |
 | Crawl service 원격 fetch | `python3 -m unittest discover -s crawl_service/tests/morgue -t .` |
 | Crawl service artifact domain | `python3 -m unittest discover -s crawl_service/tests/domain/artifacts -t .` |
-| Crawl service scoring | `python3 -m unittest discover -s crawl_service/tests/domain/evaluation -t .` 및 `crawl_service/docs/reference/artifact_scoring_formula.md` 대조 |
+| Crawl service scoring | `python3 -m unittest discover -s crawl_service/tests/domain/evaluation -t .` 및 `crawl_service/docs/ko/artifact_scoring_formula.md` 대조 |
 | Crawl service 문서/쓰기 흐름 | `python3 -m unittest discover -s crawl_service/tests/domain/documents -t .` 및 `python3 -m unittest discover -s crawl_service/tests -t .` |
 | Gallery API read 계약 | `python3 -m unittest discover -s api/tests -t .` |
 | Frontend UI/API client | `cd frontend && npm run build` |

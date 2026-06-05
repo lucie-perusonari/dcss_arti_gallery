@@ -1,4 +1,4 @@
-"""Collect a research corpus of real DCSS randarts into crawl_service/docs/research/randart-corpus/.
+"""Collect a research corpus of real DCSS randarts into crawl_service/docs/ko/research/randart-corpus/.
 
 This script intentionally uses the crawl_service parser/evaluator stack but does
 not write MongoDB. It fetches recent public morgue files, extracts random
@@ -245,7 +245,7 @@ def _report(corpus: dict[str, Any]) -> str:
 - 이 corpus는 MongoDB에 저장하지 않은 문서형 스냅샷입니다.
 - 점수는 현재 `crawl_service.domain.evaluation.evaluator` 기준입니다.
 - `base_attributes`는 제외하고 `random_attributes` 중심으로 평가한 결과입니다.
-- 원문 블록과 source URL은 `crawl_service/docs/research/randart-corpus/corpus.json`의 각 artifact에 포함되어 있습니다.
+- 원문 블록과 source URL은 `crawl_service/docs/ko/research/randart-corpus/corpus.json`의 각 artifact에 포함되어 있습니다.
 """
 
 

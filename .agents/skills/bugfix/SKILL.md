@@ -25,18 +25,18 @@ Do not use this skill for a findings-only code review. Use `code-review` instead
 - User request and expected observable behavior
 - Smallest relevant code slice
 - Relevant contract docs:
-  - `docs/reference/README.md`
-  - relevant module `docs/reference/processing-layers.md`
-  - relevant module `docs/reference/data-types.md`
-  - `crawl_service/docs/reference/artifact_scoring_formula.md` for scoring changes
-  - `crawl_service/docs/reference/randart_properties.md` for randart token handling
+  - `docs/README.md`
+  - relevant module `docs/ko/processing-layers.md`
+  - relevant module `docs/ko/data-types.md`
+  - `crawl_service/docs/ko/artifact_scoring_formula.md` for scoring changes
+  - `crawl_service/docs/ko/randart_properties.md` for randart token handling
 - Existing tests that cover the affected layer
 
 ## Workflow
 
 1. Localize the behavior to one pipeline boundary before editing.
 2. Reproduce with the narrowest existing test or a small fixture.
-3. Preserve the layer contract documented in the relevant module `docs/reference/processing-layers.md`.
+3. Preserve the layer contract documented in the relevant module `docs/ko/processing-layers.md`.
 4. Make the smallest code change that fixes the behavior without merging parser, classifier, evaluator, repository, API, and UI responsibilities.
 5. Add or update focused regression coverage when the behavior can plausibly break again.
 6. Run scoped validation first, then broader validation when contracts or shared code changed.

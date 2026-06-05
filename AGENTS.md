@@ -28,9 +28,9 @@
 - 크롤 워커는 `python3 -m crawl_service.worker`로 시작합니다.
 - API는 `python3 -m uvicorn api.app:app --host 0.0.0.0 --port 8000`로 시작합니다.
 - 프런트엔드 dev 서버는 `./scripts/run_frontend.sh` 또는 `cd frontend && VITE_ARTIFACT_API_URL=http://127.0.0.1:8000 npm run dev -- --host 127.0.0.1 --port 5173`로 시작합니다.
-- 경로/소유권/실패 정책은 `docs/harness/team-spec.md`를 참고합니다.
-- 기본 작업 흐름은 `docs/harness/workflow.md`를 참고합니다.
-- 범위별 및 프로젝트 간 검증 게이트는 `docs/harness/validation.md`를 참고합니다.
+- 경로/소유권/실패 정책은 `docs/ops/harness/team-spec.md`를 참고합니다.
+- 기본 작업 흐름은 `docs/ops/harness/workflow.md`를 참고합니다.
+- 범위별 및 프로젝트 간 검증 게이트는 `docs/ops/harness/validation.md`를 참고합니다.
 - 다중 경계 작업은 `.agents/skills/dcss-pipeline-orchestrator/SKILL.md`로 시작하고, 수정/리뷰/테스트/WebTiles UI 작업은 매칭되는 repo 로컬 skill로 분기합니다.
 - 네트워크 동작 확인이 필요하거나 명시적으로 요청되지 않는 한, 실제 라이브 morgue 크롤은 실행하지 않습니다.
 

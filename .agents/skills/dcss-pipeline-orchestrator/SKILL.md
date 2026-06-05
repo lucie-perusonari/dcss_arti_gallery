@@ -23,12 +23,12 @@ Do not use this skill for a narrow single-layer fix when `bugfix`, `test-generat
 
 - user request and expected observable outcome
 - relevant contract docs:
-  - `docs/reference/README.md`
-  - `crawl_service/docs/reference/processing-layers.md`
-  - `api/docs/reference/processing-layers.md`
-  - `frontend/docs/reference/processing-layers.md`
-  - `crawl_service/docs/reference/artifact_scoring_formula.md` for scoring changes
-  - `frontend/public/STYLE_SOURCES.md` for WebTiles UI changes
+  - `docs/README.md`
+  - `crawl_service/docs/ko/processing-layers.md`
+  - `api/docs/ko/processing-layers.md`
+  - `frontend/docs/ko/processing-layers.md`
+  - `crawl_service/docs/ko/artifact_scoring_formula.md` for scoring changes
+  - `frontend/docs/ko/style-sources.md` for WebTiles UI changes
 - current code slice for every touched boundary
 - existing tests or validation commands from `docs/ops/harness/validation.md`
 
