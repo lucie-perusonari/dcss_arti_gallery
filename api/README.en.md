@@ -47,6 +47,13 @@ python3 -m uvicorn api.app:app --host 0.0.0.0 --port 8000
 
 The default CORS origins are `http://localhost:5173` and `http://127.0.0.1:5173`.
 Adjust them with `ARTIFACT_API_CORS_ORIGINS` or `ARTIFACT_API_CORS_ORIGIN_REGEX` if needed.
+The admin dev server defaults to port `5174`, so run the API with an origin list like this when the admin dashboard
+calls it directly:
+
+```sh
+ARTIFACT_API_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://127.0.0.1:5174 \
+  python3 -m uvicorn api.app:app --host 0.0.0.0 --port 8000
+```
 
 ## Tests
 
@@ -55,6 +62,7 @@ python3 -m unittest discover -s api/tests -t .
 ```
 
 When the API/frontend contract changes, run the API tests together with `cd frontend && npm run build`.
+When the admin status contract changes, run the API tests together with `cd admin-frontend && npm run build`.
 
 ## Related Docs
 

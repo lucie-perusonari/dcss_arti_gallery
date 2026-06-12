@@ -14,7 +14,7 @@ or the frontend.
 - `domain/evaluation`: evaluate artifacts based on `RandomArtifact.random_attributes`
 - `domain/documents`: Pydantic-backed storage document models
 - `repository.py`: raw file, artifact read model, and crawl cache repositories
-- `worker.py`: archive user list scan, raw ingest, pending raw processing orchestration
+- `worker.py`: archive user list scan and raw morgue file ingest
 - `observability.py`: worker pass logging and runtime summary formatting
 
 ## Data Flow
@@ -50,11 +50,27 @@ Worker:
 python3 -m crawl_service.worker
 ```
 
-The worker scans the archive's full user directory list every three hours and reopens target directories by default
-to check for missing files. Files already stored in `raw_morgue_files` are not downloaded again.
+The worker scans the archive's full user directory list once a week and opens target directories to check for missing
+files. Files already stored in `raw_morgue_files` are not downloaded again.
 Set `CRAWL_USER_SKIP_MODE=modified_at` to query only players whose user directory `Date` changed.
 It processes only user/file data from `2026-01-01` onward, keeps a default 1-second delay between HTTP requests, and
-uses `CRAWL_PROCESS_LIMIT` to control throughput.
+only persists source into `raw_morgue_files`.
+
+### Raw Ingest And Separate Processing
+
+Artifact regeneration is run separately through the processor script, not by the worker.
+
+```sh
+crawl_service/run_raw_crawler.sh
+crawl_service/process_raw_morgue_files.sh
+```
+
+- `crawl_service/run_raw_crawler.sh`: runs the worker and stores only fetched raw files.
+- `DETACH=1 crawl_service/run_raw_crawler.sh`: runs the raw crawler in the background and writes `.logs/crawl_raw_only.log`.
+- `crawl_service/process_raw_morgue_files.sh`: processes fetched/pending or version-mismatched records in
+  `raw_morgue_files`.
+- `PROCESS_LIMIT=1000`: processor batch size. Default: `1000`.
+- `ONCE=1`: process one batch and exit.
 
 ## Tests
 

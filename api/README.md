@@ -49,6 +49,12 @@ python3 -m uvicorn api.app:app --host 0.0.0.0 --port 8000
 
 기본 CORS origin은 `http://localhost:5173`과 `http://127.0.0.1:5173`입니다.
 필요하면 `ARTIFACT_API_CORS_ORIGINS` 또는 `ARTIFACT_API_CORS_ORIGIN_REGEX`로 조정합니다.
+admin dev server 기본 port는 `5174`이므로 admin 대시보드에서 직접 호출할 때는 예를 들어 다음처럼 실행합니다.
+
+```sh
+ARTIFACT_API_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://127.0.0.1:5174 \
+  python3 -m uvicorn api.app:app --host 0.0.0.0 --port 8000
+```
 
 ## 테스트
 
@@ -57,6 +63,7 @@ python3 -m unittest discover -s api/tests -t .
 ```
 
 API/frontend contract 변경은 API 테스트와 `cd frontend && npm run build`를 함께 확인합니다.
+admin status contract 변경은 API 테스트와 `cd admin-frontend && npm run build`를 함께 확인합니다.
 
 ## 연계 문서
 

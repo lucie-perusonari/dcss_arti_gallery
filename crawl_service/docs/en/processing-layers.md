@@ -24,7 +24,7 @@ remote morgue
 - Module: `crawl_service/`
 - Role: periodically read the remote morgue root user list and persist target users' `txt`/`lst` file source into
   `raw_morgue_files`
-- Output: persisted raw morgue file records, regenerated artifact MongoDB documents, crawl file/user state records
+- Output: persisted raw morgue file records and crawl file/user state records
 - Restriction: does not import `api`, `frontend`, or `admin-frontend` types or components
 
 ## Internal Layers
@@ -36,8 +36,8 @@ remote morgue
 - `crawl_service.domain.documents`: build artifact documents for MongoDB storage
 - `crawl_service.processor`: read `raw_morgue_files` source and regenerate artifact read models
 - `crawl_service.repository`: save raw files, write artifacts, replace by source, and save crawl file/user cache records
-- `crawl_service.worker`: orchestrate remote morgue ingest and pending raw processing
-- `crawl_service.observability`: worker pass summaries and processing summary logging
+- `crawl_service.worker`: orchestrate remote morgue source ingest
+- `crawl_service.observability`: worker pass summary logging
 
 ## Ingest And Processing State
 
@@ -52,9 +52,22 @@ remote morgue
 
 ## Runtime Configuration
 
+- `MORGUE_BASE_URL`: remote morgue root URL. Default: `https://archive.nemelex.cards/morgue`.
+- `CRAWL_START_DATE`: start date for eligible user/file data. Default: `2026-01-01`.
+- `MORGUE_REQUEST_DELAY_SECONDS`: minimum delay between HTTP requests. Default: `1.0`.
+- `CRAWL_LOOP_INTERVAL_SECONDS`: delay between worker passes. Default: `604800` seconds (7 days).
+- `MORGUE_REQUEST_TIMEOUT_SECONDS`: HTTP request timeout. Default: the morgue fetcher default.
+- `MORGUE_USER_AGENT`: user agent for remote morgue requests.
 - `CRAWL_USER_SKIP_MODE`: `conservative` or `modified_at`. Default: `conservative`.
-- `CRAWL_PROCESS_LIMIT`: pending raw file limit per worker pass. Default: `100`.
 - `CRAWL_LOG_LEVEL`: worker logging level. Default: `INFO`.
+
+## Operation Scripts
+
+- `python3 -m crawl_service.worker`: fetches remote morgue source and stores it in `raw_morgue_files`.
+- `crawl_service/run_raw_crawler.sh`: raw ingest worker wrapper. With `DETACH=1`, it runs in the background and writes
+  `.logs/crawl_raw_only.log`.
+- `crawl_service/process_raw_morgue_files.sh`: processes stored fetched raw files as separate batches.
+  `PROCESS_LIMIT` defaults to `1000`; `ONCE=1` processes one batch and exits.
 
 ## Related Docs
 

@@ -15,7 +15,7 @@ English version: [README.en.md](README.en.md)
 - `domain/evaluation`: `RandomArtifact.random_attributes` 기반 평가
 - `domain/documents`: Pydantic 기반 저장 문서 모델
 - `repository.py`: raw file, artifact read model, crawl cache repository
-- `worker.py`: archive user list scan, raw ingest, pending raw processing orchestration
+- `worker.py`: archive user list scan과 raw morgue file ingest
 - `observability.py`: worker pass logging과 runtime summary formatting
 
 ## 데이터 흐름
@@ -50,11 +50,26 @@ worker:
 python3 -m crawl_service.worker
 ```
 
-worker는 archive의 전체 user directory list를 3시간마다 훑고, 기본적으로 대상 user directory를 다시 열어
+worker는 archive의 전체 user directory list를 주 1회 훑고, 대상 user directory를 열어
 누락 파일을 확인합니다. 이미 `raw_morgue_files`에 저장된 fetched 파일은 다시 다운로드하지 않습니다.
 `CRAWL_USER_SKIP_MODE=modified_at`을 설정하면 user directory Date가 바뀐 player만 조회합니다.
 2026-01-01 이후 user/file 데이터만 처리하며 모든 HTTP 요청 사이에 기본 1초 delay를 둡니다.
-처리량은 `CRAWL_PROCESS_LIMIT`으로 조절합니다.
+worker는 원본을 `raw_morgue_files`에 저장하는 것까지만 책임집니다.
+
+### Raw 수집과 별도 처리
+
+artifact 재생성은 worker가 아니라 processor script로 별도 실행합니다.
+
+```sh
+crawl_service/run_raw_crawler.sh
+crawl_service/process_raw_morgue_files.sh
+```
+
+- `crawl_service/run_raw_crawler.sh`: worker를 실행해 fetched raw file만 저장합니다.
+- `DETACH=1 crawl_service/run_raw_crawler.sh`: raw crawler를 백그라운드로 실행하고 `.logs/crawl_raw_only.log`에 기록합니다.
+- `crawl_service/process_raw_morgue_files.sh`: `raw_morgue_files`의 fetched/pending 또는 version mismatch record를 처리합니다.
+- `PROCESS_LIMIT=1000`: processor batch 크기입니다. 기본값은 `1000`입니다.
+- `ONCE=1`: processor를 한 batch만 실행하고 종료합니다.
 
 ## 테스트
 

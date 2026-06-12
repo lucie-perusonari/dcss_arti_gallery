@@ -2,7 +2,7 @@
 
 ## 도메인 요약
 
-이 저장소는 세 개의 독립 프로젝트와 하나의 admin 대시보드를 가집니다.
+이 저장소는 네 개의 독립 프로젝트를 가집니다.
 
 ```text
 remote morgue
@@ -22,7 +22,7 @@ source-of-truth 흐름은 `raw file` 우선, `process` 나중 순서로,
 
 `frontend`는 React + Vite 갤러리 UI를 소유하며 Gallery API 응답만 사용합니다.
 
-`admin-frontend`는 React + Vite로 운영 상태를 표시하는 crawl operations dashboard를 소유하며 API admin status endpoint를 사용합니다.
+`admin-frontend`는 React + Vite로 운영 상태를 표시하는 독립 crawl operations dashboard 프로젝트이며 API admin status endpoint를 사용합니다.
 
 계약의 기준 문서는 아래를 참고합니다.
 

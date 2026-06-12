@@ -14,7 +14,7 @@ English version: [README.en.md](README.en.md)
 - `public/tiles`: 로컬 DCSS 타일 PNG 자산
 - `docs/ko/style-sources.md`: DCSS 팝업 스타일 재현을 위한 WebTiles CSS/font 출처
 - `reference/dcinside-log-gallery`: DCInside 로그라이크 갤러리 기반 DCSS 아이템 UI 이미지 레퍼런스
-- `reference/screenshots/current-ui`: 회귀 비교용 현재 UI 스냅샷
+- `reference/screenshots/current-ui`: 회귀 비교용 현재 UI 스냅샷. 목록은 `docs/ko/current-ui-screenshots.md`를 봅니다.
 
 ## 실행
 

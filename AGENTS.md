@@ -2,10 +2,11 @@
 
 ## 구성
 
-- 이 저장소는 세 개의 독립 프로젝트로 구성됩니다: `crawl_service`, `api`, `frontend`.
+- 이 저장소는 네 개의 독립 프로젝트로 구성됩니다: `crawl_service`, `api`, `frontend`, `admin-frontend`.
 - `crawl_service`는 원격 morgue 조회, 파싱, 분류, 평가, artifact 문서 생성, MongoDB 저장, crawl file/user 캐시 기록, 백그라운드 crawl 워커를 담당합니다.
 - `api`는 갤러리 읽기 API를 소유합니다. API 전용 repository와 Pydantic response model로 MongoDB artifact을 읽으며 `crawl_service`를 import하면 안 됩니다.
 - `frontend`는 `frontend/` 하위의 React + TypeScript + Vite 앱으로, 갤러리 API와 통신합니다.
+- `admin-frontend`는 `admin-frontend/` 하위의 React + TypeScript + Vite 앱으로, API admin endpoint에서 crawl 운영 상태를 읽습니다.
 - 로컬 MongoDB 라이프사이클 스크립트는 `infra/mongo/`에 있습니다.
 
 ## 이유
@@ -24,10 +25,14 @@
 - crawl service 테스트는 `python3 -m unittest discover -s crawl_service/tests -t .`로 실행합니다.
 - 프런트엔드 의존성 설치는 `cd frontend && npm install`입니다.
 - 프런트엔드 프로덕션 빌드는 `cd frontend && npm run build`입니다.
+- Admin 프런트엔드 의존성 설치는 `cd admin-frontend && npm install`입니다.
+- Admin 프런트엔드 프로덕션 빌드는 `cd admin-frontend && npm run build`입니다.
 - 로컬 MongoDB는 `eval "$(infra/mongo/mongo_up.sh)"`로 시작합니다.
 - 크롤 워커는 `python3 -m crawl_service.worker`로 시작합니다.
+- raw morgue 원본만 수집하려면 `crawl_service/run_raw_crawler.sh`를 사용하고, 저장된 원본을 별도로 처리하려면 `crawl_service/process_raw_morgue_files.sh`를 사용합니다.
 - API는 `python3 -m uvicorn api.app:app --host 0.0.0.0 --port 8000`로 시작합니다.
 - 프런트엔드 dev 서버는 `./scripts/run_frontend.sh` 또는 `cd frontend && VITE_ARTIFACT_API_URL=http://127.0.0.1:8000 npm run dev -- --host 127.0.0.1 --port 5173`로 시작합니다.
+- Admin 프런트엔드 dev 서버는 `./scripts/run_admin.sh` 또는 `cd admin-frontend && VITE_ADMIN_API_URL=http://127.0.0.1:8000 npm run dev -- --host 127.0.0.1 --port 5174`로 시작합니다.
 - 경로/소유권/실패 정책은 `docs/ops/harness/team-spec.md`를 참고합니다.
 - 기본 작업 흐름은 `docs/ops/harness/workflow.md`를 참고합니다.
 - 범위별 및 프로젝트 간 검증 게이트는 `docs/ops/harness/validation.md`를 참고합니다.

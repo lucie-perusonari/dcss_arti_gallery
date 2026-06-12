@@ -40,6 +40,26 @@ MongoDB에 저장된 artifact 문서를 API 전용 DTO로 검증한 뒤 frontend
 - [Harness Validation](docs/ops/harness/validation.md): 범위별/프로젝트 간 검증 매트릭스
 - [Backlog](docs/ops/backlog.md): 데이터 품질과 운영 확장 후속 작업
 
+## Crawl 운영 모드
+
+worker는 원격 morgue 원본을 수집해 `raw_morgue_files`에 저장하는 것까지만 수행합니다.
+
+```sh
+python3 -m crawl_service.worker
+```
+
+artifact 재생성은 저장된 raw file을 처리하는 별도 script로 실행합니다.
+
+```sh
+crawl_service/run_raw_crawler.sh
+crawl_service/process_raw_morgue_files.sh
+```
+
+`crawl_service/run_raw_crawler.sh`는 worker를 실행해 `raw_morgue_files`만 채웁니다.
+`DETACH=1 crawl_service/run_raw_crawler.sh`로 백그라운드 실행할 수 있으며 기본 로그는 `.logs/crawl_raw_only.log`입니다.
+`crawl_service/process_raw_morgue_files.sh`는 저장된 fetched raw file을 현재 parser/scoring version으로 처리합니다.
+`PROCESS_LIMIT`으로 batch 크기를, `ONCE=1`로 단일 batch 실행 여부를 조정합니다.
+
 ## 로컬 MongoDB
 
 ```sh
@@ -57,7 +77,7 @@ infra/mongo/mongo_down.sh
 
 ## 로컬 개발
 
-전체 개발 서버를 한 번에 실행하려면 루트에서 다음 스크립트를 사용합니다.
+gallery 개발 스택(MongoDB, crawl worker, API, frontend)을 한 번에 실행하려면 루트에서 다음 스크립트를 사용합니다.
 
 ```sh
 ./scripts/run_dev.sh
@@ -79,6 +99,13 @@ Admin 대시보드:
 ```
 
 기본 Admin URL은 `http://127.0.0.1:5174`이고, API URL은 `VITE_ADMIN_API_URL`로 지정합니다.
+API 기본 CORS origin은 gallery dev port `5173` 기준이므로, admin 대시보드에서 API를 직접 호출하려면 API 실행 전에
+다음처럼 `5174`도 허용합니다.
+
+```sh
+ARTIFACT_API_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://127.0.0.1:5174 \
+  python3 -m uvicorn api.app:app --host 0.0.0.0 --port 8000
+```
 
 ## 검증
 

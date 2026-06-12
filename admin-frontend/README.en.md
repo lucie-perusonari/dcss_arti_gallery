@@ -31,6 +31,9 @@ From the repository root, you can use:
 ```
 
 The default Admin URL is `http://127.0.0.1:5174`.
+The API's default CORS setup explicitly allows the gallery dev port `5173`. When the admin dev server calls the API,
+include the `5174` origin in the API environment, for example
+`ARTIFACT_API_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://127.0.0.1:5174`.
 
 ## Build
 

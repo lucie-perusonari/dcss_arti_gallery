@@ -57,6 +57,17 @@ English version: [README.en.md](README.en.md)
 - [Backlog](ops/backlog.md)
 - [Memo](ops/memo.md)
 
+## 빠른 검증 명령
+
+```sh
+python3 -m unittest discover -s api/tests -t .
+python3 -m unittest discover -s crawl_service/tests -t .
+cd frontend && npm run build
+cd admin-frontend && npm run build
+```
+
+범위별 검증 조합은 [Harness Validation](ops/harness/validation.md)을 기준으로 합니다.
+
 ## 기준
 
 - 특정 모듈만 설명하는 문서는 해당 모듈의 `docs/`에 둡니다.

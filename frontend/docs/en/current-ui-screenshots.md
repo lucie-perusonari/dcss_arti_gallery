@@ -1,6 +1,6 @@
 # Current UI Screenshots
 
-This directory contains the current React screen flow verified with local mock API data.
+`frontend/reference/screenshots/current-ui/` contains the current React screen flow verified with local mock API data.
 It is not a DCSS design reference; use it only for before/after regression comparison.
 
 - `01-gallery-default.png`: full gallery

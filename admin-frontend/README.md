@@ -33,6 +33,9 @@ VITE_ADMIN_API_URL=http://127.0.0.1:8000 npm run dev -- --host 127.0.0.1 --port 
 ```
 
 기본 Admin URL은 `http://127.0.0.1:5174`입니다.
+API 기본 CORS 설정은 gallery dev port `5173`만 명시적으로 허용합니다. admin dev server에서 API를 호출할 때는
+API 실행 환경에 `ARTIFACT_API_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://127.0.0.1:5174`처럼
+`5174` origin을 포함합니다.
 
 ## 빌드
 

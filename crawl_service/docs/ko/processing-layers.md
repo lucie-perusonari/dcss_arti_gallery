@@ -21,7 +21,7 @@ remote morgue
 
 - 모듈: `crawl_service/`
 - 역할: remote morgue root user list를 주기적으로 조회하고, 대상 user의 txt/lst 파일 원본을 `raw_morgue_files`에 저장한다.
-- 출력: persisted raw morgue file records, regenerated artifact Mongo documents, crawl file/user state records
+- 출력: persisted raw morgue file records, crawl file/user state records
 - 제한: `api`, `frontend`, `admin-frontend`의 타입이나 컴포넌트를 import하지 않는다.
 
 ## Internal Layers
@@ -33,8 +33,8 @@ remote morgue
 - `crawl_service.domain.documents`: MongoDB에 저장할 artifact document 생성
 - `crawl_service.processor`: `raw_morgue_files` 원본을 읽어 artifact read model 재생성
 - `crawl_service.repository`: raw file 저장, artifact write, source별 replace, crawl file/user cache record 저장
-- `crawl_service.worker`: remote morgue 원문 ingest와 pending raw processing orchestration
-- `crawl_service.observability`: worker pass summary와 processing summary logging
+- `crawl_service.worker`: remote morgue 원문 ingest orchestration
+- `crawl_service.observability`: worker pass summary logging
 
 ## Ingest And Processing State
 
@@ -46,9 +46,20 @@ remote morgue
 
 ## Runtime Configuration
 
+- `MORGUE_BASE_URL`: remote morgue root URL. 기본값은 `https://archive.nemelex.cards/morgue`.
+- `CRAWL_START_DATE`: 처리 대상 user/file 시작일. 기본값은 `2026-01-01`.
+- `MORGUE_REQUEST_DELAY_SECONDS`: HTTP 요청 사이 최소 delay. 기본값은 `1.0`.
+- `CRAWL_LOOP_INTERVAL_SECONDS`: worker pass 사이 대기 시간. 기본값은 `604800`초(7일).
+- `MORGUE_REQUEST_TIMEOUT_SECONDS`: HTTP 요청 timeout. 기본값은 morgue fetcher 기본값.
+- `MORGUE_USER_AGENT`: remote morgue 요청 user agent.
 - `CRAWL_USER_SKIP_MODE`: `conservative` 또는 `modified_at`. 기본값은 `conservative`.
-- `CRAWL_PROCESS_LIMIT`: 한 worker pass에서 처리할 pending raw file 한도. 기본값은 `100`.
 - `CRAWL_LOG_LEVEL`: worker logging level. 기본값은 `INFO`.
+
+## 운영 스크립트
+
+- `python3 -m crawl_service.worker`: remote morgue 원문을 fetch해 `raw_morgue_files`에 저장한다.
+- `crawl_service/run_raw_crawler.sh`: raw ingest worker wrapper. `DETACH=1`이면 백그라운드로 실행하고 `.logs/crawl_raw_only.log`에 기록한다.
+- `crawl_service/process_raw_morgue_files.sh`: 저장된 fetched raw file을 별도 batch로 처리한다. `PROCESS_LIMIT` 기본값은 `1000`, `ONCE=1`이면 한 batch만 처리한다.
 
 ## Related Docs
 

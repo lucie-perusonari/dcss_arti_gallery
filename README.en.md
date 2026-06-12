@@ -36,6 +36,26 @@ Key shared documents:
 - [Artifact Scoring Formula](crawl_service/docs/en/artifact_scoring_formula.md): artifact scoring criteria
 - [DCSS Item Data](crawl_service/docs/en/dcss_item_data.md): official DCSS item data refresh criteria
 
+## Crawl Operation Modes
+
+The worker only fetches remote morgue source and stores it in `raw_morgue_files`.
+
+```sh
+python3 -m crawl_service.worker
+```
+
+Run artifact regeneration separately through the stored raw-file processor:
+
+```sh
+crawl_service/run_raw_crawler.sh
+crawl_service/process_raw_morgue_files.sh
+```
+
+`crawl_service/run_raw_crawler.sh` runs the worker, so it only fills `raw_morgue_files`.
+Run `DETACH=1 crawl_service/run_raw_crawler.sh` for background mode; the default log is
+`.logs/crawl_raw_only.log`. `crawl_service/process_raw_morgue_files.sh` processes stored fetched raw files with the
+current parser/scoring versions. Use `PROCESS_LIMIT` for batch size and `ONCE=1` for a single batch.
+
 ## Local MongoDB
 
 ```sh
@@ -53,7 +73,7 @@ infra/mongo/mongo_down.sh
 
 ## Local Development
 
-To run the whole development stack at once:
+To run the gallery development stack (MongoDB, crawl worker, API, frontend) at once:
 
 ```sh
 ./scripts/run_dev.sh
@@ -75,6 +95,13 @@ Admin dashboard:
 ```
 
 The default Admin URL is `http://127.0.0.1:5174`, and the API URL is set through `VITE_ADMIN_API_URL`.
+The API's default CORS origins target the gallery dev port `5173`, so allow `5174` before starting the API when the
+admin dashboard calls it directly.
+
+```sh
+ARTIFACT_API_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://127.0.0.1:5174 \
+  python3 -m uvicorn api.app:app --host 0.0.0.0 --port 8000
+```
 
 ## Validation
 

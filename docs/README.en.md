@@ -47,3 +47,14 @@ When changing more than one module, check all related module docs together.
 - Documents that explain only one module belong under that module's `docs/` directory.
 - Cross-module contracts should link the relevant module docs together from the Cross-Module Docs section above.
 - Experimental and reproducible analysis outputs belong under the owning module's language-specific `docs/{ko,en}/research`.
+
+## Quick Validation Commands
+
+```sh
+python3 -m unittest discover -s api/tests -t .
+python3 -m unittest discover -s crawl_service/tests -t .
+cd frontend && npm run build
+cd admin-frontend && npm run build
+```
+
+Use the Korean-only [Harness Validation](ops/harness/validation.md) matrix for scoped validation combinations.
