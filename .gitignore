@@ -1,6 +1,7 @@
 # Local workspaces and generated analysis
 _workspace/
 .understand-anything/
+.logs/
 
 # Python
 __pycache__/
