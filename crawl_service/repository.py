@@ -162,16 +162,8 @@ class RawMorgueFileRecord:
         }
 
 
-class CrawlArtifactRepository(Protocol):
-    """Storage operations required by the crawl worker."""
-
-    def replace_artifacts_for_source(
-        self,
-        player: str,
-        source_file: str,
-        artifacts: list[ArtifactDocument],
-    ) -> None:
-        ...
+class CrawlIngestRepository(Protocol):
+    """Storage operations required by the raw morgue ingest worker."""
 
     def get_crawl_file_record(
         self,
@@ -186,13 +178,44 @@ class CrawlArtifactRepository(Protocol):
     def get_crawl_user_record(self, player: str) -> CrawlUserRecord | None:
         ...
 
+    def list_crawl_user_records(
+        self,
+        players: list[str],
+    ) -> dict[str, CrawlUserRecord]:
+        ...
+
     def save_crawl_user_record(self, record: CrawlUserRecord) -> None:
         ...
 
     def get_raw_morgue_file(self, player: str, source_file: str) -> RawMorgueFileRecord | None:
         ...
 
+    def list_raw_morgue_file_records_for_players(
+        self,
+        players: list[str],
+    ) -> dict[tuple[str, str], RawMorgueFileRecord]:
+        ...
+
+    def list_raw_morgue_file_records_for_player_files(
+        self,
+        player: str,
+        source_files: list[str],
+    ) -> dict[str, RawMorgueFileRecord]:
+        ...
+
     def save_raw_morgue_file(self, record: RawMorgueFileRecord) -> None:
+        ...
+
+
+class CrawlArtifactRepository(CrawlIngestRepository, Protocol):
+    """Storage operations required by raw processing and artifact writes."""
+
+    def replace_artifacts_for_source(
+        self,
+        player: str,
+        source_file: str,
+        artifacts: list[ArtifactDocument],
+    ) -> None:
         ...
 
     def list_raw_morgue_files_for_processing(
@@ -272,6 +295,20 @@ class MongoCrawlArtifactRepository:
         document = self.crawl_user_collection.find_one({"player": _player_key(player)})
         return _crawl_user_record_from_mongo(document) if document else None
 
+    def list_crawl_user_records(
+        self,
+        players: list[str],
+    ) -> dict[str, CrawlUserRecord]:
+        self._ensure_indexes()
+        if self.crawl_user_collection is None:
+            return {}
+        player_keys = _player_keys(players)
+        if not player_keys:
+            return {}
+        documents = self.crawl_user_collection.find({"player": {"$in": player_keys}})
+        records = [_crawl_user_record_from_mongo(document) for document in documents]
+        return {_player_key(record.player): record for record in records}
+
     def save_crawl_user_record(self, record: CrawlUserRecord) -> None:
         self._ensure_indexes()
         if self.crawl_user_collection is None:
@@ -296,6 +333,40 @@ class MongoCrawlArtifactRepository:
             {"player": _player_key(player), "name": source_file}
         )
         return _raw_morgue_file_record_from_mongo(document) if document else None
+
+    def list_raw_morgue_file_records_for_players(
+        self,
+        players: list[str],
+    ) -> dict[tuple[str, str], RawMorgueFileRecord]:
+        self._ensure_indexes()
+        if self.raw_file_collection is None:
+            return {}
+        player_keys = _player_keys(players)
+        if not player_keys:
+            return {}
+        documents = self.raw_file_collection.find({"player": {"$in": player_keys}})
+        records = [_raw_morgue_file_record_from_mongo(document) for document in documents]
+        return {(_player_key(record.player), record.name): record for record in records}
+
+    def list_raw_morgue_file_records_for_player_files(
+        self,
+        player: str,
+        source_files: list[str],
+    ) -> dict[str, RawMorgueFileRecord]:
+        self._ensure_indexes()
+        if self.raw_file_collection is None:
+            return {}
+        file_names = sorted({source_file for source_file in source_files if source_file})
+        if not file_names:
+            return {}
+        documents = self.raw_file_collection.find(
+            {
+                "player": _player_key(player),
+                "name": {"$in": file_names},
+            }
+        )
+        records = [_raw_morgue_file_record_from_mongo(document) for document in documents]
+        return {record.name: record for record in records}
 
     def save_raw_morgue_file(self, record: RawMorgueFileRecord) -> None:
         self._ensure_indexes()
@@ -465,6 +536,10 @@ def _raw_morgue_file_record_from_mongo(document: dict) -> RawMorgueFileRecord:
 
 def _player_key(player: str) -> str:
     return player.strip().lower()
+
+
+def _player_keys(players: list[str]) -> list[str]:
+    return sorted({_player_key(player) for player in players if player.strip()})
 
 
 def raw_text_hash(text: str) -> str:

@@ -9,20 +9,10 @@ from typing import Any
 
 
 @dataclass(frozen=True)
-class CrawlProcessSummary:
-    """One pending-raw processing pass summary."""
-
-    artifacts_imported: int = 0
-    failed: bool = False
-    error: str | None = None
-
-
-@dataclass(frozen=True)
 class CrawlServicePassSummary:
-    """Combined ingest and processing summary for one worker loop pass."""
+    """Raw ingest summary for one worker loop pass."""
 
     crawl: Any
-    process: CrawlProcessSummary
     duration_seconds: float
 
 
@@ -43,7 +33,6 @@ def get_logger(name: str) -> logging.Logger:
 
 def crawl_pass_message(summary: CrawlServicePassSummary) -> str:
     crawl = summary.crawl
-    process = summary.process
     return (
         "Crawl pass complete: "
         f"{crawl.users_seen} users seen, "
@@ -53,7 +42,5 @@ def crawl_pass_message(summary: CrawlServicePassSummary) -> str:
         f"{crawl.users_failed} users failed, "
         f"{crawl.files_processed} files stored, "
         f"{crawl.files_skipped_existing_raw} files already stored, "
-        f"{process.artifacts_imported} artifacts imported, "
-        f"process_failed={process.failed}, "
         f"duration={summary.duration_seconds:.2f}s."
     )

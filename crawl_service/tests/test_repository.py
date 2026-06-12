@@ -3,6 +3,7 @@ from __future__ import annotations
 import unittest
 
 from crawl_service.repository import (
+    CrawlUserRecord,
     FETCH_STATUS_FETCHED,
     PROCESS_STATUS_PENDING,
     PROCESS_STATUS_PROCESSED,
@@ -137,15 +138,132 @@ class MongoCrawlArtifactRepositoryTest(unittest.TestCase):
             ],
         )
 
+    def test_crawl_user_records_can_be_loaded_for_players(self) -> None:
+        crawl_user_collection = FakeCollection()
+        repository = MongoCrawlArtifactRepository(
+            FakeCollection(),
+            crawl_user_collection=crawl_user_collection,
+        )
+        repository.save_crawl_user_record(
+            CrawlUserRecord(
+                player="WiiWiWi",
+                url="https://example.test/morgue/wiiwiwi/",
+                observed_at="2026-Jan-02 00:00",
+                status="completed",
+            )
+        )
+        repository.save_crawl_user_record(
+            CrawlUserRecord(
+                player="Other",
+                url="https://example.test/morgue/other/",
+                observed_at="2026-Jan-03 00:00",
+                status="failed",
+            )
+        )
+
+        records = repository.list_crawl_user_records(["wiiwiwi", "missing"])
+
+        self.assertEqual(list(records), ["wiiwiwi"])
+        self.assertEqual(records["wiiwiwi"].status, "completed")
+
+    def test_raw_morgue_records_can_be_loaded_for_players(self) -> None:
+        raw_collection = FakeCollection()
+        repository = MongoCrawlArtifactRepository(
+            FakeCollection(),
+            raw_file_collection=raw_collection,
+        )
+        repository.save_raw_morgue_file(
+            RawMorgueFileRecord.fetched(
+                player="WiiWiWi",
+                name="morgue-wiiwiwi-20260101-000001.txt",
+                url="https://example.test/new.txt",
+                extension="txt",
+                text="raw text",
+                fetched_at="2026-01-01T00:00:00+00:00",
+            )
+        )
+        repository.save_raw_morgue_file(
+            RawMorgueFileRecord.fetched(
+                player="Other",
+                name="morgue-other-20260101-000001.txt",
+                url="https://example.test/other.txt",
+                extension="txt",
+                text="other raw text",
+                fetched_at="2026-01-01T00:00:01+00:00",
+            )
+        )
+
+        records = repository.list_raw_morgue_file_records_for_players(["wiiwiwi"])
+
+        self.assertEqual(
+            list(records),
+            [("wiiwiwi", "morgue-wiiwiwi-20260101-000001.txt")],
+        )
+        self.assertEqual(
+            records[("wiiwiwi", "morgue-wiiwiwi-20260101-000001.txt")].text,
+            "raw text",
+        )
+
+    def test_raw_morgue_records_can_be_loaded_for_one_player_and_file_names(self) -> None:
+        raw_collection = FakeCollection()
+        repository = MongoCrawlArtifactRepository(
+            FakeCollection(),
+            raw_file_collection=raw_collection,
+        )
+        repository.save_raw_morgue_file(
+            RawMorgueFileRecord.fetched(
+                player="WiiWiWi",
+                name="morgue-wiiwiwi-20260101-000001.txt",
+                url="https://example.test/new.txt",
+                extension="txt",
+                text="raw text",
+                fetched_at="2026-01-01T00:00:00+00:00",
+            )
+        )
+        repository.save_raw_morgue_file(
+            RawMorgueFileRecord.fetched(
+                player="WiiWiWi",
+                name="morgue-wiiwiwi-20260102-000001.txt",
+                url="https://example.test/other.txt",
+                extension="txt",
+                text="other raw text",
+                fetched_at="2026-01-02T00:00:00+00:00",
+            )
+        )
+        repository.save_raw_morgue_file(
+            RawMorgueFileRecord.fetched(
+                player="Other",
+                name="morgue-other-20260101-000001.txt",
+                url="https://example.test/other-player.txt",
+                extension="txt",
+                text="other player raw text",
+                fetched_at="2026-01-01T00:00:01+00:00",
+            )
+        )
+
+        records = repository.list_raw_morgue_file_records_for_player_files(
+            "wiiwiwi",
+            [
+                "morgue-wiiwiwi-20260101-000001.txt",
+                "morgue-missing-20260101-000001.txt",
+            ],
+        )
+
+        self.assertEqual(list(records), ["morgue-wiiwiwi-20260101-000001.txt"])
+        self.assertEqual(records["morgue-wiiwiwi-20260101-000001.txt"].text, "raw text")
+
 
 def _matches_selector(document: dict, selector: dict) -> bool:
-    return all(document.get(key) == value for key, value in selector.items())
+    return all(_matches_value(document.get(key), value) for key, value in selector.items())
 
 
 def _matches_query(document: dict, query: dict) -> bool:
-    if document.get("fetch_status") != query["fetch_status"]:
-        return False
-    return any(_matches_condition(document, condition) for condition in query["$or"])
+    return all(
+        any(_matches_condition(document, condition) for condition in value)
+        if key == "$or"
+        else _matches_value(document.get(key), value)
+        for key, value in query.items()
+    )
 
 
 def _matches_condition(document: dict, condition: dict) -> bool:
@@ -155,6 +273,14 @@ def _matches_condition(document: dict, condition: dict) -> bool:
     if isinstance(expected, dict) and "$ne" in expected:
         return document.get(key) != expected["$ne"]
     return document.get(key) == expected
+
+
+def _matches_value(actual, expected) -> bool:
+    if isinstance(expected, dict) and "$in" in expected:
+        return actual in expected["$in"]
+    if isinstance(expected, dict) and "$ne" in expected:
+        return actual != expected["$ne"]
+    return actual == expected
 
 
 if __name__ == "__main__":

@@ -37,6 +37,9 @@ class FakeRepository:
         self.user_records: dict[str, CrawlUserRecord] = {}
         self.raw_records: dict[tuple[str, str], RawMorgueFileRecord] = {}
         self.replaced_sources: list[tuple[str, str, int]] = []
+        self.user_record_list_calls: list[list[str]] = []
+        self.raw_record_list_calls: list[list[str]] = []
+        self.raw_record_file_list_calls: list[tuple[str, list[str]]] = []
 
     def replace_artifacts_for_source(self, player, source_file, artifacts):
         self.replaced_sources.append((player, source_file, len(artifacts)))
@@ -59,11 +62,38 @@ class FakeRepository:
     def get_crawl_user_record(self, player):
         return self.user_records.get(player.lower())
 
+    def list_crawl_user_records(self, players):
+        self.user_record_list_calls.append(players)
+        player_keys = {player.lower() for player in players}
+        return {
+            player: record
+            for player, record in self.user_records.items()
+            if player in player_keys
+        }
+
     def save_crawl_user_record(self, record):
         self.user_records[record.player.lower()] = record
 
     def get_raw_morgue_file(self, player, source_file):
         return self.raw_records.get((player.lower(), source_file))
+
+    def list_raw_morgue_file_records_for_players(self, players):
+        self.raw_record_list_calls.append(players)
+        player_keys = {player.lower() for player in players}
+        return {
+            key: record
+            for key, record in self.raw_records.items()
+            if key[0] in player_keys
+        }
+
+    def list_raw_morgue_file_records_for_player_files(self, player, source_files):
+        self.raw_record_file_list_calls.append((player, source_files))
+        source_file_names = set(source_files)
+        return {
+            source_file: record
+            for (record_player, source_file), record in self.raw_records.items()
+            if record_player == player.lower() and source_file in source_file_names
+        }
 
     def save_raw_morgue_file(self, record):
         self.raw_records[(record.player.lower(), record.name)] = record
@@ -105,7 +135,7 @@ class CrawlWorkerTest(unittest.TestCase):
             list_files=lambda url, **kwargs: list_files_calls.append(url) or [],
         )
 
-        summary = worker.run_once()
+        summary = worker._crawl_once()
 
         self.assertEqual(summary.users_skipped_unchanged, 0)
         self.assertEqual(summary.users_scanned, 1)
@@ -135,12 +165,15 @@ class CrawlWorkerTest(unittest.TestCase):
             list_files=lambda url, **kwargs: list_files_calls.append(url) or [],
         )
 
-        summary = worker.run_once()
+        summary = worker._crawl_once()
 
         self.assertEqual(summary.users_skipped_by_date, 1)
         self.assertEqual(summary.users_skipped_unchanged, 1)
         self.assertEqual(summary.users_scanned, 1)
         self.assertEqual(list_files_calls, ["https://example.test/morgue/changed/"])
+        self.assertEqual(repository.user_record_list_calls, [["old", "same", "changed"]])
+        self.assertEqual(repository.raw_record_list_calls, [])
+        self.assertEqual(repository.raw_record_file_list_calls, [])
         self.assertEqual(repository.user_records["changed"].observed_at, "2026-Jan-03 00:00")
 
     def test_worker_stores_only_files_on_or_after_start_date(self) -> None:
@@ -172,7 +205,7 @@ class CrawlWorkerTest(unittest.TestCase):
             fetch_file_text=fetch_file_text,
         )
 
-        summary = worker.run_once()
+        summary = worker._crawl_once()
 
         self.assertEqual(fetched_urls, ["https://example.test/new.txt"])
         self.assertEqual(repository.replaced_sources, [])
@@ -193,7 +226,6 @@ class CrawlWorkerTest(unittest.TestCase):
         self.assertEqual(raw_record.scoring_version, None)
         self.assertEqual(repository.user_records["wiiwiwi"].status, "completed")
         self.assertEqual(summary.files_processed, 1)
-        self.assertEqual(summary.artifacts_imported, 0)
         self.assertEqual(len(sleeps), 3)
 
     def test_worker_stores_txt_and_lst_raw_files(self) -> None:
@@ -222,7 +254,7 @@ class CrawlWorkerTest(unittest.TestCase):
             fetch_file_text=fetch_file_text,
         )
 
-        summary = worker.run_once()
+        summary = worker._crawl_once()
 
         txt_record = repository.raw_records[("wiiwiwi", "morgue-wiiwiwi-20260101-000001.txt")]
         lst_record = repository.raw_records[("wiiwiwi", "morgue-wiiwiwi-20260101-000001.lst")]
@@ -235,7 +267,6 @@ class CrawlWorkerTest(unittest.TestCase):
         self.assertEqual(lst_record.fetch_status, FETCH_STATUS_FETCHED)
         self.assertEqual(lst_record.process_status, "pending")
         self.assertEqual(summary.files_processed, 2)
-        self.assertEqual(summary.artifacts_imported, 0)
 
     def test_worker_records_fetch_failure_without_processing_failure(self) -> None:
         repository = FakeRepository()
@@ -259,7 +290,7 @@ class CrawlWorkerTest(unittest.TestCase):
             fetch_file_text=fetch_file_text,
         )
 
-        summary = worker.run_once()
+        summary = worker._crawl_once()
 
         raw_record = repository.raw_records[("bad", "morgue-bad-20260101-000001.txt")]
         self.assertEqual(summary.users_failed, 1)
@@ -287,7 +318,7 @@ class CrawlWorkerTest(unittest.TestCase):
             list_files=list_files,
         )
 
-        summary = worker.run_once()
+        summary = worker._crawl_once()
 
         self.assertEqual(summary.users_failed, 1)
         self.assertEqual(summary.users_scanned, 1)
@@ -316,7 +347,7 @@ class CrawlWorkerTest(unittest.TestCase):
             list_files=lambda url, **kwargs: list_files_calls.append(url) or [],
         )
 
-        summary = worker.run_once()
+        summary = worker._crawl_once()
 
         self.assertEqual(summary.users_skipped_unchanged, 0)
         self.assertEqual(summary.users_scanned, 1)
@@ -356,11 +387,86 @@ class CrawlWorkerTest(unittest.TestCase):
             fetch_file_text=fake_fetch,
         )
 
-        summary = worker.run_once()
+        summary = worker._crawl_once()
 
         self.assertEqual(fetch_file_text.calls, 0)
         self.assertEqual(summary.files_processed, 0)
         self.assertEqual(summary.files_skipped_existing_raw, 1)
+
+    def test_worker_fetches_duplicate_user_file_once(self) -> None:
+        repository = FakeRepository()
+        fetch_file_text = SimpleNamespace(calls=0)
+
+        def fake_fetch(url: str, **kwargs):
+            fetch_file_text.calls += 1
+            return "raw text"
+
+        worker = CrawlWorker(
+            repository,
+            config=_config(),
+            throttle=RequestThrottle(0, sleep=lambda _seconds: None),
+            list_users=lambda *args, **kwargs: [
+                MorgueUser("wiiwiwi", "https://example.test/morgue/wiiwiwi/", "2026-Jan-02 00:00")
+            ],
+            list_files=lambda *args, **kwargs: [
+                MorgueFile(
+                    "morgue-wiiwiwi-20260101-000001.txt",
+                    "https://example.test/new.txt",
+                ),
+                MorgueFile(
+                    "morgue-wiiwiwi-20260101-000001.txt",
+                    "https://example.test/new.txt",
+                ),
+            ],
+            fetch_file_text=fake_fetch,
+        )
+
+        summary = worker._crawl_once()
+
+        self.assertEqual(fetch_file_text.calls, 1)
+        self.assertEqual(summary.files_processed, 1)
+        self.assertEqual(summary.files_skipped_existing_raw, 1)
+
+    def test_worker_retries_failed_raw_files(self) -> None:
+        repository = FakeRepository()
+        repository.save_raw_morgue_file(
+            RawMorgueFileRecord.fetch_failed(
+                player="wiiwiwi",
+                name="morgue-wiiwiwi-20260101-000001.txt",
+                url="https://example.test/new.txt",
+                extension="txt",
+                error="temporary outage",
+            )
+        )
+        fetch_file_text = SimpleNamespace(calls=0)
+
+        def fake_fetch(url: str, **kwargs):
+            fetch_file_text.calls += 1
+            return "retried raw text"
+
+        worker = CrawlWorker(
+            repository,
+            config=_config(),
+            throttle=RequestThrottle(0, sleep=lambda _seconds: None),
+            list_users=lambda *args, **kwargs: [
+                MorgueUser("wiiwiwi", "https://example.test/morgue/wiiwiwi/", "2026-Jan-02 00:00")
+            ],
+            list_files=lambda *args, **kwargs: [
+                MorgueFile(
+                    "morgue-wiiwiwi-20260101-000001.txt",
+                    "https://example.test/new.txt",
+                )
+            ],
+            fetch_file_text=fake_fetch,
+        )
+
+        summary = worker._crawl_once()
+
+        raw_record = repository.raw_records[("wiiwiwi", "morgue-wiiwiwi-20260101-000001.txt")]
+        self.assertEqual(fetch_file_text.calls, 1)
+        self.assertEqual(raw_record.text, "retried raw text")
+        self.assertEqual(raw_record.fetch_status, FETCH_STATUS_FETCHED)
+        self.assertEqual(summary.files_processed, 1)
 
     def test_worker_does_not_skip_when_only_crawl_file_cache_exists(self) -> None:
         repository = FakeRepository()
@@ -397,7 +503,7 @@ class CrawlWorkerTest(unittest.TestCase):
             fetch_file_text=fake_fetch,
         )
 
-        summary = worker.run_once()
+        summary = worker._crawl_once()
 
         raw_record = repository.raw_records[("wiiwiwi", "morgue-wiiwiwi-20260101-000001.txt")]
         self.assertEqual(fetch_file_text.calls, 1)
@@ -405,73 +511,92 @@ class CrawlWorkerTest(unittest.TestCase):
         self.assertEqual(raw_record.fetch_status, FETCH_STATUS_FETCHED)
         self.assertEqual(summary.files_processed, 1)
 
-    def test_worker_pass_processes_pending_raw_files_after_ingest(self) -> None:
+    def test_worker_loads_raw_metadata_after_listing_candidate_user_files(self) -> None:
         repository = FakeRepository()
-        calls: list[int] = []
-
-        def process_pending(repository_arg, *, limit: int):
-            self.assertIs(repository_arg, repository)
-            calls.append(limit)
-            return 7
-
-        worker = CrawlWorker(
-            repository,
-            config=_config(process_limit=12),
-            throttle=RequestThrottle(0, sleep=lambda _seconds: None),
-            list_users=lambda *args, **kwargs: [],
-            process_pending=process_pending,
-        )
-
-        summary = worker.run_pass()
-
-        self.assertEqual(calls, [12])
-        self.assertEqual(summary.crawl.users_seen, 0)
-        self.assertEqual(summary.process.artifacts_imported, 7)
-        self.assertFalse(summary.process.failed)
-
-    def test_worker_pass_records_processing_failure_without_raising(self) -> None:
-        repository = FakeRepository()
-
-        def process_pending(repository_arg, *, limit: int):
-            raise RuntimeError("parser failed")
+        events: list[str] = []
 
         worker = CrawlWorker(
             repository,
             config=_config(),
             throttle=RequestThrottle(0, sleep=lambda _seconds: None),
-            list_users=lambda *args, **kwargs: [],
-            process_pending=process_pending,
+            list_users=lambda *args, **kwargs: [
+                MorgueUser("one", "https://example.test/morgue/one/", "2026-Jan-02 00:00")
+            ],
+            list_files=lambda *args, **kwargs: events.append("list_files")
+            or [
+                MorgueFile(
+                    "morgue-one-20251231-235959.txt",
+                    "https://example.test/old.txt",
+                ),
+                MorgueFile(
+                    "morgue-one-20260101-000001.txt",
+                    "https://example.test/new.txt",
+                ),
+                MorgueFile(
+                    "morgue-one-20260101-000001.txt",
+                    "https://example.test/new.txt",
+                ),
+            ],
+            fetch_file_text=lambda *args, **kwargs: "raw text",
+        )
+        original_user_records = repository.list_crawl_user_records
+        original_raw_records = repository.list_raw_morgue_file_records_for_player_files
+
+        def list_crawl_user_records(players):
+            events.append("list_user_records")
+            return original_user_records(players)
+
+        def list_raw_morgue_file_records_for_player_files(player, source_files):
+            events.append("list_raw_records")
+            return original_raw_records(player, source_files)
+
+        repository.list_crawl_user_records = list_crawl_user_records
+        repository.list_raw_morgue_file_records_for_player_files = (
+            list_raw_morgue_file_records_for_player_files
         )
 
-        summary = worker.run_pass()
+        worker._crawl_once()
 
-        self.assertTrue(summary.process.failed)
-        self.assertEqual(summary.process.error, "parser failed")
+        self.assertEqual(
+            events,
+            ["list_user_records", "list_files", "list_raw_records"],
+        )
+        self.assertEqual(repository.user_record_list_calls, [["one"]])
+        self.assertEqual(repository.raw_record_list_calls, [])
+        self.assertEqual(
+            repository.raw_record_file_list_calls,
+            [("one", ["morgue-one-20260101-000001.txt"])],
+        )
 
-    def test_worker_pass_skips_processing_when_limit_is_zero(self) -> None:
+    def test_run_forever_reports_raw_ingest_only(self) -> None:
         repository = FakeRepository()
-        calls = SimpleNamespace(count=0)
+        captured_summaries = []
 
-        def process_pending(repository_arg, *, limit: int):
-            calls.count += 1
-            return 1
+        def list_users(*args, **kwargs):
+            worker.request_stop()
+            return []
 
         worker = CrawlWorker(
             repository,
-            config=_config(process_limit=0),
+            config=_config(),
             throttle=RequestThrottle(0, sleep=lambda _seconds: None),
-            list_users=lambda *args, **kwargs: [],
-            process_pending=process_pending,
+            list_users=list_users,
         )
 
-        summary = worker.run_pass()
+        with patch(
+            "crawl_service.worker.crawl_pass_message",
+            side_effect=lambda summary: captured_summaries.append(summary) or "logged",
+        ):
+            worker.run_forever()
 
-        self.assertEqual(calls.count, 0)
-        self.assertEqual(summary.process.artifacts_imported, 0)
+        self.assertEqual(len(captured_summaries), 1)
+        summary = captured_summaries[0]
+        self.assertEqual(summary.crawl.users_seen, 0)
+        self.assertFalse(hasattr(summary, "process"))
 
-    def test_config_from_env_reads_process_limit(self) -> None:
-        with patch.dict("os.environ", {"CRAWL_PROCESS_LIMIT": "25"}, clear=False):
-            self.assertEqual(config_from_env().process_limit, 25)
+    def test_config_from_env_defaults_to_weekly_loop_interval(self) -> None:
+        with patch.dict("os.environ", {}, clear=True):
+            self.assertEqual(config_from_env().loop_interval_seconds, 604_800)
 
     def test_process_pending_raw_files_rebuilds_artifacts_without_fetching(self) -> None:
         repository = FakeRepository()
@@ -505,7 +630,6 @@ class CrawlWorkerTest(unittest.TestCase):
 def _config(
     request_delay_seconds: float = 0,
     user_skip_mode: str = "conservative",
-    process_limit: int = 100,
 ) -> CrawlWorkerConfig:
     return CrawlWorkerConfig(
         base_url="https://example.test/morgue/",
@@ -513,7 +637,6 @@ def _config(
         request_delay_seconds=request_delay_seconds,
         loop_interval_seconds=10_800,
         user_skip_mode=user_skip_mode,
-        process_limit=process_limit,
     )
 
 
