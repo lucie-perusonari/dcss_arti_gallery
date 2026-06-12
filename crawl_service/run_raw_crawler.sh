@@ -28,7 +28,7 @@ if [ "$DETACH" = "1" ]; then
       exit 0
     fi
   fi
-  setsid python3 -u -m crawl_service.worker > "$LOG_FILE" 2>&1 < /dev/null &
+  setsid python3 -u -m crawl_service.cli.worker > "$LOG_FILE" 2>&1 < /dev/null &
   worker_pid=$!
   printf '%s\n' "$worker_pid" > "$PID_FILE"
   echo "Raw morgue crawler started in background."
@@ -44,4 +44,4 @@ echo "  Raw collection: $MONGODB_RAW_FILES_COLLECTION"
 echo "  Mode: raw ingest only"
 echo "Press Ctrl-C to stop."
 
-exec python3 -u -m crawl_service.worker
+exec python3 -u -m crawl_service.cli.worker

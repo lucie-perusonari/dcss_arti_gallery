@@ -22,12 +22,12 @@ from __future__ import annotations
 import sys
 from datetime import UTC, datetime
 
-from crawl_service.processor import (
+from crawl_service.core.processor import (
     CURRENT_PARSER_VERSION,
     CURRENT_SCORING_VERSION,
     process_raw_morgue_file,
 )
-from crawl_service.repository import repository_from_env
+from crawl_service.core.repository import repository_from_env
 
 
 def utc_now() -> str:
