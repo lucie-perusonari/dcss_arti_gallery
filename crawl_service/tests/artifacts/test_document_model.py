@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import unittest
 
-from crawl_service.domain.documents.builder import ArtifactDocument
-from crawl_service.tests.domain.documents.helpers import artifact_document
+from crawl_service.artifacts.models import ArtifactDocument
+from crawl_service.tests.artifacts.helpers import artifact_document
 
 
-class DocumentBuilderTest(unittest.TestCase):
-    def test_document_builder_uses_artifact_shaped_input(self) -> None:
+class DocumentModelTest(unittest.TestCase):
+    def test_document_model_uses_artifact_shaped_input(self) -> None:
         document = artifact_document()
 
         self.assertIsInstance(document, ArtifactDocument)
@@ -17,7 +17,7 @@ class DocumentBuilderTest(unittest.TestCase):
         self.assertEqual(document.source.player, "wiiwiwi")
         self.assertEqual(document.evaluation.total, 42)
 
-    def test_document_builder_stores_canonical_snake_case_fields(self) -> None:
+    def test_document_model_stores_canonical_snake_case_fields(self) -> None:
         document = artifact_document(
             name='the +6 broad axe "Axe" {heavy Slay+3 rF+ *Slow}',
             base_item="broad axe",

@@ -5,14 +5,14 @@ from datetime import date
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from crawl_service.tests.domain.documents.helpers import artifact_document
+from crawl_service.tests.artifacts.helpers import artifact_document
 from crawl_service.morgue.types import MorgueFile, MorgueUser
-from crawl_service.processor import (
+from crawl_service.core.processor import (
     CURRENT_PARSER_VERSION,
     CURRENT_SCORING_VERSION,
     process_pending_raw_morgue_files,
 )
-from crawl_service.repository import (
+from crawl_service.core.repository import (
     CrawlFileRecord,
     CrawlUserRecord,
     FETCH_STATUS_FAILED,
@@ -21,7 +21,7 @@ from crawl_service.repository import (
     PROCESS_STATUS_PROCESSED,
     RawMorgueFileRecord,
 )
-from crawl_service.worker import (
+from crawl_service.cli.worker import (
     CrawlWorker,
     CrawlWorkerConfig,
     RequestThrottle,
@@ -584,7 +584,7 @@ class CrawlWorkerTest(unittest.TestCase):
         )
 
         with patch(
-            "crawl_service.worker.crawl_pass_message",
+            "crawl_service.cli.worker.crawl_pass_message",
             side_effect=lambda summary: captured_summaries.append(summary) or "logged",
         ):
             worker.run_forever()
@@ -616,8 +616,12 @@ class CrawlWorkerTest(unittest.TestCase):
             attributes=["rCorr", "AC+4"],
         )
 
-        with patch("crawl_service.processor.artifact_documents_from_raw_text", return_value=[document]):
-            artifact_count = process_pending_raw_morgue_files(repository)
+        artifact_count = process_pending_raw_morgue_files(
+            repository,
+            artifact_processor=SimpleNamespace(
+                documents_from_raw_text=lambda _raw_text: [document]
+            ),
+        )
 
         raw_record = repository.raw_records[("wiiwiwi", "morgue-wiiwiwi-20260101-000001.txt")]
         self.assertEqual(artifact_count, 1)

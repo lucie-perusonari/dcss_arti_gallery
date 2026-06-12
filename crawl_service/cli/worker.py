@@ -18,17 +18,15 @@ from crawl_service.morgue.fetcher import (
     fetch_morgue_users,
 )
 from crawl_service.morgue.types import MorgueFile, MorgueUser
-from crawl_service.observability import (
-    CrawlProcessSummary,
+from crawl_service.core.observability import (
     CrawlServicePassSummary,
     configure_logging,
     crawl_pass_message,
     get_logger,
 )
-from crawl_service.processor import process_pending_raw_morgue_files
-from crawl_service.repository import (
-    CrawlArtifactRepository,
+from crawl_service.core.repository import (
     CrawlFileRecord,
+    CrawlIngestRepository,
     CrawlUserRecord,
     FETCH_STATUS_FETCHED,
     RawMorgueFileRecord,
@@ -40,7 +38,6 @@ DEFAULT_MORGUE_BASE_URL = "https://archive.nemelex.cards/morgue"
 DEFAULT_CRAWL_START_DATE = date(2026, 1, 1)
 DEFAULT_REQUEST_DELAY_SECONDS = 1.0
 DEFAULT_LOOP_INTERVAL_SECONDS = 604_800.0
-DEFAULT_PROCESS_LIMIT = 100
 USER_SKIP_MODE_CONSERVATIVE = "conservative"
 USER_SKIP_MODE_MODIFIED_AT = "modified_at"
 MORGUE_FILE_STAMP_RE = re.compile(
@@ -60,12 +57,11 @@ class CrawlWorkerConfig:
     timeout: float = DEFAULT_TIMEOUT
     user_agent: str = DEFAULT_USER_AGENT
     user_skip_mode: str = USER_SKIP_MODE_CONSERVATIVE
-    process_limit: int = DEFAULT_PROCESS_LIMIT
 
 
 @dataclass(frozen=True)
 class CrawlWorkerRunSummary:
-    """One full root-lis    t scan summary."""
+    """One full root-list scan summary."""
 
     users_seen: int = 0
     users_skipped_by_date: int = 0
@@ -74,7 +70,6 @@ class CrawlWorkerRunSummary:
     users_failed: int = 0
     files_processed: int = 0
     files_skipped_existing_raw: int = 0
-    artifacts_imported: int = 0
 
 
 @dataclass(frozen=True)
@@ -83,7 +78,6 @@ class _UserScanSummary:
 
     files_processed: int = 0
     files_skipped_existing_raw: int = 0
-    artifacts_imported: int = 0
 
 
 class RequestThrottle:
@@ -107,14 +101,13 @@ class CrawlWorker:
 
     def __init__(
         self,
-        repository: CrawlArtifactRepository,
+        repository: CrawlIngestRepository,
         config: CrawlWorkerConfig | None = None,
         throttle: RequestThrottle | None = None,
         sleep: Callable[[float], None] = time.sleep,
         list_users: Callable[..., list[MorgueUser]] = fetch_morgue_users,
         list_files: Callable[..., list[MorgueFile]] = fetch_morgue_files,
         fetch_file_text: Callable[..., str] = fetch_morgue_file_text,
-        process_pending: Callable[..., int] = process_pending_raw_morgue_files,
     ) -> None:
         self.repository = repository
         self.config = config or CrawlWorkerConfig()
@@ -126,7 +119,6 @@ class CrawlWorker:
         self.list_users = list_users
         self.list_files = list_files
         self.fetch_file_text = fetch_file_text
-        self.process_pending = process_pending
         self.logger = get_logger(__name__)
         self._stop_requested = False
 
@@ -135,23 +127,13 @@ class CrawlWorker:
 
     def run_forever(self) -> None:
         while not self._stop_requested:
-            summary = self.run_pass()
+            started_at = time.monotonic()
+            crawl_summary = self._crawl_once()
+            summary = _pass_summary(started_at, crawl_summary)
             self.logger.info(crawl_pass_message(summary))
-            if summary.process.error:
-                self.logger.warning("Processing pass failed: %s", summary.process.error)
             self._sleep_until_next_pass()
 
-    def run_pass(self) -> CrawlServicePassSummary:
-        started_at = time.monotonic()
-        crawl_summary = self.run_once()
-        process_summary = self._process_pending_raw_files()
-        return CrawlServicePassSummary(
-            crawl=crawl_summary,
-            process=process_summary,
-            duration_seconds=time.monotonic() - started_at,
-        )
-
-    def run_once(self) -> CrawlWorkerRunSummary:
+    def _crawl_once(self) -> CrawlWorkerRunSummary:
         self.throttle.wait()
         users = self.list_users(
             self.config.base_url,
@@ -159,24 +141,27 @@ class CrawlWorker:
             user_agent=self.config.user_agent,
         )
 
-        users_skipped_by_date = 0
-        users_skipped_unchanged = 0
         users_scanned = 0
         users_failed = 0
         files_processed = 0
         files_skipped_existing_raw = 0
-        artifacts_imported = 0
+        user_records = self._load_user_records(users)
+        users_skipped_by_date = 0
+        users_skipped_unchanged = 0
+        users_to_scan: list[MorgueUser] = []
 
         for user in users:
-            if self._stop_requested:
-                break
             if not _index_date_is_on_or_after(user.modified_at, self.config.start_date):
                 users_skipped_by_date += 1
                 continue
-            if self._user_is_unchanged(user):
+            if self._user_is_unchanged(user, user_records):
                 users_skipped_unchanged += 1
                 continue
+            users_to_scan.append(user)
 
+        for user in users_to_scan:
+            if self._stop_requested:
+                break
             try:
                 summary = self._scan_user(user)
             except Exception as exc:
@@ -187,12 +172,11 @@ class CrawlWorker:
             users_scanned += 1
             files_processed += summary.files_processed
             files_skipped_existing_raw += summary.files_skipped_existing_raw
-            artifacts_imported += summary.artifacts_imported
             self._save_user_record(
                 user,
                 status="completed",
                 processed_files=summary.files_processed,
-                artifact_count=summary.artifacts_imported,
+                artifact_count=0,
             )
 
         return CrawlWorkerRunSummary(
@@ -203,8 +187,11 @@ class CrawlWorker:
             users_failed=users_failed,
             files_processed=files_processed,
             files_skipped_existing_raw=files_skipped_existing_raw,
-            artifacts_imported=artifacts_imported,
         )
+
+    def _load_user_records(self, users: list[MorgueUser]) -> dict[str, CrawlUserRecord]:
+        players = [user.nickname for user in users]
+        return self.repository.list_crawl_user_records(players)
 
     def _scan_user(self, user: MorgueUser) -> _UserScanSummary:
         self.throttle.wait()
@@ -213,68 +200,65 @@ class CrawlWorker:
             timeout=self.config.timeout,
             user_agent=self.config.user_agent,
         )
-        selected_files = [
+        candidate_files, duplicate_files = self._candidate_files(files)
+        raw_file_records = self._load_raw_file_records(user, candidate_files)
+        files_to_fetch = [
             file
-            for file in files
-            if _morgue_file_date_is_on_or_after(file.name, self.config.start_date)
+            for file in candidate_files
+            if not _raw_file_is_fetched(raw_file_records.get(file.name))
         ]
+        fetched_raw_files = len(candidate_files) - len(files_to_fetch)
+        files_processed = self._fetch_user_files(user, files_to_fetch)
+        return _UserScanSummary(
+            files_processed=files_processed,
+            files_skipped_existing_raw=duplicate_files + fetched_raw_files,
+        )
 
+    def _candidate_files(self, files: list[MorgueFile]) -> tuple[list[MorgueFile], int]:
+        candidate_files: list[MorgueFile] = []
+        duplicate_files = 0
+        seen_file_names: set[str] = set()
+        for file in files:
+            if not _morgue_file_date_is_on_or_after(file.name, self.config.start_date):
+                continue
+            if file.name in seen_file_names:
+                duplicate_files += 1
+                continue
+            candidate_files.append(file)
+            seen_file_names.add(file.name)
+        return candidate_files, duplicate_files
+
+    def _load_raw_file_records(
+        self,
+        user: MorgueUser,
+        files: list[MorgueFile],
+    ) -> dict[str, RawMorgueFileRecord]:
+        source_files = [file.name for file in files]
+        if not source_files:
+            return {}
+        return self.repository.list_raw_morgue_file_records_for_player_files(
+            user.nickname,
+            source_files,
+        )
+
+    def _fetch_user_files(
+        self,
+        user: MorgueUser,
+        files: list[MorgueFile],
+    ) -> int:
         files_processed = 0
-        files_skipped_existing_raw = 0
-        artifacts_imported = 0
-        for file in selected_files:
+        for file in files:
             if self._stop_requested:
                 break
-            if _is_completed_file(self.repository, user.nickname, file.name):
-                files_skipped_existing_raw += 1
-                continue
-
             self.throttle.wait()
             try:
                 self._ingest_file(user, file)
-                self.repository.save_crawl_file_record(
-                    CrawlFileRecord(
-                        player=user.nickname,
-                        name=file.name,
-                        url=file.url,
-                        status="completed",
-                        artifact_count=0,
-                        processed_at=_utc_now(),
-                        error=None,
-                    )
-                )
+                self._save_file_record(user, file, status="completed")
             except Exception as exc:
-                self.repository.save_crawl_file_record(
-                    CrawlFileRecord(
-                        player=user.nickname,
-                        name=file.name,
-                        url=file.url,
-                        status="failed",
-                        artifact_count=0,
-                        processed_at=_utc_now(),
-                        error=str(exc),
-                    )
-                )
+                self._save_file_record(user, file, status="failed", error=str(exc))
                 raise
             files_processed += 1
-
-        return _UserScanSummary(
-            files_processed=files_processed,
-            files_skipped_existing_raw=files_skipped_existing_raw,
-            artifacts_imported=artifacts_imported,
-        )
-
-    def _process_pending_raw_files(self) -> CrawlProcessSummary:
-        if self.config.process_limit <= 0:
-            return CrawlProcessSummary()
-        try:
-            artifacts_imported = self.process_pending(
-                self.repository,
-                limit=self.config.process_limit,
-            )
-        except Exception as exc:
-            return CrawlProcessSummary(failed=True, error=str(exc))
-        return CrawlProcessSummary(artifacts_imported=artifacts_imported)
+        return files_processed
 
     def _ingest_file(self, user: MorgueUser, file: MorgueFile) -> RawMorgueFileRecord:
         try:
@@ -305,14 +289,37 @@ class CrawlWorker:
         self.repository.save_raw_morgue_file(raw_file)
         return raw_file
 
-    def _user_is_unchanged(self, user: MorgueUser) -> bool:
+    def _user_is_unchanged(
+        self,
+        user: MorgueUser,
+        user_records: dict[str, CrawlUserRecord],
+    ) -> bool:
         if self.config.user_skip_mode != USER_SKIP_MODE_MODIFIED_AT:
             return False
-        record = self.repository.get_crawl_user_record(user.nickname)
+        record = user_records.get(_player_key(user.nickname))
         return (
             record is not None
             and record.status == "completed"
             and record.observed_at == user.modified_at
+        )
+
+    def _save_file_record(
+        self,
+        user: MorgueUser,
+        file: MorgueFile,
+        status: str,
+        error: str | None = None,
+    ) -> None:
+        self.repository.save_crawl_file_record(
+            CrawlFileRecord(
+                player=user.nickname,
+                name=file.name,
+                url=file.url,
+                status=status,
+                artifact_count=0,
+                processed_at=_utc_now(),
+                error=error,
+            )
         )
 
     def _save_user_record(
@@ -361,7 +368,6 @@ def config_from_env() -> CrawlWorkerConfig:
         timeout=_float_from_env("MORGUE_REQUEST_TIMEOUT_SECONDS", DEFAULT_TIMEOUT),
         user_agent=os.environ.get("MORGUE_USER_AGENT", DEFAULT_USER_AGENT),
         user_skip_mode=_user_skip_mode_from_env(),
-        process_limit=_int_from_env("CRAWL_PROCESS_LIMIT", DEFAULT_PROCESS_LIMIT),
     )
 
 
@@ -373,15 +379,14 @@ def main() -> None:
     worker.run_forever()
 
 
-def _is_completed_file(
-    repository: CrawlArtifactRepository,
-    nickname: str,
-    source_file: str,
-) -> bool:
-    raw_file = repository.get_raw_morgue_file(nickname, source_file)
-    if raw_file is not None:
-        return raw_file.fetch_status == FETCH_STATUS_FETCHED
-    return False
+def _pass_summary(
+    started_at: float,
+    crawl_summary: CrawlWorkerRunSummary,
+) -> CrawlServicePassSummary:
+    return CrawlServicePassSummary(
+        crawl=crawl_summary,
+        duration_seconds=time.monotonic() - started_at,
+    )
 
 
 def _index_date_is_on_or_after(value: str, start_date: date) -> bool:
@@ -399,6 +404,10 @@ def _morgue_file_date_is_on_or_after(name: str, start_date: date) -> bool:
     return file_date >= start_date
 
 
+def _raw_file_is_fetched(raw_file: RawMorgueFileRecord | None) -> bool:
+    return raw_file is not None and raw_file.fetch_status == FETCH_STATUS_FETCHED
+
+
 def _date_from_env(name: str, default: date) -> date:
     configured = os.environ.get(name)
     if not configured:
@@ -413,13 +422,6 @@ def _float_from_env(name: str, default: float) -> float:
     return max(float(configured), 0.0)
 
 
-def _int_from_env(name: str, default: int) -> int:
-    configured = os.environ.get(name)
-    if not configured:
-        return default
-    return max(int(configured), 0)
-
-
 def _user_skip_mode_from_env() -> str:
     configured = os.environ.get("CRAWL_USER_SKIP_MODE", USER_SKIP_MODE_CONSERVATIVE)
     if configured == USER_SKIP_MODE_MODIFIED_AT:
@@ -429,6 +431,10 @@ def _user_skip_mode_from_env() -> str:
 
 def _utc_now() -> str:
     return datetime.now(UTC).isoformat()
+
+
+def _player_key(player: str) -> str:
+    return player.strip().lower()
 
 
 if __name__ == "__main__":

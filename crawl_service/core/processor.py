@@ -4,15 +4,12 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from crawl_service.domain.artifacts.classifier import build_random_artifact
-from crawl_service.domain.artifacts.filter import is_random_artifact_info
-from crawl_service.domain.artifacts.info_parser import parse_artifact_info
-from crawl_service.domain.artifacts.raw_parser import get_artifact_raw_info
-from crawl_service.domain.artifacts.types import ArtifactRawTextInput
-from crawl_service.domain.documents.builder import ArtifactDocument, build_artifact_document
-from crawl_service.domain.evaluation.evaluator import evaluate_artifact
+from crawl_service.artifacts.models import (
+    ArtifactDocument,
+)
+from crawl_service.artifacts.extractor import extract_artifact_documents
 from crawl_service.morgue.types import MorgueRawText
-from crawl_service.repository import (
+from crawl_service.core.repository import (
     CrawlArtifactRepository,
     PROCESS_STATUS_FAILED,
     PROCESS_STATUS_PROCESSED,
@@ -24,22 +21,32 @@ CURRENT_PARSER_VERSION = "artifact-parser-v1"
 CURRENT_SCORING_VERSION = "artifact-scoring-v1"
 
 
+class ArtifactProcessor:
+    """Build storage-ready artifact documents from one raw morgue text."""
+
+    def documents_from_raw_text(self, raw_text: MorgueRawText) -> list[ArtifactDocument]:
+        """Convert one fetched morgue text into sorted storage documents."""
+        return extract_artifact_documents(raw_text)
+
+
 def process_raw_morgue_file(
     repository: CrawlArtifactRepository,
     raw_file: RawMorgueFileRecord,
     *,
     processed_at: str,
+    artifact_processor: ArtifactProcessor | None = None,
 ) -> int:
     """Refresh derived artifact documents from one persisted raw morgue file."""
 
     try:
+        processor = artifact_processor or ArtifactProcessor()
         raw_text = MorgueRawText(
             name=raw_file.name,
             url=raw_file.url,
             extension=raw_file.extension,
             text=raw_file.text,
         )
-        documents = artifact_documents_from_raw_text(raw_text)
+        documents = processor.documents_from_raw_text(raw_text)
         repository.replace_artifacts_for_source(raw_file.player, raw_file.name, documents)
         repository.save_raw_morgue_file(
             RawMorgueFileRecord(
@@ -88,9 +95,11 @@ def process_pending_raw_morgue_files(
     repository: CrawlArtifactRepository,
     *,
     limit: int = 100,
+    artifact_processor: ArtifactProcessor | None = None,
 ) -> int:
     """Process fetched raw files whose derived artifact documents are stale or missing."""
 
+    processor = artifact_processor or ArtifactProcessor()
     artifact_count = 0
     raw_files = repository.list_raw_morgue_files_for_processing(
         parser_version=CURRENT_PARSER_VERSION,
@@ -102,33 +111,9 @@ def process_pending_raw_morgue_files(
             repository,
             raw_file,
             processed_at=_utc_now(),
+            artifact_processor=processor,
         )
     return artifact_count
-
-
-def artifact_documents_from_raw_text(raw_text: MorgueRawText) -> list[ArtifactDocument]:
-    """Convert one fetched morgue text into sorted storage documents."""
-
-    documents_by_id: dict[str, ArtifactDocument] = {}
-    raw_input = ArtifactRawTextInput(
-        name=raw_text.name,
-        url=raw_text.url,
-        extension=raw_text.extension,
-        text=raw_text.text,
-    )
-    for raw_info in get_artifact_raw_info(raw_input):
-        artifact_info = parse_artifact_info(raw_info)
-        if not is_random_artifact_info(artifact_info):
-            continue
-        random_artifact = build_random_artifact(artifact_info)
-        evaluation = evaluate_artifact(random_artifact)
-        document = build_artifact_document(random_artifact, evaluation)
-        documents_by_id[document.id] = document
-    return sorted(
-        documents_by_id.values(),
-        key=lambda document: document.evaluation.total,
-        reverse=True,
-    )
 
 
 def _utc_now() -> str:

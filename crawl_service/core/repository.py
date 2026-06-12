@@ -8,7 +8,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Protocol
 
-from crawl_service.domain.documents.builder import ArtifactDocument
+from crawl_service.artifacts.models import ArtifactDocument
 
 
 DEFAULT_MONGO_URI = "mongodb://localhost:27017"

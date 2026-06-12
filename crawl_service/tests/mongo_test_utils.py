@@ -6,7 +6,7 @@ import time
 import uuid
 from pathlib import Path
 
-from crawl_service.repository import create_mongo_crawl_repository
+from crawl_service.core.repository import create_mongo_crawl_repository
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]

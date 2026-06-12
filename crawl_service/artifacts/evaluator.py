@@ -2,55 +2,61 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any
-
-from crawl_service.domain.constants import (
+from crawl_service.artifacts.property_parser import parse_property_token
+from crawl_service.artifacts.constants import (
     GOOD_BASE_ITEMS,
     GOOD_BRANDS,
     PENALTY_SCORES,
-    SIGNED_PROPERTY_RE,
     SPELL_SCHOOL_KEYS,
     TOP_BASE_ITEMS,
     UTILITY_SCORES,
 )
+from crawl_service.artifacts.models import ArtifactDocumentEvaluation
 
 
-@dataclass(frozen=True)
-class ArtifactEvaluation:
-    """Shallow evaluation result for one random artifact."""
+def evaluate_artifact_data(
+    *,
+    base_item: str,
+    enchantment: int | None,
+    item_class: str,
+    armour_slot: str | None,
+    jewellery_slot: str | None,
+    random_attributes: list[str],
+) -> ArtifactDocumentEvaluation:
+    """Evaluate artifact fields into the document evaluation shape."""
 
-    total: int
-    practical_score: int
-    rarity_score: int
-    offense: int
-    defense: int
-    utility: int
-    penalty: int
-    base_fit: int
-    grade: str
-    luxury_grade: str
-
-
-def evaluate_artifact(artifact: Any) -> ArtifactEvaluation:
-    """Evaluate an artifact using only RandomArtifact.random_attributes."""
-
-    random_attributes = artifact.random_attributes
     offense = _offense_score(random_attributes)
     defense = _defense_score(random_attributes)
     utility = _utility_score(random_attributes)
     penalty_points = _penalty_points(random_attributes)
-    base_fit = _base_fit_score(artifact, random_attributes)
+    base_fit = _base_fit_score(
+        base_item=base_item,
+        enchantment=enchantment,
+        item_class=item_class,
+        armour_slot=armour_slot,
+        jewellery_slot=jewellery_slot,
+        random_attributes=random_attributes,
+    )
     power = min(30, offense + defense + utility)
     synergy = _synergy_score(random_attributes)
     purity = _clamp(15 - penalty_points - _junk_points(random_attributes), 0, 15)
     flex = _flex_score(random_attributes, power, penalty_points)
     timing = 2
     untyped_total = round(base_fit + power + synergy + purity + flex + timing)
-    total = _clamp(round(untyped_total * _type_multiplier(artifact)), 0, 100)
-    rarity = _rarity_score(artifact, random_attributes, penalty_points)
+    total = _clamp(
+        round(untyped_total * _type_multiplier(item_class, armour_slot)),
+        0,
+        100,
+    )
+    rarity = _rarity_score(
+        enchantment=enchantment,
+        item_class=item_class,
+        armour_slot=armour_slot,
+        attributes=random_attributes,
+        penalty_points=penalty_points,
+    )
 
-    return ArtifactEvaluation(
+    return ArtifactDocumentEvaluation(
         total=total,
         practical_score=total,
         rarity_score=rarity,
@@ -65,36 +71,44 @@ def evaluate_artifact(artifact: Any) -> ArtifactEvaluation:
 
 
 def _base_fit_score(
-    artifact: Any,
+    *,
+    base_item: str,
+    enchantment: int | None,
+    item_class: str,
+    armour_slot: str | None,
+    jewellery_slot: str | None,
     random_attributes: list[str],
 ) -> int:
-    slot_value = _slot_value(artifact)
-    base_item = artifact.base_item.lower()
-    if base_item in TOP_BASE_ITEMS:
+    slot_value = _slot_value(item_class, armour_slot, jewellery_slot)
+    normalized_base_item = base_item.lower()
+    if normalized_base_item in TOP_BASE_ITEMS:
         base_item_value = 6
-    elif base_item in GOOD_BASE_ITEMS or artifact.item_class == "jewellery":
+    elif normalized_base_item in GOOD_BASE_ITEMS or item_class == "jewellery":
         base_item_value = 4
-    elif artifact.item_class == "unknown":
+    elif item_class == "unknown":
         base_item_value = 0
     else:
         base_item_value = 2
 
-    enchantment = artifact.enchantment
     enchant_value = 0 if enchantment is None else min(5, max(0, enchantment))
     brand_value = _brand_value(random_attributes)
     return _clamp(slot_value + base_item_value + enchant_value + brand_value, 0, 20)
 
 
-def _slot_value(artifact: Any) -> int:
-    if artifact.item_class == "jewellery":
-        return 7 if artifact.jewellery_slot == "amulet" else 6
-    if artifact.item_class == "armour":
-        if artifact.armour_slot in {"cloak", "boots", "gloves", "helmet"}:
+def _slot_value(
+    item_class: str,
+    armour_slot: str | None,
+    jewellery_slot: str | None,
+) -> int:
+    if item_class == "jewellery":
+        return 7 if jewellery_slot == "amulet" else 6
+    if item_class == "armour":
+        if armour_slot in {"cloak", "boots", "gloves", "helmet"}:
             return 6
         return 5
-    if artifact.item_class == "weapon":
+    if item_class == "weapon":
         return 5
-    if artifact.item_class in {"staff", "talisman"}:
+    if item_class in {"staff", "talisman"}:
         return 4
     return 0
 
@@ -235,13 +249,16 @@ def _flex_score(
 
 
 def _rarity_score(
-    artifact: Any,
+    *,
+    enchantment: int | None,
+    item_class: str,
+    armour_slot: str | None,
     attributes: list[str],
     penalty_points: int,
 ) -> int:
     """Score rare luxury signals, excluding intrinsic base item properties."""
 
-    score = _enchantment_rarity_score(artifact)
+    score = _enchantment_rarity_score(enchantment, item_class, armour_slot)
     parsed = [_key_value(attribute) for attribute in attributes]
     parsed_values = {key: value for key, value in parsed}
 
@@ -250,7 +267,7 @@ def _rarity_score(
         score += 45
     elif slay >= 4:
         score += 25
-    elif slay >= 3 and _high_value_slot(artifact):
+    elif slay >= 3 and _high_value_slot(item_class, armour_slot):
         score += 15
 
     resist_count = _positive_resist_count(parsed_values)
@@ -259,10 +276,10 @@ def _rarity_score(
     elif resist_count >= 3:
         score += 20
 
-    if slay >= 3 and _high_value_slot(artifact):
+    if slay >= 3 and _high_value_slot(item_class, armour_slot):
         score += 15
 
-    if artifact.item_class == "jewellery" and slay > 0:
+    if item_class == "jewellery" and slay > 0:
         has_stat = any(_int_value(parsed_values.get(key)) > 0 for key in {"Str", "Int", "Dex"})
         has_defense = resist_count > 0 or _int_value(parsed_values.get("Will")) > 0
         if has_stat and has_defense:
@@ -280,12 +297,15 @@ def _rarity_score(
     return _clamp(score, 0, 100)
 
 
-def _enchantment_rarity_score(artifact: Any) -> int:
-    enchantment = artifact.enchantment
+def _enchantment_rarity_score(
+    enchantment: int | None,
+    item_class: str,
+    armour_slot: str | None,
+) -> int:
     if enchantment is None or enchantment <= 0:
         return 0
 
-    if artifact.item_class == "weapon":
+    if item_class == "weapon":
         if enchantment >= 9:
             return 30
         if enchantment >= 7:
@@ -294,10 +314,10 @@ def _enchantment_rarity_score(artifact: Any) -> int:
             return 10
         return 0
 
-    if artifact.item_class != "armour":
+    if item_class != "armour":
         return 0
 
-    if artifact.armour_slot in {"cloak", "boots", "gloves", "helmet"}:
+    if armour_slot in {"cloak", "boots", "gloves", "helmet"}:
         if enchantment >= 4:
             return 25
         if enchantment >= 2:
@@ -315,10 +335,10 @@ def _enchantment_rarity_score(artifact: Any) -> int:
     return 0
 
 
-def _high_value_slot(artifact: Any) -> bool:
-    if artifact.item_class == "jewellery":
+def _high_value_slot(item_class: str, armour_slot: str | None) -> bool:
+    if item_class == "jewellery":
         return True
-    return artifact.item_class == "armour" and artifact.armour_slot in {
+    return item_class == "armour" and armour_slot in {
         "cloak",
         "boots",
         "gloves",
@@ -341,14 +361,14 @@ def _int_value(value: int | bool | None) -> int:
     return value if isinstance(value, int) and not isinstance(value, bool) else 0
 
 
-def _type_multiplier(artifact: Any) -> float:
-    if artifact.item_class == "jewellery":
+def _type_multiplier(item_class: str, armour_slot: str | None) -> float:
+    if item_class == "jewellery":
         return 1.05
-    if artifact.item_class == "armour":
-        if artifact.armour_slot in {"cloak", "boots", "gloves", "helmet"}:
+    if item_class == "armour":
+        if armour_slot in {"cloak", "boots", "gloves", "helmet"}:
             return 1.05
         return 0.98
-    if artifact.item_class in {"staff", "talisman"}:
+    if item_class in {"staff", "talisman"}:
         return 0.95
     return 1.0
 
@@ -382,22 +402,7 @@ def _luxury_grade(practical_score: int, rarity_score: int) -> str:
 
 
 def _key_value(token: str) -> tuple[str, int | bool | None]:
-    signed_match = SIGNED_PROPERTY_RE.match(token)
-    if signed_match:
-        return signed_match.group("key"), int(signed_match.group("value"))
-
-    for key in ("rF", "rC", "rN", "Will"):
-        if token.startswith(key) and set(token[len(key) :]) <= {"+", "-"}:
-            suffix = token[len(key) :]
-            if suffix:
-                sign = -1 if suffix[0] == "-" else 1
-                return key, sign * len(suffix)
-
-    for key in ("RegenMP", "Regen"):
-        if token == f"{key}+":
-            return key, True
-
-    return token, True
+    return parse_property_token(token)
 
 
 def _is_negative(token: str) -> bool:

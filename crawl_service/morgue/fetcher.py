@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import posixpath
-import re
 import time
 import urllib.parse
 from collections.abc import Callable, Iterable
@@ -11,14 +10,12 @@ from collections.abc import Callable, Iterable
 import requests
 from bs4 import BeautifulSoup
 
-from crawl_service.morgue.types import MorgueFile, MorgueRawText, MorgueUser
-
-
-DEFAULT_TIMEOUT = 20.0
-DEFAULT_USER_AGENT = "dcss-arti-gallery-crawler/0.1"
-MORGUE_FILE_RE = re.compile(
-    r"^\.?morgue-(?P<player>.+?)-(?P<stamp>\d{8}-\d{6})\.(?P<ext>txt|lst)$"
+from crawl_service.morgue.constants import (
+    DEFAULT_TIMEOUT,
+    DEFAULT_USER_AGENT,
+    MORGUE_FILE_RE,
 )
+from crawl_service.morgue.types import MorgueFile, MorgueRawText, MorgueUser
 
 
 def _normalized_morgue_file_name(name: str) -> str:

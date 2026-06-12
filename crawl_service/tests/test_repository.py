@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import unittest
 
-from crawl_service.repository import (
+from crawl_service.core.repository import (
     CrawlUserRecord,
     FETCH_STATUS_FETCHED,
     PROCESS_STATUS_PENDING,
