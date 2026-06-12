@@ -25,7 +25,7 @@ A player directory discovered in a remote morgue root directory fetched over HTT
 
 ## `MorgueRawText`
 
-Raw morgue text fetched over HTTP and ready for the artifact parser.
+Raw morgue text fetched over HTTP and ready for the morgue artifact extractor.
 
 - Defined in: `crawl_service.morgue.types`
 - Fields:
@@ -41,7 +41,7 @@ This record is the source of truth for artifact read models; artifact documents 
 Ingest is responsible only for the fetch state of this record, and processing reads this record to update artifact
 documents and process state.
 
-- Defined in: `crawl_service.repository`
+- Defined in: `crawl_service.core.repository`
 - Fields:
   - `player: str`
   - `name: str`
@@ -59,106 +59,13 @@ documents and process state.
   - `parser_version: str | None`
   - `scoring_version: str | None`
 
-## `ArtifactRawTextInput`
-
-Parser-ready raw text input built from a `RawMorgueFileRecord` by the processor.
-
-- Defined in: `crawl_service.domain.artifacts.types`
-- Fields:
-  - `name: str`
-  - `url: str`
-  - `extension: str`
-  - `text: str`
-
-## `ArtifactRawInfo`
-
-A single randart raw block plus the indexing information that can be extracted directly from the raw source.
-
-- Defined in: `crawl_service.domain.artifacts.types`
-- Fields:
-  - `source_name: str | None`
-  - `source_url: str | None`
-  - `line_no: int`
-  - `raw_text_block: str`
-  - `artifact_name: str`
-  - `item_location: str | None`
-  - `item_source: str | None`
-  - `visible_item_description: list[str]`
-  - `visible_description_labels: list[str]`
-  - `bracket_subtype: str | None`
-
-## `ArtifactAttribute`
-
-A single attribute token parsed from the `{...}` section of an artifact name.
-
-- Defined in: `crawl_service.domain.artifacts.types`
-- Fields:
-  - `token: str`
-  - `key: str`
-  - `value: int | bool | None`
-  - `description: str | None`
-
-## `ArtifactInfo`
-
-Structured artifact information parsed from `ArtifactRawInfo`.
-
-- Defined in: `crawl_service.domain.artifacts.types`
-- Fields:
-  - `raw_info: ArtifactRawInfo`
-  - `display_name: str`
-  - `base_item: str`
-  - `enchantment: int | None`
-  - `attributes: list[ArtifactAttribute]`
-  - `base_subtype: str | None`
-
-## `RandomArtifact`
-
-The final randart object in a shape that is easy to store in a NoSQL document.
-
-- Defined in: `crawl_service.domain.artifacts.types`
-- Fields:
-  - `artifact_info: ArtifactInfo`
-  - `name: str`
-  - `base_item: str`
-  - `enchantment: int | None`
-  - `brand: str | None`
-  - `base_subtype: str | None`
-  - `item_class: str`
-  - `item_subtype: str`
-  - `weapon_subtype: str | None`
-  - `armour_slot: str | None`
-  - `jewellery_slot: str | None`
-  - `all_attributes: list[str]`
-  - `base_attributes: list[str]`
-  - `random_attributes: list[str]`
-  - `all_attribute_text: str`
-  - `base_attribute_text: str`
-  - `random_attribute_text: str`
-
-## `ArtifactEvaluation`
-
-The score result for a `RandomArtifact`.
-
-- Defined in: `crawl_service.domain.evaluation.evaluator`
-- Fields:
-  - `total: int`
-  - `practical_score: int`
-  - `rarity_score: int`
-  - `offense: int`
-  - `defense: int`
-  - `utility: int`
-  - `penalty: int`
-  - `base_fit: int`
-  - `grade: str`
-  - `luxury_grade: str`
-
 ## `ArtifactDocument`
 
 The canonical artifact read-model document regenerated from `RawMorgueFileRecord` and stored in MongoDB.
 Display tiles, description assembly, attribute kind/scoreImpact, and camelCase response fields are created in the
 `api` read model.
 
-- Defined in: `crawl_service.domain.documents.builder`
+- Defined in: `crawl_service.artifacts.models`
 - Implementation: Pydantic `BaseModel`
 - Key fields:
   - `id: str`
@@ -179,11 +86,11 @@ Display tiles, description assembly, attribute kind/scoreImpact, and camelCase r
 
 ## `ArtifactDocumentEvaluation`
 
-The persisted shape of the evaluation result owned by `crawl_service.domain.documents`.
-The values are copied from `crawl_service.domain.evaluation.evaluator` through the document creation flow in
-`crawl_service.processor`, but the document model does not depend directly on the evaluation-domain types.
+The persisted shape of the evaluation result owned by `crawl_service.artifacts`.
+`crawl_service.artifacts.evaluator` creates this model directly, and the processor stores it in
+`ArtifactDocument.evaluation`.
 
-- Defined in: `crawl_service.domain.documents.builder`
+- Defined in: `crawl_service.artifacts.models`
 - Implementation: Pydantic `BaseModel`
 - Fields:
   - `total: int`
@@ -201,7 +108,7 @@ The values are copied from `crawl_service.domain.evaluation.evaluator` through t
 
 The raw morgue source location for a document.
 
-- Defined in: `crawl_service.domain.documents.builder`
+- Defined in: `crawl_service.artifacts.models`
 - Implementation: Pydantic `BaseModel`
 - Fields:
   - `player: str`
@@ -214,7 +121,7 @@ The raw morgue source location for a document.
 Parsed attribute token data stored in the document. The API uses this to build display-friendly `kind` and
 `scoreImpact` values.
 
-- Defined in: `crawl_service.domain.documents.builder`
+- Defined in: `crawl_service.artifacts.models`
 - Implementation: Pydantic `BaseModel`
 - Fields:
   - `token: str`
@@ -228,7 +135,7 @@ The cache record that stores the worker completion state for each remote morgue 
 The source-of-truth state for raw source and reprocessing belongs to `RawMorgueFileRecord`; this record is used
 when deciding whether to skip or cache files during archive scans.
 
-- Defined in: `crawl_service.repository`
+- Defined in: `crawl_service.core.repository`
 - Fields:
   - `player: str`
   - `name: str`
@@ -242,7 +149,7 @@ when deciding whether to skip or cache files during archive scans.
 
 The cache record that stores the root-index `Date` and scan result for each user directory.
 
-- Defined in: `crawl_service.repository`
+- Defined in: `crawl_service.core.repository`
 - Fields:
   - `player: str`
   - `url: str`

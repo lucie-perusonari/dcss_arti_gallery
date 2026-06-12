@@ -19,4 +19,4 @@ python3 scripts/collect_randart_corpus.py
 
 기본 실행은 `crawl_service/docs/ko/research/randart-corpus/corpus.json`과
 `crawl_service/docs/ko/research/randart-corpus/report.md`를 갱신합니다.
-MongoDB에는 쓰지 않고 `crawl_service.processor.artifact_documents_from_raw_text`를 사용해 문서형 스냅샷만 생성합니다.
+MongoDB에는 쓰지 않고 `crawl_service.core.processor.ArtifactProcessor.documents_from_raw_text`를 사용해 문서형 스냅샷만 생성합니다.

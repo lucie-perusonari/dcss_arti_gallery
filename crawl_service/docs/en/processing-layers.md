@@ -9,13 +9,13 @@ read model for the API and frontend.
 
 ```text
 remote morgue
-  -> crawl_service.worker
+  -> crawl_service.cli.worker
   -> raw_morgue_files
        fetch_status / fetch_error
        process_status / process_error
        content_hash
        parser_version / scoring_version
-  -> crawl_service.processor
+  -> crawl_service.core.processor
   -> artifacts
 ```
 
@@ -31,13 +31,11 @@ remote morgue
 
 - `crawl_service.morgue`: HTTP fetch for remote morgue root/user directories and file text
 - ingest flow: store remote morgue source, compute content hashes, and record fetch state
-- `crawl_service.domain.artifacts`: extract randart raw info from raw text and build `RandomArtifact`
-- `crawl_service.domain.evaluation`: evaluate `RandomArtifact.random_attributes`
-- `crawl_service.domain.documents`: build artifact documents for MongoDB storage
-- `crawl_service.processor`: read `raw_morgue_files` source and regenerate artifact read models
-- `crawl_service.repository`: save raw files, write artifacts, replace by source, and save crawl file/user cache records
-- `crawl_service.worker`: orchestrate remote morgue source ingest
-- `crawl_service.observability`: worker pass summary logging
+- `crawl_service.artifacts`: extract artifact raw evidence from txt/lst source, parse names/attributes/classification, evaluate, and build `ArtifactDocument` values
+- `crawl_service.core.processor`: read `raw_morgue_files` source and regenerate artifact read models
+- `crawl_service.core.repository`: save raw files, write artifacts, replace by source, and save crawl file/user cache records
+- `crawl_service.cli.worker`: orchestrate remote morgue source ingest
+- `crawl_service.core.observability`: worker pass logging
 
 ## Ingest And Processing State
 
@@ -63,7 +61,7 @@ remote morgue
 
 ## Operation Scripts
 
-- `python3 -m crawl_service.worker`: fetches remote morgue source and stores it in `raw_morgue_files`.
+- `python3 -m crawl_service.cli.worker`: fetches remote morgue source and stores it in `raw_morgue_files`.
 - `crawl_service/run_raw_crawler.sh`: raw ingest worker wrapper. With `DETACH=1`, it runs in the background and writes
   `.logs/crawl_raw_only.log`.
 - `crawl_service/process_raw_morgue_files.sh`: processes stored fetched raw files as separate batches.

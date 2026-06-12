@@ -10,7 +10,7 @@
     "source_file_count": 35,
     "artifact_count": 150,
     "failure_count": 0,
-    "parser": "crawl_service.processor.artifact_documents_from_raw_text"
+    "parser": "crawl_service.core.processor.ArtifactProcessor.documents_from_raw_text"
   },
   "source_files": [
     {

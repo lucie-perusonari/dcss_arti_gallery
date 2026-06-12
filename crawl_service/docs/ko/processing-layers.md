@@ -7,13 +7,13 @@
 
 ```text
 remote morgue
-  -> crawl_service.worker
+  -> crawl_service.cli.worker
   -> raw_morgue_files
        fetch_status / fetch_error
        process_status / process_error
        content_hash
        parser_version / scoring_version
-  -> crawl_service.processor
+  -> crawl_service.core.processor
   -> artifacts
 ```
 
@@ -28,13 +28,11 @@ remote morgue
 
 - `crawl_service.morgue`: 원격 morgue root/user 디렉터리와 파일 HTTP fetch
 - ingest flow: remote morgue 파일 원문 저장, content hash 생성, fetch 상태 기록
-- `crawl_service.domain.artifacts`: raw text에서 randart raw info를 추출하고 `RandomArtifact` 생성
-- `crawl_service.domain.evaluation`: `RandomArtifact.random_attributes` 기반 평가
-- `crawl_service.domain.documents`: MongoDB에 저장할 artifact document 생성
-- `crawl_service.processor`: `raw_morgue_files` 원본을 읽어 artifact read model 재생성
-- `crawl_service.repository`: raw file 저장, artifact write, source별 replace, crawl file/user cache record 저장
-- `crawl_service.worker`: remote morgue 원문 ingest orchestration
-- `crawl_service.observability`: worker pass summary logging
+- `crawl_service.artifacts`: txt/lst 원문에서 artifact raw evidence를 추출하고 이름/속성/분류/평가/`ArtifactDocument` 생성을 담당
+- `crawl_service.core.processor`: `raw_morgue_files` 원본을 읽어 artifact read model 재생성
+- `crawl_service.core.repository`: raw file 저장, artifact write, source별 replace, crawl file/user cache record 저장
+- `crawl_service.cli.worker`: remote morgue 원문 ingest orchestration
+- `crawl_service.core.observability`: worker pass summary logging
 
 ## Ingest And Processing State
 
@@ -57,7 +55,7 @@ remote morgue
 
 ## 운영 스크립트
 
-- `python3 -m crawl_service.worker`: remote morgue 원문을 fetch해 `raw_morgue_files`에 저장한다.
+- `python3 -m crawl_service.cli.worker`: remote morgue 원문을 fetch해 `raw_morgue_files`에 저장한다.
 - `crawl_service/run_raw_crawler.sh`: raw ingest worker wrapper. `DETACH=1`이면 백그라운드로 실행하고 `.logs/crawl_raw_only.log`에 기록한다.
 - `crawl_service/process_raw_morgue_files.sh`: 저장된 fetched raw file을 별도 batch로 처리한다. `PROCESS_LIMIT` 기본값은 `1000`, `ONCE=1`이면 한 batch만 처리한다.
 

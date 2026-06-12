@@ -10,13 +10,11 @@ English version: [README.en.md](README.en.md)
 ## 책임
 
 - `morgue`: morgue directory 조회, txt/lst 파일 목록 추출, raw text 변환
-- `processor.py`: 저장된 raw morgue 원본에서 artifact read model 재생성
-- `domain/artifacts`: randart 원문 블록 추출, 구조화된 artifact 정보 파싱, `RandomArtifact` 생성
-- `domain/evaluation`: `RandomArtifact.random_attributes` 기반 평가
-- `domain/documents`: Pydantic 기반 저장 문서 모델
-- `repository.py`: raw file, artifact read model, crawl cache repository
-- `worker.py`: archive user list scan과 raw morgue file ingest
-- `observability.py`: worker pass logging과 runtime summary formatting
+- `core/processor.py`: 저장된 raw morgue 원본에서 artifact read model 재생성
+- `artifacts`: artifact raw evidence 추출, 이름/속성/분류 파싱, 평가, Pydantic 저장 문서 모델
+- `core/repository.py`: raw file, artifact read model, crawl cache repository
+- `cli/worker.py`: archive user list scan과 raw morgue file ingest
+- `core/observability.py`: worker pass logging과 runtime summary formatting
 
 ## 데이터 흐름
 
@@ -24,7 +22,7 @@ English version: [README.en.md](README.en.md)
 
 1. worker가 remote morgue 파일을 fetch합니다.
 2. `raw_morgue_files`에 원문, content hash, fetch 상태를 저장합니다.
-3. 저장된 원본을 `crawl_service.processor`가 parse/classify/evaluate/document build 단계로 처리합니다.
+3. 저장된 원본을 `crawl_service.core.processor`가 parse/classify/evaluate/document build 단계로 처리합니다.
 4. 결과를 `artifacts` read model로 재생성합니다.
 5. raw 저장 완료 파일 cache는 `crawl_files`에, user scan 상태는 `crawl_users`에 기록합니다.
 
@@ -35,7 +33,16 @@ English version: [README.en.md](README.en.md)
 dependencies:
 
 ```sh
-python3 -m pip install -r requirements.txt
+python3 -m venv .venv
+
+sudo apt update
+sudo apt install -y python3-venv python3-pip
+
+rm -rf .venv
+python3 -m venv .venv
+
+.venv/bin/python -m pip install --upgrade pip
+.venv/bin/python -m pip install -r requirements.txt
 ```
 
 local MongoDB:
@@ -47,7 +54,7 @@ eval "$(infra/mongo/mongo_up.sh)"
 worker:
 
 ```sh
-python3 -m crawl_service.worker
+python3 -m crawl_service.cli.worker
 ```
 
 worker는 archive의 전체 user directory list를 주 1회 훑고, 대상 user directory를 열어

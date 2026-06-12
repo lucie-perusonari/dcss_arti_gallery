@@ -8,14 +8,12 @@ or the frontend.
 
 ## Responsibilities
 
-- `morgue`: query morgue directories, extract `txt`/`lst` file lists, convert raw text
-- `processor.py`: regenerate artifact read models from stored raw morgue sources
-- `domain/artifacts`: extract randart blocks, parse structured artifact information, build `RandomArtifact`
-- `domain/evaluation`: evaluate artifacts based on `RandomArtifact.random_attributes`
-- `domain/documents`: Pydantic-backed storage document models
-- `repository.py`: raw file, artifact read model, and crawl cache repositories
-- `worker.py`: archive user list scan and raw morgue file ingest
-- `observability.py`: worker pass logging and runtime summary formatting
+- `morgue`: query morgue directories, extract `txt`/`lst` file lists, and convert raw text
+- `core/processor.py`: regenerate artifact read models from stored raw morgue sources
+- `artifacts`: extract artifact raw evidence, parse names/attributes/classification, evaluate, and define Pydantic storage document models
+- `core/repository.py`: raw file, artifact read model, and crawl cache repositories
+- `cli/worker.py`: archive user list scan and raw morgue file ingest
+- `core/observability.py`: worker pass logging and runtime summary formatting
 
 ## Data Flow
 
@@ -23,7 +21,7 @@ The core flow is: store the raw source first, then process the stored source lat
 
 1. The worker fetches remote morgue files.
 2. It stores the raw text, content hash, and fetch status in `raw_morgue_files`.
-3. `crawl_service.processor` parses, classifies, evaluates, and builds documents from the stored raw source.
+3. `crawl_service.core.processor` parses, classifies, evaluates, and builds documents from the stored raw source.
 4. The result is regenerated into the `artifacts` read model.
 5. Successfully stored files are cached in `crawl_files`, and user scan state is stored in `crawl_users`.
 
@@ -47,7 +45,7 @@ eval "$(infra/mongo/mongo_up.sh)"
 Worker:
 
 ```sh
-python3 -m crawl_service.worker
+python3 -m crawl_service.cli.worker
 ```
 
 The worker scans the archive's full user directory list once a week and opens target directories to check for missing
