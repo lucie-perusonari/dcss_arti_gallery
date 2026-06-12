@@ -23,12 +23,12 @@ Run:
 python3 scripts/update_dcss_item_data.py --version 0.34.1
 ```
 
-The command regenerates `crawl_service/domain/generated_dcss_data.py` with:
+The command regenerates `crawl_service/domain/constants/generated_dcss_data.py` with:
 
 - `DCSS_ITEM_FLAVOUR_TEXT`: item description text keyed by normalized item name.
 - `DCSS_UNRANDART_NAMES`: unrandart names parsed from `art-data.txt`.
 - `DCSS_EQUIPMENT_NAMES`: equipment names grouped by broad category.
 - `DCSS_ARMOUR_SLOTS`: armour item names mapped to Crawl slot names.
 
-`crawl_service/domain/constants.py` imports the generated module and merges it with local compatibility aliases and
+`crawl_service/domain/constants/` imports the generated module and merges it with local compatibility aliases and
 scoring constants.

@@ -21,11 +21,11 @@ Run:
 python3 scripts/update_dcss_item_data.py --version 0.34.1
 ```
 
-실행 시 `crawl_service/domain/generated_dcss_data.py`가 다음 항목으로 갱신됩니다.
+실행 시 `crawl_service/domain/constants/generated_dcss_data.py`가 다음 항목으로 갱신됩니다.
 
 - `DCSS_ITEM_FLAVOUR_TEXT`: 정규화된 아이템명 기준의 아이템 설명 텍스트.
 - `DCSS_UNRANDART_NAMES`: `art-data.txt`에서 파싱한 unrandart 이름.
 - `DCSS_EQUIPMENT_NAMES`: 대분류 기준 장비명 목록.
 - `DCSS_ARMOUR_SLOTS`: Crawl 슬롯명으로 매핑한 방어구 아이템명.
 
-`crawl_service/domain/constants.py`가 이 생성 모듈을 import해 로컬 호환 별칭과 점수용 상수와 병합합니다.
+`crawl_service/domain/constants/` package가 이 생성 모듈을 import해 로컬 호환 별칭과 점수용 상수와 병합합니다.

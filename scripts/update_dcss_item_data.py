@@ -13,7 +13,7 @@ from pprint import pformat
 
 DEFAULT_VERSION = "0.34.1"
 SOURCE_BASE = "https://raw.githubusercontent.com/crawl/crawl/{version}/crawl-ref/source"
-OUTPUT_PATH = Path("crawl_service/domain/generated_dcss_data.py")
+OUTPUT_PATH = Path("crawl_service/domain/constants/generated_dcss_data.py")
 
 
 def main() -> None:
