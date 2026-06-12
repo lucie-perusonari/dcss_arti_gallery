@@ -23,6 +23,7 @@ else
     docker run \
         --detach \
         --name "$MONGO_CONTAINER_NAME" \
+        --restart unless-stopped \
         --publish "${MONGO_PORT}:27017" \
         --volume "${MONGO_VOLUME}:/data/db" \
         "$MONGO_IMAGE" >/dev/null
