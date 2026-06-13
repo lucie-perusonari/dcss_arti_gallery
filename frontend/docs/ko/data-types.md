@@ -26,10 +26,28 @@ TypeScript 타입은 Gallery API 응답과 정렬되어야 합니다.
   - 용도: 갤러리 목록/상세 렌더링 상태
 - 주요 필드:
   - `id`, `name`, `baseItem`, `type`, `subtype`, `tile`
+  - `weaponSubtype?: string | null`
+  - `armourSlot?: string | null`
+  - `jewellerySlot?: string | null`
   - `source`
   - `randomAttributes`
   - `score`
   - `dcssDescription`
+
+`weaponSubtype`, `armourSlot`, `jewellerySlot`는 타입별 하위 필터와 렌더링 보조 정보로 사용합니다.
+값이 없으면 UI는 `subtype`을 fallback으로 사용합니다.
+
+## `ArtifactFilters`
+
+- 정의 위치: `frontend/src/types/artifact.ts`
+- 필드:
+  - `search: string`
+  - `type: ArtifactType | 'all'`
+  - `slot: string`
+
+`slot`은 API query parameter가 아니라 frontend 표시 필터입니다. API에서 받은 타입/검색 기준 원본
+목록은 유지하고, 화면에 표시할 목록만 `slot`으로 파생 필터링합니다. 이렇게 해야 하위 필터 버튼을
+클릭해도 같은 타입의 다른 하위 항목 버튼이 사라지지 않습니다.
 
 ## 연계 문서
 

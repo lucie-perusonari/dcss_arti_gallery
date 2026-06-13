@@ -32,10 +32,16 @@
 - 용도: Gallery API가 반환하는 artifact read model
 - 주요 필드:
   - `id`, `name`, `baseItem`, `type`, `subtype`, `tile`
+  - `weaponSubtype: str | None`: weapon 세부 분류입니다. 예: `melee`, `ranged`.
+  - `armourSlot: str | None`: armour 장착 부위입니다. 예: `body armour`, `cloak`, `boots`.
+  - `jewellerySlot: str | None`: jewellery 장착 부위입니다. 예: `ring`, `amulet`.
   - `source: ArtifactSource`
   - `randomAttributes: list[str]`
   - `score: ArtifactEvaluation`
   - `dcssDescription: str`
+
+분류 필드는 MongoDB의 snake_case field인 `weapon_subtype`, `armour_slot`, `jewellery_slot`를
+frontend용 camelCase field로 변환한 값입니다.
 
 ## 연계 문서
 

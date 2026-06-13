@@ -33,10 +33,16 @@ public API contract.
 - Purpose: artifact read model returned by the Gallery API
 - Key fields:
   - `id`, `name`, `baseItem`, `type`, `subtype`, `tile`
+  - `weaponSubtype: str | None`
+  - `armourSlot: str | None`
+  - `jewellerySlot: str | None`
   - `source: ArtifactSource`
   - `randomAttributes: list[str]`
   - `score: ArtifactEvaluation`
   - `dcssDescription: str`
+
+The subtype/slot fields are camelCase projections of MongoDB fields such as
+`weapon_subtype`, `armour_slot`, and `jewellery_slot`.
 
 ## Related Docs
 

@@ -36,6 +36,9 @@ class ArtifactDocument(BaseModel):
     baseItem: str
     type: str
     subtype: str
+    weaponSubtype: str | None = None
+    armourSlot: str | None = None
+    jewellerySlot: str | None = None
     tile: str
     source: ArtifactSource
     randomAttributes: list[str]

@@ -26,10 +26,26 @@ The TypeScript types must stay aligned with the Gallery API response shape.
 - Purpose: gallery list/detail rendering state
 - Key fields:
   - `id`, `name`, `baseItem`, `type`, `subtype`, `tile`
+  - `weaponSubtype?: string | null`
+  - `armourSlot?: string | null`
+  - `jewellerySlot?: string | null`
   - `source`
   - `randomAttributes`
   - `score`
   - `dcssDescription`
+
+The subtype/slot fields support type-specific secondary filters. When they are missing,
+the UI falls back to `subtype`.
+
+## `ArtifactFilters`
+
+- Defined in: `frontend/src/types/artifact.ts`
+- Fields:
+  - `search: string`
+  - `type: ArtifactType | 'all'`
+  - `slot: string`
+
+`slot` is a frontend display filter, not a Gallery API query parameter.
 
 ## Related Docs
 

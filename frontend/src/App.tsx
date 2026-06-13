@@ -16,6 +16,7 @@ const getInitialFilters = (): ArtifactFilters => {
   return {
     search: params.get('search') ?? '',
     type: artifactTypes.includes(type as ArtifactType | 'all') ? (type as ArtifactType | 'all') : 'all',
+    slot: params.get('slot') ?? 'all',
   };
 };
 
@@ -43,9 +44,10 @@ export function App() {
       .then((items) => {
         if (!active) return;
         setArtifacts(items);
+        const visibleItems = artifactsMatchingSlot(items, filters.slot);
         setSelectedId((current) => {
-          if (items.length === 0) return null;
-          return current && items.some((item) => item.id === current) ? current : items[0].id;
+          if (visibleItems.length === 0) return null;
+          return current && visibleItems.some((item) => item.id === current) ? current : visibleItems[0].id;
         });
       })
       .catch((reason: unknown) => {
@@ -61,15 +63,18 @@ export function App() {
     };
   }, [filters]);
 
+  const slotOptions = useMemo(() => slotOptionsForArtifacts(artifacts, filters.type), [artifacts, filters.type]);
+  const displayedArtifacts = useMemo(() => artifactsMatchingSlot(artifacts, filters.slot), [artifacts, filters.slot]);
   const selectedArtifact = useMemo(
-    () => artifacts.find((artifact) => artifact.id === selectedId) ?? artifacts[0] ?? null,
-    [artifacts, selectedId],
+    () => displayedArtifacts.find((artifact) => artifact.id === selectedId) ?? displayedArtifacts[0] ?? null,
+    [displayedArtifacts, selectedId],
   );
 
   const applyPlayerArtifacts = (items: Artifact[] | undefined) => {
     const nextItems = items ?? [];
     setArtifacts(nextItems);
-    setSelectedId(nextItems[0]?.id ?? null);
+    const visibleItems = artifactsMatchingSlot(nextItems, filters.slot);
+    setSelectedId(visibleItems[0]?.id ?? null);
   };
 
   return (
@@ -81,20 +86,20 @@ export function App() {
               <p className="eyebrow">Inventory</p>
               <h1>Randart Browser</h1>
             </div>
-            <span className="count-pill">{artifacts.length}</span>
+            <span className="count-pill">{displayedArtifacts.length}</span>
           </div>
 
           <NicknameCrawler onArtifactsLoaded={applyPlayerArtifacts} />
 
-          <FilterBar filters={filters} types={types} onChange={setFilters} />
+          <FilterBar filters={filters} types={types} slots={slotOptions} onChange={setFilters} />
 
           <div className="list-area">
             {loading && <div className="empty-state">Loading artifacts...</div>}
             {error && <div className="empty-state empty-state--error">{error}</div>}
-            {!loading && !error && artifacts.length === 0 && <div className="empty-state">No matching artifacts.</div>}
+            {!loading && !error && displayedArtifacts.length === 0 && <div className="empty-state">No matching artifacts.</div>}
             {!loading &&
               !error &&
-              artifacts.map((artifact) => (
+              displayedArtifacts.map((artifact) => (
                 <ArtifactCard
                   artifact={artifact}
                   key={artifact.id}
@@ -121,4 +126,28 @@ export function App() {
       </main>
     </WebtilesShell>
   );
+}
+
+function slotOptionsForArtifacts(artifacts: Artifact[], type: ArtifactFilters['type']) {
+  if (type === 'all') return ['all'];
+  const slots = new Set<string>();
+  artifacts.forEach((artifact) => {
+    if (artifact.type !== type) return;
+    const slot = slotForArtifact(artifact);
+    if (slot) slots.add(slot);
+  });
+  return ['all', ...Array.from(slots).sort()];
+}
+
+function artifactsMatchingSlot(artifacts: Artifact[], slot: string) {
+  if (slot === 'all') return artifacts;
+  return artifacts.filter((artifact) => slotForArtifact(artifact) === slot);
+}
+
+function slotForArtifact(artifact: Artifact) {
+  if (artifact.type === 'weapon') return artifact.weaponSubtype ?? artifact.subtype;
+  if (artifact.type === 'armour') return artifact.armourSlot ?? artifact.subtype;
+  if (artifact.type === 'jewellery') return artifact.jewellerySlot ?? artifact.subtype;
+  if (artifact.type === 'staff') return artifact.subtype;
+  return artifact.subtype;
 }

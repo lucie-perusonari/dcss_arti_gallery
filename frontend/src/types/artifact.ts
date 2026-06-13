@@ -19,6 +19,9 @@ export type Artifact = {
   baseItem: string;
   type: ArtifactType;
   subtype: string;
+  weaponSubtype?: string | null;
+  armourSlot?: string | null;
+  jewellerySlot?: string | null;
   tile: string;
   source: {
     player: string;
@@ -31,4 +34,5 @@ export type Artifact = {
 export type ArtifactFilters = {
   search: string;
   type: ArtifactType | 'all';
+  slot: string;
 };
