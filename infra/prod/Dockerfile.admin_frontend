@@ -3,7 +3,7 @@ FROM node:22-alpine AS admin-frontend-build
 WORKDIR /app/admin-frontend
 
 COPY admin-frontend/package*.json ./
-RUN npm ci
+RUN npm install
 
 COPY admin-frontend/index.html admin-frontend/tsconfig*.json admin-frontend/vite.config.ts ./
 COPY admin-frontend/src ./src
