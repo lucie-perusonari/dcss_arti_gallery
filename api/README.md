@@ -27,7 +27,7 @@ English version: [README.en.md](README.en.md)
 
 ## 엔드포인트
 
-- `GET /artifacts`: 아티팩트 목록 조회 (`q`, `type`, `player` 필터 지원)
+- `GET /artifacts`: 아티팩트 목록 조회 (`q`, `type`, `player`, `since`, `limit`, `offset` 필터 지원)
 - `GET /artifacts/{artifact_id}`: 단일 아티팩트 조회
 - `GET /artifact-types`: 사용 가능한 아티팩트 타입 목록
 - `GET /filters`: 갤러리 필터 메타데이터
@@ -44,7 +44,7 @@ python3 -m pip install -r requirements.txt
 로컬 MongoDB:
 
 ```sh
-eval "$(infra/dev/mongo_up.sh)"
+docker compose -f infra/dev/docker-compose.yml up -d mongo mongo-indexes
 ```
 
 갤러리 API 서버:

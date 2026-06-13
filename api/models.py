@@ -9,6 +9,7 @@ class ArtifactSource(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     player: str
+    url: str | None = None
 
 
 class ArtifactEvaluation(BaseModel):

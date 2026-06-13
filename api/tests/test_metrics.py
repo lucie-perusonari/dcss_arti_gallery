@@ -54,6 +54,9 @@ class MetricsRepository:
         query: str | None = None,
         item_type: str = "all",
         player: str | None = None,
+        since_days: int | None = 30,
+        limit: int = 200,
+        offset: int = 0,
     ) -> list[ArtifactDocument]:
         return []
 

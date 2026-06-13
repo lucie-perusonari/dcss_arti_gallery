@@ -23,7 +23,7 @@ EXPECTED_ARTIFACT_KEYS = {
     "dcssDescription",
 }
 
-EXPECTED_SOURCE_KEYS = {"player"}
+EXPECTED_SOURCE_KEYS = {"player", "url"}
 REMOVED_ARTIFACT_KEYS = {
     "allAttributes",
     "attributes",
@@ -50,7 +50,10 @@ class GalleryApiFrontendContractTest(unittest.TestCase):
 
         self.assertEqual(frontend_fields, EXPECTED_ARTIFACT_KEYS)
         self.assertFalse(REMOVED_ARTIFACT_KEYS & frontend_fields)
-        self.assertRegex(frontend_type, r"source:\s*\{\s*player: string;\s*\};")
+        self.assertRegex(
+            frontend_type,
+            r"source:\s*\{\s*player: string;\s*url\?: string \| null;\s*\};",
+        )
 
 
 def _mongo_artifact_document() -> dict:

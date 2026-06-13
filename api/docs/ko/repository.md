@@ -5,9 +5,12 @@
 ## 책임
 
 - artifact 목록과 단건 조회를 수행합니다.
-- 검색어, type, player 필터를 MongoDB query로 변환합니다.
+- 검색어, type, player, 최근 게임 범위 필터를 MongoDB query로 변환합니다.
 - player 필터는 canonical artifact의 대표 `source.player`와 누적 evidence인 `sources.player`를
   함께 조회합니다.
+- 목록 조회는 MongoDB에서 `evaluation.total` 내림차순 정렬, `offset`, `limit`를 적용합니다.
+- 기본 최근 범위는 `latest_game_ended_at` 기준 30일입니다. 이 필드는 `arti_parser`가 morgue
+  파일명에서 파싱해 저장합니다.
 - 필터 메타데이터 조회에 필요한 distinct/count 성격의 read를 제공합니다.
 
 ## 비소유 책임

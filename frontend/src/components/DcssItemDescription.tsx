@@ -32,10 +32,20 @@ export function DcssItemDescription({ artifact }: DcssItemDescriptionProps) {
         </div>
       </div>
 
-      <div className="actions fg11" aria-hidden="true">
-        <span data-hotkey="w">(w)ear</span>, <span data-hotkey="d">(d)rop</span>,{' '}
-        <span data-hotkey="=">(=)adjust</span>, or <span data-hotkey="i">(i)nscribe</span>.
-      </div>
+      {artifact.source.url ? (
+        <div className="actions fg11">
+          <a
+            href={artifact.source.url}
+            target="_blank"
+            rel="noreferrer"
+            data-source-link
+            aria-label={`Open original morgue for ${artifact.name}`}
+          >
+            View original morgue
+          </a>
+          .
+        </div>
+      ) : null}
     </div>
   );
 }

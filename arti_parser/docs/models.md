@@ -28,6 +28,10 @@
 - `source`: 대표 occurrence의 player, source file, URL, line metadata입니다.
 - `sources`, `occurrence_ids`, `source_count`, `first_source`, `first_discovered_by`, `known_seeds`, `updated_at`: repository가
   저장 시 추가하는 canonical source evidence metadata입니다.
+- `sources[].game_ended_at`, `latest_game_ended_at`: `morgue-<player>-YYYYMMDD-HHMMSS.*` 파일명에서 파싱한
+  게임 시각입니다. Gallery API가 최근 게임 범위를 제한할 때 사용합니다.
+- `artifact_processing_files.metadata_version`: 저장 문서 보조 metadata가 추가될 때 기존 raw file을
+  한 번 다시 처리하기 위한 processing record version입니다.
 
 ## 변경 시 주의점
 

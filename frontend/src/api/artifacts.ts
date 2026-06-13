@@ -72,6 +72,7 @@ export const artifactApi = {
     if (filters.search.trim()) params.set("q", filters.search.trim());
     if (filters.type !== "all") params.set("type", filters.type);
     if (filters.player.trim()) params.set("player", filters.player.trim());
+    params.set("since", filters.timeRange);
 
     const response = await fetch(apiUrl(`/artifacts?${params.toString()}`));
     if (!response.ok) {
@@ -132,7 +133,7 @@ export const artifactApi = {
       };
     }
 
-    const params = new URLSearchParams({ player: nickname });
+    const params = new URLSearchParams({ player: nickname, since: "30d" });
     const response = await fetch(apiUrl(`/artifacts?${params.toString()}`));
     if (!response.ok) {
       throw await apiError(response, "Player artifact API failed");

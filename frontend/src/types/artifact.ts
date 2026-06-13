@@ -25,6 +25,7 @@ export type Artifact = {
   tile: string;
   source: {
     player: string;
+    url?: string | null;
   };
   randomAttributes: string[];
   score: ArtifactEvaluation;
@@ -37,4 +38,5 @@ export type ArtifactFilters = {
   slot: string;
   luxuryOnly: boolean;
   player: string;
+  timeRange: '30d' | 'all';
 };

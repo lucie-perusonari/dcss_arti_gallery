@@ -575,7 +575,12 @@ h1 {
   white-space: pre-wrap;
 }
 
-.describe-item > .actions span[data-hotkey]:hover {
+.describe-item > .actions a[data-source-link] {
+  color: inherit;
+  text-decoration: none;
+}
+
+.describe-item > .actions a[data-source-link]:hover {
   background: #555;
 }
 

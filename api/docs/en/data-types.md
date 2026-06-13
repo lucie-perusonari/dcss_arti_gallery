@@ -11,6 +11,7 @@ public API contract.
 - Defined in: `api.models.ArtifactSource`
 - Fields:
   - `player: str`
+  - `url: str | None`: original morgue file URL.
 
 ## `ArtifactEvaluation`
 

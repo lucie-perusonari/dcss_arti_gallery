@@ -36,7 +36,7 @@ class MongoArtifactReadRepositoryTest(unittest.TestCase):
         collection = _ReadOnlyCollection()
         repository = MongoArtifactReadRepository(collection)
 
-        repository.list_artifacts(player="WiiWiwi")
+        repository.list_artifacts(player="WiiWiwi", since_days=None)
 
         self.assertEqual(
             collection.find_queries[0],

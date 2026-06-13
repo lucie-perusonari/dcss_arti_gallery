@@ -36,6 +36,7 @@ The TypeScript types must stay aligned with the Gallery API response shape.
 
 The subtype/slot fields support type-specific secondary filters. When they are missing,
 the UI falls back to `subtype`.
+When `source.url` is present, the detail panel uses it as the original morgue link.
 
 ## `ArtifactFilters`
 

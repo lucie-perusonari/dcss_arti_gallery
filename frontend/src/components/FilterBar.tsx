@@ -54,6 +54,23 @@ export function FilterBar({ filters, types, slots, onChange }: FilterBarProps) {
         </button>
       </div>
 
+      <div className="segmented segmented--secondary" aria-label="Game date filter">
+        <button
+          className={filters.timeRange === '30d' ? 'is-active' : ''}
+          type="button"
+          onClick={() => onChange({ ...filters, timeRange: '30d' })}
+        >
+          Recent 30d
+        </button>
+        <button
+          className={filters.timeRange === 'all' ? 'is-active' : ''}
+          type="button"
+          onClick={() => onChange({ ...filters, timeRange: 'all' })}
+        >
+          All time
+        </button>
+      </div>
+
       {filters.type !== 'all' && slots.length > 1 && (
         <div className="segmented segmented--secondary" aria-label={subtypeFilterLabel}>
           {slots.map((slot) => (

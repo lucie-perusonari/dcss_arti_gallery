@@ -4,6 +4,7 @@ import unittest
 
 from arti_parser.batch import ArtifactProcessingBatchProcessor
 from arti_parser.repository import (
+    ARTIFACT_METADATA_VERSION,
     MongoArtifactProcessingRepository,
     PROCESSING_STATUS_COMPLETED,
     PROCESSING_STATUS_FAILED,
@@ -311,6 +312,7 @@ def _processing_record(
         "content_hash": content_hash,
         "status": status,
         "artifact_count": 1,
+        "metadata_version": ARTIFACT_METADATA_VERSION,
     }
 
 

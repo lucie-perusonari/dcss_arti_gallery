@@ -208,7 +208,10 @@ def present_artifact_document(document: dict[str, Any]) -> ArtifactDocument:
         "armourSlot": data.get("armour_slot"),
         "jewellerySlot": data.get("jewellery_slot"),
         "tile": _tile_for(data),
-        "source": {"player": data["source"].get("player", "")},
+        "source": {
+            "player": data["source"].get("player", ""),
+            "url": data["source"].get("url"),
+        },
         "randomAttributes": data.get("random_attributes", []),
         "score": evaluation,
         "dcssDescription": description,

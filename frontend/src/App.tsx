@@ -120,6 +120,7 @@ const getInitialFilters = (): ArtifactFilters => {
     slot: params.get('slot') ?? 'all',
     luxuryOnly: params.get('luxury') === '1',
     player: params.get('player') ?? '',
+    timeRange: params.get('since') === 'all' ? 'all' : '30d',
   };
 };
 
@@ -186,7 +187,7 @@ export function App() {
 
   useEffect(() => {
     rowVirtualizer.scrollToOffset(0);
-  }, [filters.luxuryOnly, filters.player, filters.search, filters.slot, filters.type, rowVirtualizer]);
+  }, [filters.luxuryOnly, filters.player, filters.search, filters.slot, filters.timeRange, filters.type, rowVirtualizer]);
 
   const applyPlayerFilter = (player: string) => {
     setFilters((current) => ({ ...current, player }));

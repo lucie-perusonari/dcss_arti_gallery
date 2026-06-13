@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import os
+import re
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any, Protocol
 
 from arti_parser.models import ArtifactDocument
@@ -17,6 +19,8 @@ DEFAULT_MONGO_ARTIFACT_PROCESSING_COLLECTION = "artifact_processing_files"
 FETCH_STATUS_FETCHED = "fetched"
 PROCESSING_STATUS_COMPLETED = "completed"
 PROCESSING_STATUS_FAILED = "failed"
+ARTIFACT_METADATA_VERSION = "game-ended-at-v1"
+MORGUE_FILE_DATE_RE = re.compile(r"-(?P<date>\d{8})-(?P<time>\d{6})(?:\.[^.]+)?$")
 RAW_FILE_METADATA_PROJECTION = {
     "_id": 0,
     "player": 1,
@@ -73,6 +77,7 @@ class ArtifactProcessingRecord:
     artifact_count: int = 0
     processed_at: str | None = None
     error: str | None = None
+    metadata_version: str = ARTIFACT_METADATA_VERSION
 
     def to_dict(self) -> dict:
         return {
@@ -83,6 +88,7 @@ class ArtifactProcessingRecord:
             "artifact_count": self.artifact_count,
             "processed_at": self.processed_at,
             "error": self.error,
+            "metadata_version": self.metadata_version,
         }
 
 
@@ -463,6 +469,7 @@ def _artifact_source_evidence(
         "occurrence_id": artifact.occurrence_id,
         "player": _player_key(raw_file.player),
         "file": raw_file.name,
+        "game_ended_at": _game_ended_at_from_file(raw_file.name),
         "url": artifact.source.url,
         "line": artifact.source.line,
         "item_location": artifact.item_location,
@@ -475,22 +482,29 @@ def _artifact_source_evidence(
 def _artifact_sources_from_document(document: dict) -> list[dict]:
     sources = document.get("sources")
     if isinstance(sources, list):
-        return [_without_version_metadata(source) for source in sources if isinstance(source, dict)]
+        return [
+            _artifact_source_with_game_time(_without_version_metadata(source))
+            for source in sources
+            if isinstance(source, dict)
+        ]
 
     source = document.get("source")
     if not isinstance(source, dict):
         return []
     return [
-        {
-            "occurrence_id": document.get("occurrence_id", document.get("id", "")),
-            "player": _player_key(source.get("player", "")),
-            "file": source.get("file", ""),
-            "url": source.get("url"),
-            "line": source.get("line"),
-            "item_location": document.get("item_location"),
-            "item_source": document.get("item_source"),
-            "source_content_hash": document.get("source_content_hash", ""),
-        }
+        _artifact_source_with_game_time(
+            {
+                "occurrence_id": document.get("occurrence_id", document.get("id", "")),
+                "player": _player_key(source.get("player", "")),
+                "file": source.get("file", ""),
+                "game_ended_at": source.get("game_ended_at") or document.get("latest_game_ended_at"),
+                "url": source.get("url"),
+                "line": source.get("line"),
+                "item_location": document.get("item_location"),
+                "item_source": document.get("item_source"),
+                "source_content_hash": document.get("source_content_hash", ""),
+            }
+        )
     ]
 
 
@@ -549,18 +563,25 @@ def _artifact_document_with_sources(
     updated_at: str | None = None,
 ) -> dict:
     updated = _without_mongo_id(document)
-    updated["sources"] = [dict(source) for source in sources]
+    enriched_sources = [_artifact_source_with_game_time(source) for source in sources]
+    updated["sources"] = [dict(source) for source in enriched_sources]
     updated["occurrence_ids"] = [
         str(source["occurrence_id"])
-        for source in sources
+        for source in enriched_sources
         if source.get("occurrence_id")
     ]
-    updated["source_count"] = len(sources)
-    if sources:
-        first_source = dict(sources[0])
+    ended_at_values = [
+        str(source["game_ended_at"])
+        for source in enriched_sources
+        if source.get("game_ended_at")
+    ]
+    updated["latest_game_ended_at"] = max(ended_at_values) if ended_at_values else None
+    updated["source_count"] = len(enriched_sources)
+    if enriched_sources:
+        first_source = dict(enriched_sources[0])
         updated["first_source"] = first_source
         updated["first_discovered_by"] = first_source.get("player", "")
-        if not _source_in_sources(updated.get("source"), sources):
+        if not _source_in_sources(updated.get("source"), enriched_sources):
             _apply_representative_source(updated, first_source)
     else:
         updated["first_source"] = None
@@ -643,6 +664,7 @@ def _should_process(
     return (
         record.status != PROCESSING_STATUS_COMPLETED
         or record.content_hash != raw_file.content_hash
+        or record.metadata_version != ARTIFACT_METADATA_VERSION
     )
 
 
@@ -669,6 +691,7 @@ def _processing_record_from_mongo(document: dict) -> ArtifactProcessingRecord:
         artifact_count=int(document.get("artifact_count", 0)),
         processed_at=document.get("processed_at"),
         error=document.get("error"),
+        metadata_version=document.get("metadata_version", ""),
     )
 
 
@@ -681,6 +704,25 @@ def _without_version_metadata(document: dict) -> dict:
     copy.pop("parser_version", None)
     copy.pop("scoring_version", None)
     return copy
+
+
+def _artifact_source_with_game_time(source: dict) -> dict:
+    copy = dict(source)
+    if not copy.get("game_ended_at"):
+        copy["game_ended_at"] = _game_ended_at_from_file(str(copy.get("file", "")))
+    return copy
+
+
+def _game_ended_at_from_file(file_name: str) -> str | None:
+    match = MORGUE_FILE_DATE_RE.search(file_name)
+    if match is None:
+        return None
+    value = f"{match.group('date')}{match.group('time')}"
+    try:
+        ended_at = datetime.strptime(value, "%Y%m%d%H%M%S").replace(tzinfo=UTC)
+    except ValueError:
+        return None
+    return ended_at.isoformat()
 
 
 def _player_key(player: str) -> str:

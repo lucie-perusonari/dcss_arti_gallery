@@ -10,6 +10,7 @@
 - 정의 위치: `api.models.ArtifactSource`
 - 필드:
   - `player: str`
+  - `url: str | None`: 원본 morgue 파일 URL입니다.
 
 ## `ArtifactEvaluation`
 
