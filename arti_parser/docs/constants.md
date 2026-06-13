@@ -21,6 +21,6 @@
 
 ## 변경 시 주의점
 
-- `UNRANDART_NAMES`와 armour slot item 목록은 `dcss_data.py`의 generated 데이터와 합쳐집니다.
+- `UNRANDART_NAMES`, armour slot item 목록, base armour intrinsic 속성은 `dcss_data.py`의 DCSS 정적 데이터와 합쳐집니다.
 - 새 property token을 추가할 때 parser와 evaluator가 그 token을 어떻게 해석하는지도 확인합니다.
 - 정규식 변경은 `.txt`, `.lst` 양쪽 추출에 영향을 줄 수 있습니다.

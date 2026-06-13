@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 
 from .dcss_data import (
+    DCSS_ARMOUR_ATTRIBUTES,
     DCSS_ARMOUR_SLOTS,
     DCSS_UNRANDART_NAMES,
 )
@@ -168,6 +169,7 @@ BASE_SUBTYPE_ATTRIBUTES = {
 }
 
 BASE_ITEM_ATTRIBUTES = {
+    **DCSS_ARMOUR_ATTRIBUTES,
     "troll leather armour": ["Regen+"],
     "troll skin": ["Regen+"],
 }

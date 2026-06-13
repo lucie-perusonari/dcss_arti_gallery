@@ -9,7 +9,7 @@ from arti_parser.models import ArtifactDocument
 
 
 CURRENT_PARSER_VERSION = "artifact-parser-v1"
-CURRENT_SCORING_VERSION = "artifact-scoring-v1"
+CURRENT_SCORING_VERSION = "artifact-scoring-v4"
 
 
 @dataclass(frozen=True)
