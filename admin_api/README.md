@@ -57,6 +57,7 @@ python3 -m uvicorn admin_api.app:app --host 0.0.0.0 --port 8001
 Admin API 기본 CORS origin은 `http://localhost:5174`와 `http://127.0.0.1:5174`입니다.
 필요하면 `ADMIN_API_CORS_ORIGINS` 또는 `ADMIN_API_CORS_ORIGIN_REGEX`로 조정합니다.
 Gallery API 메트릭 조회는 `PROMETHEUS_URL`을 사용하며 기본값은 `http://localhost:9090`입니다.
+Artifact 처리 상태는 `MONGODB_ARTIFACT_PROCESSING_COLLECTION`에서 읽고, 기본값은 `artifact_processing_files`입니다.
 `ADMIN_CRAWL_STATUS_CACHE_SECONDS`는 `/admin/crawl-status`의 in-process cache TTL이며 기본값은 `5`초입니다.
 
 ## 테스트

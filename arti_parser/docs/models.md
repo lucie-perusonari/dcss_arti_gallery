@@ -37,5 +37,4 @@
 
 - 모델은 `ConfigDict(frozen=True)`로 불변에 가깝게 사용됩니다.
 - `to_dict`는 MongoDB 저장 전 `model_dump` 결과를 반환합니다.
-- 필드 변경은 `api` response model, frontend TypeScript type, mock artifact 생성 스크립트와
-  함께 맞춰야 합니다.
+- 필드 변경은 `api` response model과 frontend TypeScript type을 함께 맞춰야 합니다.

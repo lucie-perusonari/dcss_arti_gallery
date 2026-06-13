@@ -1,19 +1,23 @@
 # Admin API
 
-`admin_api` reads MongoDB crawl operations status collections and serves read-only FastAPI endpoints for the admin
-dashboard. Response DTOs and repositories are owned by `admin_api`, and it does not import `crawl_service`.
+`admin_api` reads MongoDB crawl operations status collections and the internal Prometheus API, then serves read-only
+FastAPI endpoints for the admin dashboard. Response DTOs and repositories are owned by `admin_api`, and it does not
+import `crawl_service`.
 
-## Responsibilities
+## Modules
 
-- `app.py`: admin FastAPI app factory, CORS setup, and admin router wiring
-- `routes.py`: crawl operations dashboard status endpoints
-- `models.py`: admin status response DTOs
-- `repository.py`: read repository for crawl file/user/raw file status
-- `run_admin_api.sh`: Admin API dev server wrapper with the dev MongoDB environment
+- [`app.py`](app.py): admin FastAPI app factory, CORS setup, and admin router wiring
+- [`routes.py`](routes.py): crawl operations dashboard status endpoints
+- [`models.py`](models.py): admin status response DTOs
+- [`repository.py`](repository.py): read repository for crawl file/user/raw file status
+- [`prometheus.py`](prometheus.py): Gallery API metrics read repository backed by the Prometheus HTTP API
+- [`run_admin_api.sh`](run_admin_api.sh): Admin API dev server wrapper with the dev MongoDB environment
+- [`tests/`](tests/): Admin API response contract and MongoDB read checks
 
 ## Endpoints
 
 - `GET /admin/crawl-status`: crawl operations dashboard status
+- `GET /admin/metrics/gallery-api`: Gallery API request/latency metrics read from Prometheus
 
 ## Runtime
 
@@ -44,6 +48,8 @@ From the repository root, you can use the service script:
 The admin API default CORS origins are `http://localhost:5174` and `http://127.0.0.1:5174`.
 `ADMIN_CRAWL_STATUS_CACHE_SECONDS` controls the in-process `/admin/crawl-status` cache TTL and defaults to `5` seconds.
 Adjust them with `ADMIN_API_CORS_ORIGINS` or `ADMIN_API_CORS_ORIGIN_REGEX` if needed.
+Gallery API metrics use `PROMETHEUS_URL`, defaulting to `http://localhost:9090`.
+Artifact processing status is read from `MONGODB_ARTIFACT_PROCESSING_COLLECTION`, defaulting to `artifact_processing_files`.
 
 ## Tests
 

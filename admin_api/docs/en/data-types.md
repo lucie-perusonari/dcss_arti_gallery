@@ -45,6 +45,22 @@ This document defines the public response DTOs owned by `admin_api`.
   - `message: str`
   - `at: str | None`
 
+## `GalleryApiMetrics`
+
+- Defined in: `admin_api.models.GalleryApiMetrics`
+- Purpose: Gallery API metrics response for the admin dashboard
+- Fields:
+  - `status: str`
+  - `windowSeconds: int`
+  - `requestRatePerSecond: float | None`
+  - `errorRatePerSecond: float | None`
+  - `p95LatencySeconds: float | None`
+  - `inFlightRequests: float | None`
+  - `error: str | None`
+
+`status` is `ok` when Prometheus queries succeed and `unavailable` when they fail. `admin_api` queries the internal
+Prometheus HTTP API read-only; it does not scrape or store metrics itself.
+
 ## Related Docs
 
 - [Admin API Processing Layers](./processing-layers.md)

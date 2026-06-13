@@ -12,6 +12,7 @@ This document defines the layers and project boundary for the Gallery read API.
 ## Internal Layers
 
 - `api.app`: gallery FastAPI app factory, CORS setup, and gallery router wiring
+- `api.metrics`: Prometheus metrics registry, HTTP middleware, and `/metrics` endpoint
 - `api.repository`: MongoDB artifact read repository, search/filter/sort
 - `api.models`: frontend-facing artifact response DTOs
 - `api.routes`: `/artifacts`, `/artifacts/{artifact_id}`, `/artifact-types`, `/filters`

@@ -42,6 +42,18 @@ This document defines the status types consumed by the crawl operations dashboar
   - `latest: LatestActivity`
   - `recentErrors: CrawlError[]`
 
+## `GalleryApiMetrics`
+
+- Defined in: `admin-frontend/src/types/status.ts`
+- Fields:
+  - `status: 'ok' | 'unavailable' | string`
+  - `windowSeconds: number`
+  - `requestRatePerSecond?: number | null`
+  - `errorRatePerSecond?: number | null`
+  - `p95LatencySeconds?: number | null`
+  - `inFlightRequests?: number | null`
+  - `error?: string | null`
+
 ## Related Docs
 
 - [Admin Frontend Processing Layers](./processing-layers.md)

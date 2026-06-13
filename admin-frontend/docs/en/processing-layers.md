@@ -5,8 +5,8 @@ This document defines the API boundary and UI layers for the crawl operations da
 ## Project Boundary
 
 - Module: `admin-frontend/`
-- Role: bring the admin crawl-status API response into React UI state and render the operations dashboard
-- Input: `/admin/crawl-status` response
+- Role: bring the admin crawl-status and Gallery API metrics responses into React UI state and render the operations dashboard
+- Input: `/admin/crawl-status`, `/admin/metrics/gallery-api` responses
 - Output: browser UI state
 
 ## Internal Layers

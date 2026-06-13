@@ -142,11 +142,11 @@ python3 -m arti_parser.batch
 | `--loop-interval-seconds` | `PROCESS_LOOP_INTERVAL_SECONDS` | `60.0` | 반복 처리 사이 대기 시간입니다. |
 | 없음 | `ARTIFACT_PROCESS_LOG_LEVEL` | `INFO` | batch processor 로그 레벨입니다. |
 
-MongoDB 연결 환경 변수:
+Compose job의 MongoDB 연결 환경 변수:
 
 | 환경 변수 | 기본값 | 설명 |
 | --- | --- | --- |
-| `MONGODB_URI` | `mongodb://localhost:27017` | MongoDB 연결 문자열입니다. |
+| `MONGODB_URI` | `mongodb://mongo:27017` | MongoDB 연결 문자열입니다. host에서 `process_raw_morgue_files.sh`로 직접 실행할 때는 dev MongoDB host bind인 `mongodb://localhost:27018`을 기본으로 사용합니다. |
 | `MONGODB_DATABASE` | `dcss_arti_gallery` | 사용할 database 이름입니다. |
 | `MONGODB_RAW_FILES_COLLECTION` | `raw_morgue_files` | raw source 입력 컬렉션입니다. |
 | `MONGODB_COLLECTION` | `artifacts` | artifact read model 출력 컬렉션입니다. |

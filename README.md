@@ -26,7 +26,7 @@ English version: [README.en.md](README.en.md)
 - [crawl_service](crawl_service/README.md): 원격 morgue 탐색/가져오기, raw morgue 원본 저장, crawl 상태 기록, 백그라운드 워커
 - [arti_parser](arti_parser/README.md): 저장된 raw morgue 원본에서 랜덤 아티팩트를 파싱하고 `artifacts` read model 재생성
 - [api](api/README.md): 갤러리용 artifact 읽기 API, API 소유 DTO, FastAPI 라우트
-- [admin_api](admin_api/README.md): crawl 운영 상태 읽기 API, admin API 소유 DTO, FastAPI 라우트
+- [admin_api](admin_api/README.md): crawl/처리 운영 상태와 Gallery API 지표 읽기 API, admin API 소유 DTO, FastAPI 라우트
 - [frontend](frontend/README.md): React/Vite 기반 WebTiles 스타일 artifact 갤러리
 - [admin-frontend](admin-frontend/README.md): React/Vite 기반 crawl 운영 대시보드
 - [infra](infra/README.md): 개발/운영 Docker Compose stack과 환경 정책
@@ -43,6 +43,8 @@ remote morgue
   -> frontend
 
 crawl status collections
+artifact_processing_files
+Prometheus Gallery API metrics
   -> admin_api
   -> admin-frontend
 ```
@@ -61,8 +63,8 @@ crawl status collections
 - `crawl_service`는 원격 morgue 조회, raw morgue 원본 저장, crawl 상태 기록, 백그라운드 worker만 소유합니다. artifact 파싱, 분류, 평가, `artifacts` 저장은 담당하지 않습니다.
 - `arti_parser`는 저장된 `raw_morgue_files`를 입력으로 사용해 랜덤 아티팩트를 파싱하고, 평가한 뒤 `artifacts` read model을 재생성합니다. 원격 morgue 조회나 HTTP API 제공은 담당하지 않습니다.
 - `api`는 `artifacts` read model을 읽어 갤러리 API 응답을 제공합니다. API 공개 계약은 `api`의 DTO가 소유하며, `crawl_service` 내부 모델을 import하지 않습니다.
-- `admin_api`는 crawl 상태 컬렉션을 읽어 운영 대시보드 API 응답을 제공합니다. crawl worker 내부 구현에 직접 의존하지 않습니다.
+- `admin_api`는 crawl 상태 컬렉션, artifact 처리 상태 컬렉션, 내부 Prometheus Gallery API 지표를 읽어 운영 대시보드 API 응답을 제공합니다. crawl worker 내부 구현에 직접 의존하지 않습니다.
 - `frontend`는 갤러리 화면을 소유하고, persisted artifact data는 Gallery API를 통해서만 읽습니다.
 - `admin-frontend`는 운영 대시보드를 소유하고, crawl 상태 데이터는 Admin API를 통해서만 읽습니다.
-- `infra`는 MongoDB lifecycle script와 index 같은 인프라 작업을 소유합니다. application repository가 infra DDL을 대신 수행하지 않습니다.
+- `infra`는 개발/운영 Docker Compose stack과 MongoDB index 같은 인프라 작업을 소유합니다. application repository가 infra DDL을 대신 수행하지 않습니다.
 - 루트 `scripts/`는 장기적으로 제거 대상입니다. 실행용 스크립트는 해당 서비스 아래에 두고, mock 검증 로직과 테스트 fixture 생성기는 테스트 파일 또는 테스트 패키지 안에 둡니다. 운영 로직에 빠지면 안 되는 필수 생성기만 예외적으로 서비스 아래에 유지합니다.
