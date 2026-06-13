@@ -1,4 +1,4 @@
- """Artifact classification helpers for ArtifactDocument construction."""
+"""Artifact classification helpers for ArtifactDocument construction."""
 
 from __future__ import annotations
 
