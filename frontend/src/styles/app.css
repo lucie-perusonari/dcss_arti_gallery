@@ -116,8 +116,10 @@ button {
 }
 
 .inventory-panel {
+  display: flex;
+  flex-direction: column;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
   padding: 8px;
   border-right: 1px solid #626262;
   background: #000;
@@ -286,7 +288,37 @@ h1 {
 }
 
 .list-area {
+  position: relative;
   display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-color: #7d623c #050505;
+  scrollbar-width: thin;
+}
+
+.list-area::-webkit-scrollbar {
+  width: 10px;
+}
+
+.list-area::-webkit-scrollbar-track {
+  background: #050505;
+}
+
+.list-area::-webkit-scrollbar-thumb {
+  background: #7d623c;
+}
+
+.virtual-list {
+  position: relative;
+  width: 100%;
+}
+
+.virtual-list__row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
 }
 
 .artifact-card {
@@ -729,9 +761,13 @@ h1 {
   }
 
   .inventory-panel {
-    overflow: visible;
+    overflow: hidden;
     border-right: 0;
     border-bottom: 1px solid #626262;
+  }
+
+  .list-area {
+    max-height: 48vh;
   }
 
   #ui-stack {

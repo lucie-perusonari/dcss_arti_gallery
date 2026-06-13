@@ -42,6 +42,7 @@ async function apiError(response: Response, fallback: string) {
 
 const matchesFilters = (artifact: Artifact, filters: ArtifactFilters) => {
   const search = filters.search.trim().toLowerCase();
+  const player = filters.player.trim().toLowerCase();
   const searchable = [
     artifact.name,
     artifact.baseItem,
@@ -53,7 +54,8 @@ const matchesFilters = (artifact: Artifact, filters: ArtifactFilters) => {
 
   return (
     (filters.type === "all" || artifact.type === filters.type) &&
-    (!search || searchable.includes(search))
+    (!search || searchable.includes(search)) &&
+    (!player || artifact.source.player.toLowerCase() === player)
   );
 };
 
@@ -69,6 +71,7 @@ export const artifactApi = {
     const params = new URLSearchParams();
     if (filters.search.trim()) params.set("q", filters.search.trim());
     if (filters.type !== "all") params.set("type", filters.type);
+    if (filters.player.trim()) params.set("player", filters.player.trim());
 
     const response = await fetch(apiUrl(`/artifacts?${params.toString()}`));
     if (!response.ok) {

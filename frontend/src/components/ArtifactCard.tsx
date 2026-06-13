@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { Artifact } from '../types/artifact';
 
 type ArtifactCardProps = {
@@ -6,7 +7,7 @@ type ArtifactCardProps = {
   onSelect: (artifact: Artifact) => void;
 };
 
-export function ArtifactCard({ artifact, selected, onSelect }: ArtifactCardProps) {
+export const ArtifactCard = memo(function ArtifactCard({ artifact, selected, onSelect }: ArtifactCardProps) {
   return (
     <button
       className={`artifact-card ${selected ? 'is-selected' : ''}`}
@@ -33,4 +34,4 @@ export function ArtifactCard({ artifact, selected, onSelect }: ArtifactCardProps
       <span className="score-badge">{artifact.score.total}</span>
     </button>
   );
-}
+});

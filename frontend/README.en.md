@@ -11,6 +11,7 @@ is not set.
 - `src/data`: local mock artifact data and DCSS tile mappings
 - `src/components`: WebTiles-style panels, filters, cards, item details, and nickname crawl UI
 - `public/tiles`: local DCSS tile PNG assets
+- `run_frontend.sh`: frontend dev server wrapper
 - [docs/en/style-sources.md](docs/en/style-sources.md): source notes for the WebTiles CSS/font recreation
 - [UI Reference](docs/en/ui-reference.md): DCSS item UI reference material based on the DCInside roguelike gallery
 - [Current UI Screenshots](docs/en/current-ui-screenshots.md): current UI screenshots for regression comparison

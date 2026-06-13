@@ -11,6 +11,7 @@ persisted artifact data는 Gallery API에서 읽고, `VITE_ARTIFACT_API_URL`이 
 - [`src/components`](docs/ko/components.md): WebTiles 스타일 패널, 필터, 카드, 아이템 상세, 닉네임 크롤 UI
 - [`public/tiles`](docs/ko/public-tiles.md): 로컬 DCSS 타일 PNG 자산
 - [`reference/`](docs/ko/reference.md): DCSS/WebTiles UI 레퍼런스와 회귀 비교용 스냅샷
+- [`run_frontend.sh`](docs/ko/run_frontend.md): frontend dev server 실행 wrapper
 
 English version: [README.en.md](README.en.md)
 

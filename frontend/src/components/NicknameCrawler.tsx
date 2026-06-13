@@ -1,21 +1,31 @@
-import { useState, type FormEvent } from 'react';
-import { artifactApi, type PlayerArtifactsResponse } from '../api/artifacts';
+import { useEffect, useState, type FormEvent } from 'react';
 
 type NicknameCrawlerProps = {
-  onArtifactsLoaded?: (artifacts: PlayerArtifactsResponse['artifacts']) => void;
+  activePlayer: string;
+  artifactCount: number;
+  loading: boolean;
+  onPlayerChange: (player: string) => void;
+  onClearPlayer: () => void;
 };
 
-const playerArtifactMessage = (result: PlayerArtifactsResponse) => {
-  if (result.message) return result.message;
-  return `Loaded ${result.artifactCount ?? result.artifacts?.length ?? 0} stored artifacts for ${result.nickname}.`;
-};
-
-export function NicknameCrawler({ onArtifactsLoaded }: NicknameCrawlerProps) {
-  const [nickname, setNickname] = useState('wiiwiwi');
+export function NicknameCrawler({ activePlayer, artifactCount, loading, onPlayerChange, onClearPlayer }: NicknameCrawlerProps) {
+  const [nickname, setNickname] = useState(activePlayer || 'wiiwiwi');
   const [message, setMessage] = useState(`Load stored artifacts for wiiwiwi.`);
-  const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
-  const submitNickname = async (event: FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    if (!activePlayer) {
+      setStatus('idle');
+      setMessage(`Load stored artifacts for ${nickname.trim() || 'a player'}.`);
+      return;
+    }
+
+    setNickname(activePlayer);
+    setStatus('success');
+    setMessage(`Showing ${artifactCount} stored artifacts for ${activePlayer}.`);
+  }, [activePlayer, artifactCount]);
+
+  const submitNickname = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const nextNickname = nickname.trim();
 
@@ -25,24 +35,8 @@ export function NicknameCrawler({ onArtifactsLoaded }: NicknameCrawlerProps) {
       return;
     }
 
-    setStatus('submitting');
     setMessage(`Loading stored artifacts for ${nextNickname}...`);
-
-    try {
-      const result = await artifactApi.listPlayerArtifacts({
-        nickname: nextNickname,
-      });
-      if (result.status === 'failed') {
-        throw new Error(result.error ?? result.message ?? 'Failed to load stored artifacts.');
-      }
-
-      setStatus('success');
-      setMessage(playerArtifactMessage(result));
-      onArtifactsLoaded?.(result.artifacts ?? []);
-    } catch (reason) {
-      setStatus('error');
-      setMessage(reason instanceof Error ? reason.message : 'Failed to load stored artifacts.');
-    }
+    onPlayerChange(nextNickname);
   };
 
   return (
@@ -54,15 +48,20 @@ export function NicknameCrawler({ onArtifactsLoaded }: NicknameCrawlerProps) {
           onChange={(event) => setNickname(event.target.value)}
           placeholder="nickname"
           autoComplete="nickname"
-          disabled={status === 'submitting'}
+          disabled={loading}
         />
       </label>
 
       <div className="nickname-crawl__row">
-        <button type="submit" disabled={status === 'submitting'}>
-          {status === 'submitting' ? 'Loading' : 'Load'}
+        <button type="submit" disabled={loading}>
+          {loading && activePlayer ? 'Loading' : 'Load'}
         </button>
-        <span className={`nickname-crawl__status nickname-crawl__status--${status}`}>{message}</span>
+        {activePlayer && (
+          <button type="button" className="nickname-crawl__clear" disabled={loading} onClick={onClearPlayer}>
+            All
+          </button>
+        )}
+        <span className={`nickname-crawl__status nickname-crawl__status--${loading ? 'submitting' : status}`}>{message}</span>
       </div>
     </form>
   );
