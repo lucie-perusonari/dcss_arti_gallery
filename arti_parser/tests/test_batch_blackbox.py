@@ -166,6 +166,56 @@ class ArtifactProcessingBlackBoxTest(unittest.TestCase):
         self.assertEqual(second_summary.raw_files_seen, 0)
         self.assertEqual(len(artifacts.documents), 1)
 
+    def test_batch_merges_same_signature_artifacts_into_canonical_document(self) -> None:
+        raw_files = _Collection()
+        artifacts = _Collection()
+        processing = _Collection()
+        repository = MongoArtifactProcessingRepository(
+            raw_file_collection=raw_files,
+            artifacts_collection=artifacts,
+            processing_collection=processing,
+        )
+        raw_files.documents.extend(
+            [
+                _raw_record(
+                    "wiiwiwi",
+                    "morgue-wiiwiwi-20260101-000001.txt",
+                    "\n".join(
+                        [
+                            "Inventory:",
+                            ' a - the +6 broad axe "Axe" {heavy Slay+3 rF+ *Slow}',
+                            "   Skills:",
+                        ]
+                    ),
+                    "hash-1",
+                ).to_dict(),
+                _raw_record(
+                    "other",
+                    "morgue-other-20260102-000001.txt",
+                    "\n".join(
+                        [
+                            "Inventory:",
+                            ' a - the +6 broad axe "Axe" {rF+ heavy *Slow Slay+3}',
+                            "   Skills:",
+                        ]
+                    ),
+                    "hash-2",
+                ).to_dict(),
+            ]
+        )
+
+        summary = ArtifactProcessingBatchProcessor(repository).process_batch(limit=10)
+
+        self.assertEqual(summary.raw_files_processed, 2)
+        self.assertEqual(summary.artifacts_written, 2)
+        self.assertEqual(len(artifacts.documents), 1)
+        artifact = artifacts.documents[0]
+        self.assertEqual(artifact["source_count"], 2)
+        self.assertEqual(len(artifact["sources"]), 2)
+        self.assertEqual(len(artifact["occurrence_ids"]), 2)
+        self.assertEqual({source["player"] for source in artifact["sources"]}, {"wiiwiwi", "other"})
+        self.assertNotEqual(artifact["id"], artifact["occurrence_id"])
+
     def test_batch_records_processing_failure_without_stopping_batch(self) -> None:
         raw_files = _Collection()
         processing = _Collection()

@@ -46,7 +46,7 @@ class GalleryApiFrontendContractTest(unittest.TestCase):
 
     def test_frontend_artifact_type_matches_api_contract_fields(self) -> None:
         frontend_type = _frontend_artifact_type_body()
-        frontend_fields = set(re.findall(r"^  ([A-Za-z][A-Za-z0-9]*):", frontend_type, re.MULTILINE))
+        frontend_fields = set(re.findall(r"^  ([A-Za-z][A-Za-z0-9]*)\??:", frontend_type, re.MULTILINE))
 
         self.assertEqual(frontend_fields, EXPECTED_ARTIFACT_KEYS)
         self.assertFalse(REMOVED_ARTIFACT_KEYS & frontend_fields)
