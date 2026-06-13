@@ -4,17 +4,13 @@ set -euo pipefail
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 
-if [ -f "$ROOT_DIR/infra/dev/mongo_env.sh" ]; then
-  . "$ROOT_DIR/infra/dev/mongo_env.sh"
-fi
-
 LOG_DIR="${LOG_DIR:-$ROOT_DIR/.logs}"
 PID_FILE="${PID_FILE:-$LOG_DIR/crawl_raw_only.pid}"
 LOG_FILE="${LOG_FILE:-$LOG_DIR/crawl_raw_only.log}"
 DETACH="${DETACH:-0}"
 
 export MONGODB_URI="${MONGODB_URI:-mongodb://localhost:27018}"
-export MONGODB_DATABASE="${MONGODB_DATABASE:-dcss_arti_gallery_dev}"
+export MONGODB_DATABASE="${MONGODB_DATABASE:-dcss_arti_gallery}"
 export MONGODB_CRAWL_FILES_COLLECTION="${MONGODB_CRAWL_FILES_COLLECTION:-crawl_files}"
 export MONGODB_CRAWL_USERS_COLLECTION="${MONGODB_CRAWL_USERS_COLLECTION:-crawl_users}"
 export MONGODB_RAW_FILES_COLLECTION="${MONGODB_RAW_FILES_COLLECTION:-raw_morgue_files}"

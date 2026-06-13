@@ -6,7 +6,7 @@ wrapper입니다.
 ## 동작
 
 1. 저장소 루트로 이동합니다.
-2. `infra/dev/mongo_env.sh`가 있으면 읽습니다.
+2. 명시적인 `MONGODB_*` override가 없으면 compose dev MongoDB host bind 기본값을 사용합니다.
 3. 개발 기본 MongoDB 환경 변수를 채웁니다.
 4. `python3 -m arti_parser.batch "$@"`를 실행합니다.
 

@@ -26,7 +26,7 @@ python3 -m pip install -r requirements.txt
 Local MongoDB:
 
 ```sh
-eval "$(infra/dev/mongo_up.sh)"
+docker compose -f infra/dev/docker-compose.yml up -d mongo mongo-indexes
 ```
 
 Admin API server:

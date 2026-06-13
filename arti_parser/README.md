@@ -97,8 +97,7 @@ Stale 후보는 반드시 현재 raw file의 source metadata로 제한합니다.
 arti_parser/process_raw_morgue_files.sh --once
 ```
 
-이 스크립트는 `infra/dev/mongo_env.sh`가 있으면 읽고, 기본값으로 다음 연결 정보를
-사용합니다.
+이 스크립트는 기본값으로 compose dev MongoDB host bind 연결 정보를 사용합니다.
 
 ```text
 MONGODB_URI=mongodb://localhost:27018
@@ -163,8 +162,12 @@ MongoDB 연결 환경 변수:
 - `item_location`, `item_source`: 대표 occurrence에서 확인한 위치/상점 정보입니다.
 - `source`: 대표 occurrence의 player, file, URL, line metadata입니다.
 - `sources`, `occurrence_ids`, `source_count`, `first_source`, `first_discovered_by`, `known_seeds`, `updated_at`: canonical artifact에 누적된 source evidence metadata입니다.
+- `sources[].game_ended_at`, `latest_game_ended_at`: morgue 파일명(`morgue-<player>-YYYYMMDD-HHMMSS.*`)에서
+  파싱한 게임 시각입니다. Gallery API의 최근 게임 범위 조회와 MongoDB 인덱스에 사용합니다.
 
 저장 시 repository가 `source_content_hash`도 함께 추가합니다.
+게임 시각 메타데이터처럼 저장 문서 보조 필드가 추가되면 `artifact_processing_files.metadata_version`을
+통해 기존 raw file을 한 번 다시 처리합니다.
 
 ## 개발 규칙
 

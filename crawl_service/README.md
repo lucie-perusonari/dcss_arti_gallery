@@ -46,7 +46,7 @@ python3 -m venv .venv
 local MongoDB:
 
 ```sh
-eval "$(infra/dev/mongo_up.sh)"
+docker compose -f infra/dev/docker-compose.yml up -d mongo mongo-indexes
 ```
 
 worker:

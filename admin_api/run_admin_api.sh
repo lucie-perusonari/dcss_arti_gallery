@@ -6,7 +6,8 @@ ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 
 ADMIN_API_HOST="${ADMIN_API_HOST:-0.0.0.0}"
 ADMIN_API_PORT="${ADMIN_API_PORT:-8001}"
+export MONGODB_URI="${MONGODB_URI:-mongodb://localhost:27018}"
+export MONGODB_DATABASE="${MONGODB_DATABASE:-dcss_arti_gallery}"
 
 cd "$ROOT_DIR"
-. "$ROOT_DIR/infra/dev/mongo_env.sh"
 python3 -m uvicorn admin_api.app:app --host "$ADMIN_API_HOST" --port "$ADMIN_API_PORT"

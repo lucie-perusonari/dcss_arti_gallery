@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: DCSS Arti Gallery
+    orgId: 1
+    folder: DCSS Arti Gallery
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

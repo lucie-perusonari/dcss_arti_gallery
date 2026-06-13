@@ -1,0 +1,163 @@
+services:
+  mongo:
+    image: mongo:7.0
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ${MONGO_VOLUME:-${HOME}/.local/var/dcss-arti-gallery/mongodb-dev}
+        target: /data/db
+    ports:
+      - "127.0.0.1:${DEV_MONGO_PORT:-27018}:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  mongo-indexes:
+    image: python:3.12-slim
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace:ro
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_DATABASE: ${MONGODB_DATABASE:-dcss_arti_gallery}
+      MONGODB_COLLECTION: ${MONGODB_COLLECTION:-artifacts}
+      MONGODB_CRAWL_FILES_COLLECTION: ${MONGODB_CRAWL_FILES_COLLECTION:-crawl_files}
+      MONGODB_CRAWL_USERS_COLLECTION: ${MONGODB_CRAWL_USERS_COLLECTION:-crawl_users}
+      MONGODB_RAW_FILES_COLLECTION: ${MONGODB_RAW_FILES_COLLECTION:-raw_morgue_files}
+      MONGODB_ARTIFACT_PROCESSING_COLLECTION: ${MONGODB_ARTIFACT_PROCESSING_COLLECTION:-artifact_processing_files}
+    command: >
+      sh -c "python -m pip install --no-cache-dir 'pymongo>=4.10'
+      && python infra/ensure_mongo_indexes.py"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    image: python:3.12-slim
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace
+      - python_cache:/root/.cache/pip
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_DATABASE: ${MONGODB_DATABASE:-dcss_arti_gallery}
+      MONGODB_COLLECTION: ${MONGODB_COLLECTION:-artifacts}
+      ARTIFACT_API_CORS_ORIGINS: ${ARTIFACT_API_CORS_ORIGINS:-http://localhost:15173,http://127.0.0.1:15173}
+      ARTIFACT_API_METRICS_ENABLED: "1"
+    command: >
+      sh -c "python -m pip install --no-cache-dir -r requirements.txt
+      && python -m uvicorn api.app:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "127.0.0.1:${DEV_API_PORT:-18000}:8000"
+    depends_on:
+      mongo-indexes:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  admin-api:
+    image: python:3.12-slim
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace
+      - python_cache:/root/.cache/pip
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_DATABASE: ${MONGODB_DATABASE:-dcss_arti_gallery}
+      MONGODB_COLLECTION: ${MONGODB_COLLECTION:-artifacts}
+      MONGODB_RAW_FILES_COLLECTION: ${MONGODB_RAW_FILES_COLLECTION:-raw_morgue_files}
+      MONGODB_CRAWL_FILES_COLLECTION: ${MONGODB_CRAWL_FILES_COLLECTION:-crawl_files}
+      MONGODB_CRAWL_USERS_COLLECTION: ${MONGODB_CRAWL_USERS_COLLECTION:-crawl_users}
+      ADMIN_API_CORS_ORIGINS: ${ADMIN_API_CORS_ORIGINS:-http://localhost:15174,http://127.0.0.1:15174}
+      PROMETHEUS_URL: http://prometheus:9090
+      PROMETHEUS_TIMEOUT_SECONDS: ${PROMETHEUS_TIMEOUT_SECONDS:-3}
+      PROMETHEUS_METRICS_WINDOW_SECONDS: ${PROMETHEUS_METRICS_WINDOW_SECONDS:-300}
+    command: >
+      sh -c "python -m pip install --no-cache-dir -r requirements.txt
+      && python -m uvicorn admin_api.app:app --host 0.0.0.0 --port 8001"
+    ports:
+      - "127.0.0.1:${DEV_ADMIN_API_PORT:-18001}:8001"
+    depends_on:
+      mongo-indexes:
+        condition: service_completed_successfully
+      prometheus:
+        condition: service_started
+    restart: unless-stopped
+
+  frontend:
+    image: node:22-alpine
+    working_dir: /workspace/frontend
+    volumes:
+      - ../..:/workspace
+      - frontend_node_modules:/workspace/frontend/node_modules
+    environment:
+      VITE_ARTIFACT_API_URL: ${VITE_ARTIFACT_API_URL:-http://127.0.0.1:18000}
+    command: >
+      sh -c "npm install
+      && npm run dev -- --host 0.0.0.0 --port 5173 --strictPort"
+    ports:
+      - "127.0.0.1:${DEV_FRONTEND_PORT:-15173}:5173"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  admin-frontend:
+    image: node:22-alpine
+    working_dir: /workspace/admin-frontend
+    volumes:
+      - ../..:/workspace
+      - admin_frontend_node_modules:/workspace/admin-frontend/node_modules
+    environment:
+      VITE_ADMIN_API_URL: ${VITE_ADMIN_API_URL:-http://127.0.0.1:18001}
+      VITE_GRAFANA_URL: ${VITE_GRAFANA_URL:-http://127.0.0.1:13000/d/dcss-gallery-api/dcss-gallery-api}
+    command: >
+      sh -c "npm install
+      && npm run dev -- --host 0.0.0.0 --port 5174 --strictPort"
+    ports:
+      - "127.0.0.1:${DEV_ADMIN_FRONTEND_PORT:-15174}:5174"
+    depends_on:
+      - admin-api
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "127.0.0.1:${DEV_PROMETHEUS_PORT:-19090}:9090"
+    depends_on:
+      - api
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    restart: unless-stopped
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../prod/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "127.0.0.1:${DEV_GRAFANA_PORT:-13000}:3000"
+    depends_on:
+      - prometheus
+
+volumes:
+  admin_frontend_node_modules:
+  frontend_node_modules:
+  grafana_data:
+  prometheus_data:
+  python_cache:

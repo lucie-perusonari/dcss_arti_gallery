@@ -116,6 +116,9 @@ def _ensure_indexes(database: Any) -> None:
     artifacts.create_index("sources.occurrence_id")
     artifacts.create_index("occurrence_ids")
     artifacts.create_index([("evaluation.total", -1)])
+    artifacts.create_index([("latest_game_ended_at", -1)])
+    artifacts.create_index([("evaluation.total", -1), ("latest_game_ended_at", -1)])
+    artifacts.create_index([("item_class", 1), ("evaluation.total", -1), ("latest_game_ended_at", -1)])
     artifacts.create_index("item_class")
 
     processing.create_index([("player", 1), ("name", 1)], unique=True)

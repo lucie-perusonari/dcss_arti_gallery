@@ -4,7 +4,7 @@
 
 ## 책임
 
-- `infra/dev/mongo_env.sh`를 적용해 dev MongoDB 환경값을 설정합니다.
+- 명시적인 `MONGODB_URI`, `MONGODB_DATABASE`가 없으면 compose dev MongoDB host bind 기본값을 사용합니다.
 - `ADMIN_API_HOST`, `ADMIN_API_PORT` 환경 변수를 읽어 uvicorn host/port를 정합니다.
 - `admin_api.app:app`을 Admin API entrypoint로 실행합니다.
 
