@@ -1,13 +1,20 @@
 ---
 name: git-workflow
-description: Enforce repository git hygiene for DCSS artifact gallery work. Use whenever Codex creates, renames, or checks branches; stages files; writes commits; amends commits; prepares pull-request summaries; reports git status; or advises on git commands in this repository.
+description: Enforce repository git hygiene for DCSS artifact gallery work. Use for any git-related request or command in this repository, including git status, diff, log, show, branch creation/rename/switching, fetch, pull, merge, rebase, staging, committing, amending, tagging, pushing, force-pushing, reverting, resetting, cleaning, stash work, PR summaries, release notes from git history, or advice about git commands.
 ---
 
 # Git Workflow
 
 ## Overview
 
-Use this skill before any git-facing action in this repository. The goal is to keep branches, commits, and status reporting predictable while protecting user work already present in the worktree.
+Use this skill before any git-facing action in this repository. If a user asks to inspect, explain, modify, commit, push, pull, sync, or advise on git state, apply this skill first. The goal is to keep branches, commits, and status reporting predictable while protecting user work already present in the worktree.
+
+## Trigger Discipline
+
+- Treat any explicit `git ...` command, branch/commit/push/pull/status/diff/log/stash/reset/revert wording, or PR/release-history request as a git workflow task.
+- Before running mutating git commands, check status and identify unrelated or user-owned work.
+- For read-only git commands such as `git log`, `git show`, `git diff`, or `git status`, still use this skill so reporting stays consistent.
+- If another skill is also relevant, use this skill in addition to that skill; git hygiene does not replace domain-specific routing.
 
 ## Required Checks
 

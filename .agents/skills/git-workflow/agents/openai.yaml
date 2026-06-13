@@ -1,4 +1,4 @@
 interface:
   display_name: "Git Workflow"
-  short_description: "Enforce commit and branch naming rules"
-  default_prompt: "Use $git-workflow to prepare a compliant git branch, commit, or status update."
+  short_description: "Use for any git status, commit, branch, pull, or push work"
+  default_prompt: "Use $git-workflow before any git-related request, including status, diff, log, branch changes, commits, pulls, pushes, or PR summaries."
