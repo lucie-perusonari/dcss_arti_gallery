@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import time
 from typing import Any, Protocol
 
 from admin_api.models import CrawlError, CrawlStatus, LatestActivity, RawFileStatus
@@ -14,6 +15,34 @@ DEFAULT_MONGO_COLLECTION = "artifacts"
 DEFAULT_MONGO_CRAWL_FILES_COLLECTION = "crawl_files"
 DEFAULT_MONGO_CRAWL_USERS_COLLECTION = "crawl_users"
 DEFAULT_MONGO_RAW_FILES_COLLECTION = "raw_morgue_files"
+DEFAULT_CRAWL_STATUS_CACHE_SECONDS = 5.0
+
+RAW_FILE_STATUS_PROJECTION = {
+    "_id": False,
+    "player": True,
+    "name": True,
+    "fetch_status": True,
+    "process_status": True,
+    "fetched_at": True,
+    "processed_at": True,
+    "fetch_error": True,
+    "process_error": True,
+}
+CRAWL_FILE_STATUS_PROJECTION = {
+    "_id": False,
+    "player": True,
+    "name": True,
+    "status": True,
+    "processed_at": True,
+    "error": True,
+}
+CRAWL_USER_STATUS_PROJECTION = {
+    "_id": False,
+    "player": True,
+    "status": True,
+    "scanned_at": True,
+    "error": True,
+}
 
 
 class CrawlStatusRepository(Protocol):
@@ -30,28 +59,43 @@ class MongoCrawlStatusRepository:
         raw_files_collection,
         crawl_files_collection,
         crawl_users_collection,
+        cache_ttl_seconds: float = DEFAULT_CRAWL_STATUS_CACHE_SECONDS,
     ) -> None:
         self.artifacts_collection = artifacts_collection
         self.raw_files_collection = raw_files_collection
         self.crawl_files_collection = crawl_files_collection
         self.crawl_users_collection = crawl_users_collection
+        self.cache_ttl_seconds = cache_ttl_seconds
+        self._cached_status: CrawlStatus | None = None
+        self._cached_at = 0.0
 
     def get_crawl_status(self) -> CrawlStatus:
-        raw_files = list(self.raw_files_collection.find({}))
-        crawl_files = list(self.crawl_files_collection.find({}))
-        crawl_users = list(self.crawl_users_collection.find({}))
-        return CrawlStatus(
-            artifactCount=self.artifacts_collection.count_documents({}),
-            rawFiles=_raw_file_status(raw_files),
-            crawlFiles=_status_counts(crawl_files, "status"),
-            crawlUsers=_status_counts(crawl_users, "status"),
-            latest=LatestActivity(
-                fetchedAt=_latest(raw_files, "fetched_at"),
-                processedAt=_latest(raw_files, "processed_at"),
-                scannedAt=_latest(crawl_users, "scanned_at"),
-            ),
-            recentErrors=_recent_errors(raw_files, crawl_files, crawl_users),
+        now = time.monotonic()
+        if self._cached_status is not None and now - self._cached_at < self.cache_ttl_seconds:
+            return self._cached_status
+
+        raw_file_status, latest_raw_activity, raw_errors = _raw_file_status_from_collection(
+            self.raw_files_collection
         )
+        crawl_file_counts, crawl_file_errors = _crawl_file_status_from_collection(self.crawl_files_collection)
+        crawl_user_counts, latest_scanned_at, crawl_user_errors = _crawl_user_status_from_collection(
+            self.crawl_users_collection
+        )
+        status = CrawlStatus(
+            artifactCount=self.artifacts_collection.count_documents({}),
+            rawFiles=raw_file_status,
+            crawlFiles=crawl_file_counts,
+            crawlUsers=crawl_user_counts,
+            latest=LatestActivity(
+                fetchedAt=latest_raw_activity.get("fetched_at"),
+                processedAt=latest_raw_activity.get("processed_at"),
+                scannedAt=latest_scanned_at,
+            ),
+            recentErrors=_sort_recent_errors([*raw_errors, *crawl_file_errors, *crawl_user_errors]),
+        )
+        self._cached_status = status
+        self._cached_at = now
+        return status
 
 
 def repository_from_env() -> MongoCrawlStatusRepository:
@@ -71,6 +115,7 @@ def repository_from_env() -> MongoCrawlStatusRepository:
             "MONGODB_CRAWL_USERS_COLLECTION",
             DEFAULT_MONGO_CRAWL_USERS_COLLECTION,
         ),
+        cache_ttl_seconds=_env_float("ADMIN_CRAWL_STATUS_CACHE_SECONDS", DEFAULT_CRAWL_STATUS_CACHE_SECONDS),
     )
 
 
@@ -81,6 +126,7 @@ def create_mongo_crawl_status_repository(
     raw_files_collection: str = DEFAULT_MONGO_RAW_FILES_COLLECTION,
     crawl_files_collection: str = DEFAULT_MONGO_CRAWL_FILES_COLLECTION,
     crawl_users_collection: str = DEFAULT_MONGO_CRAWL_USERS_COLLECTION,
+    cache_ttl_seconds: float = DEFAULT_CRAWL_STATUS_CACHE_SECONDS,
     client_factory: Any | None = None,
 ) -> MongoCrawlStatusRepository:
     if client_factory is None:
@@ -94,79 +140,160 @@ def create_mongo_crawl_status_repository(
         database_handle[raw_files_collection],
         database_handle[crawl_files_collection],
         database_handle[crawl_users_collection],
+        cache_ttl_seconds,
     )
 
 
-def _raw_file_status(documents: list[dict]) -> RawFileStatus:
-    return RawFileStatus(
-        total=len(documents),
-        fetched=sum(1 for document in documents if document.get("fetch_status") == "fetched"),
-        fetchFailed=sum(1 for document in documents if document.get("fetch_status") == "failed"),
-        processPending=sum(1 for document in documents if document.get("process_status") == "pending"),
-        processProcessed=sum(1 for document in documents if document.get("process_status") == "processed"),
-        processFailed=sum(1 for document in documents if document.get("process_status") == "failed"),
+def _env_float(name: str, default: float) -> float:
+    configured = os.environ.get(name)
+    return default if configured is None else float(configured)
+
+
+def _raw_file_status_from_collection(
+    collection,
+) -> tuple[RawFileStatus, dict[str, str | None], list[CrawlError]]:
+    total, fetch_counts, process_counts = _raw_file_counts(collection)
+    return (
+        RawFileStatus(
+            total=total,
+            fetched=fetch_counts.get("fetched", 0),
+            fetchFailed=fetch_counts.get("failed", 0),
+            processPending=process_counts.get("pending", 0),
+            processProcessed=process_counts.get("processed", 0),
+            processFailed=process_counts.get("failed", 0),
+        ),
+        {
+            "fetched_at": _latest_by_sort(collection, "fetched_at"),
+            "processed_at": _latest_by_sort(collection, "processed_at"),
+        },
+        [
+            *_raw_fetch_errors(
+                _recent_documents(collection, "fetch_error", "fetched_at", RAW_FILE_STATUS_PROJECTION)
+            ),
+            *_raw_process_errors(
+                _recent_documents(collection, "process_error", "processed_at", RAW_FILE_STATUS_PROJECTION)
+            ),
+        ],
     )
 
 
-def _status_counts(documents: list[dict], key: str) -> dict[str, int]:
-    counts: dict[str, int] = {}
-    for document in documents:
-        status = str(document.get(key) or "unknown")
-        counts[status] = counts.get(status, 0) + 1
-    return counts
+def _raw_file_counts(collection) -> tuple[int, dict[str, int], dict[str, int]]:
+    result = next(
+        collection.aggregate(
+            [
+                {
+                    "$facet": {
+                        "total": [{"$count": "count"}],
+                        "fetch": [{"$group": {"_id": "$fetch_status", "count": {"$sum": 1}}}],
+                        "process": [{"$group": {"_id": "$process_status", "count": {"$sum": 1}}}],
+                    }
+                }
+            ]
+        ),
+        {},
+    )
+    total = result.get("total", [])
+    return (
+        total[0]["count"] if total else 0,
+        _facet_counts(result.get("fetch", [])),
+        _facet_counts(result.get("process", [])),
+    )
 
 
-def _latest(documents: list[dict], key: str) -> str | None:
-    values = [document.get(key) for document in documents if document.get(key)]
-    return max(values) if values else None
+def _facet_counts(documents: list[dict]) -> dict[str, int]:
+    return {str(document.get("_id") or "unknown"): int(document.get("count", 0)) for document in documents}
 
 
-def _recent_errors(
-    raw_files: list[dict],
-    crawl_files: list[dict],
-    crawl_users: list[dict],
-) -> list[CrawlError]:
-    errors: list[CrawlError] = []
-    for document in raw_files:
-        if document.get("fetch_error"):
-            errors.append(
-                CrawlError(
-                    kind="fetch",
-                    player=str(document.get("player", "")),
-                    name=document.get("name"),
-                    message=str(document["fetch_error"]),
-                    at=document.get("fetched_at"),
-                )
-            )
-        if document.get("process_error"):
-            errors.append(
-                CrawlError(
-                    kind="process",
-                    player=str(document.get("player", "")),
-                    name=document.get("name"),
-                    message=str(document["process_error"]),
-                    at=document.get("processed_at"),
-                )
-            )
-    for document in crawl_files:
-        if document.get("error"):
-            errors.append(
-                CrawlError(
-                    kind="file",
-                    player=str(document.get("player", "")),
-                    name=document.get("name"),
-                    message=str(document["error"]),
-                    at=document.get("processed_at"),
-                )
-            )
-    for document in crawl_users:
-        if document.get("error"):
-            errors.append(
-                CrawlError(
-                    kind="user",
-                    player=str(document.get("player", "")),
-                    message=str(document["error"]),
-                    at=document.get("scanned_at"),
-                )
-            )
+def _status_counts_from_collection(collection, key: str) -> dict[str, int]:
+    return _facet_counts(collection.aggregate([{"$group": {"_id": f"${key}", "count": {"$sum": 1}}}]))
+
+
+def _crawl_file_status_from_collection(collection) -> tuple[dict[str, int], list[CrawlError]]:
+    return (
+        _status_counts_from_collection(collection, "status"),
+        _crawl_file_errors(_recent_documents(collection, "error", "processed_at", CRAWL_FILE_STATUS_PROJECTION)),
+    )
+
+
+def _crawl_user_status_from_collection(collection) -> tuple[dict[str, int], str | None, list[CrawlError]]:
+    return (
+        _status_counts_from_collection(collection, "status"),
+        _latest_by_sort(collection, "scanned_at"),
+        _crawl_user_errors(_recent_documents(collection, "error", "scanned_at", CRAWL_USER_STATUS_PROJECTION)),
+    )
+
+
+def _latest_by_sort(collection, key: str) -> str | None:
+    document = collection.find_one(
+        {key: {"$exists": True}},
+        {"_id": False, key: True},
+        sort=[(key, -1)],
+    )
+    return document.get(key) if document else None
+
+
+def _recent_documents(collection, error_key: str, sort_key: str, projection: dict) -> list[dict]:
+    documents = list(
+        collection.find(
+            {error_key: {"$type": "string"}},
+            projection,
+        )
+        .sort(sort_key, -1)
+        .limit(50)
+    )
+    return [document for document in documents if document.get(error_key)][:10]
+
+
+def _sort_recent_errors(errors: list[CrawlError]) -> list[CrawlError]:
     return sorted(errors, key=lambda error: error.at or "", reverse=True)[:10]
+
+
+def _raw_fetch_errors(documents) -> list[CrawlError]:
+    return [
+        CrawlError(
+            kind="fetch",
+            player=str(document.get("player", "")),
+            name=document.get("name"),
+            message=str(document["fetch_error"]),
+            at=document.get("fetched_at"),
+        )
+        for document in documents
+    ]
+
+
+def _raw_process_errors(documents) -> list[CrawlError]:
+    return [
+        CrawlError(
+            kind="process",
+            player=str(document.get("player", "")),
+            name=document.get("name"),
+            message=str(document["process_error"]),
+            at=document.get("processed_at"),
+        )
+        for document in documents
+    ]
+
+
+def _crawl_file_errors(documents) -> list[CrawlError]:
+    return [
+        CrawlError(
+            kind="file",
+            player=str(document.get("player", "")),
+            name=document.get("name"),
+            message=str(document["error"]),
+            at=document.get("processed_at"),
+        )
+        for document in documents
+    ]
+
+
+def _crawl_user_errors(documents) -> list[CrawlError]:
+    return [
+        CrawlError(
+            kind="user",
+            player=str(document.get("player", "")),
+            message=str(document["error"]),
+            at=document.get("scanned_at"),
+        )
+        for document in documents
+    ]

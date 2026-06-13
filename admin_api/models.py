@@ -43,3 +43,15 @@ class CrawlStatus(BaseModel):
     crawlUsers: dict[str, int]
     latest: LatestActivity
     recentErrors: list[CrawlError]
+
+
+class GalleryApiMetrics(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    status: str
+    windowSeconds: int
+    requestRatePerSecond: float | None = None
+    errorRatePerSecond: float | None = None
+    p95LatencySeconds: float | None = None
+    inFlightRequests: float | None = None
+    error: str | None = None

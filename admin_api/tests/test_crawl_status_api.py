@@ -5,7 +5,7 @@ import unittest
 from fastapi.testclient import TestClient
 
 from admin_api.app import create_app
-from admin_api.models import CrawlStatus, LatestActivity, RawFileStatus
+from admin_api.models import CrawlStatus, GalleryApiMetrics, LatestActivity, RawFileStatus
 from admin_api.tests.mongo_test_utils import (
     drop_crawl_status_repository_collections,
     mongo_crawl_status_repository_for_test,
@@ -76,7 +76,7 @@ class AdminCrawlStatusApiTest(unittest.TestCase):
                 },
             ]
         )
-        client = TestClient(create_app(self.repository))
+        client = TestClient(create_app(self.repository, MockGalleryApiMetricsRepository()))
 
         response = client.get("/admin/crawl-status")
 
@@ -103,7 +103,7 @@ class AdminCrawlStatusApiTest(unittest.TestCase):
 
 class MockCrawlStatusApiTest(unittest.TestCase):
     def test_admin_crawl_status_uses_injected_mock_repository(self) -> None:
-        client = TestClient(create_app(MockCrawlStatusRepository()))
+        client = TestClient(create_app(MockCrawlStatusRepository(), MockGalleryApiMetricsRepository()))
 
         response = client.get("/admin/crawl-status")
 
@@ -132,6 +132,27 @@ class MockCrawlStatusApiTest(unittest.TestCase):
         )
 
 
+class AdminGalleryApiMetricsTest(unittest.TestCase):
+    def test_admin_gallery_api_metrics_uses_injected_repository(self) -> None:
+        client = TestClient(create_app(MockCrawlStatusRepository(), MockGalleryApiMetricsRepository()))
+
+        response = client.get("/admin/metrics/gallery-api")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "status": "ok",
+                "windowSeconds": 300,
+                "requestRatePerSecond": 1.5,
+                "errorRatePerSecond": 0.25,
+                "p95LatencySeconds": 0.125,
+                "inFlightRequests": 2.0,
+                "error": None,
+            },
+        )
+
+
 class MockCrawlStatusRepository:
     def get_crawl_status(self) -> CrawlStatus:
         return CrawlStatus(
@@ -152,6 +173,18 @@ class MockCrawlStatusRepository:
                 scannedAt="2026-01-01T00:04:00+00:00",
             ),
             recentErrors=[],
+        )
+
+
+class MockGalleryApiMetricsRepository:
+    def get_gallery_api_metrics(self) -> GalleryApiMetrics:
+        return GalleryApiMetrics(
+            status="ok",
+            windowSeconds=300,
+            requestRatePerSecond=1.5,
+            errorRatePerSecond=0.25,
+            p95LatencySeconds=0.125,
+            inFlightRequests=2.0,
         )
 
 

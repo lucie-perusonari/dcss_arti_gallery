@@ -6,7 +6,7 @@
 
 - crawl operations dashboard 응답 shape를 정의합니다.
 - crawl worker 내부 record와 분리된 admin-facing 공개 계약을 유지합니다.
-- raw file, crawl file/user, latest activity, recent error 요약 타입을 관리합니다.
+- raw file, crawl file/user, latest activity, recent error, Gallery API metrics 요약 타입을 관리합니다.
 
 ## 변경 규칙
 

@@ -45,6 +45,22 @@
   - `message: str`
   - `at: str | None`
 
+## `GalleryApiMetrics`
+
+- 정의 위치: `admin_api.models.GalleryApiMetrics`
+- 용도: admin dashboard의 Gallery API metrics 응답
+- 필드:
+  - `status: str`
+  - `windowSeconds: int`
+  - `requestRatePerSecond: float | None`
+  - `errorRatePerSecond: float | None`
+  - `p95LatencySeconds: float | None`
+  - `inFlightRequests: float | None`
+  - `error: str | None`
+
+`status`는 Prometheus query가 성공하면 `ok`, 실패하면 `unavailable`입니다. `admin_api`는 Prometheus를 scrape하거나
+저장하지 않고, 내부 Prometheus HTTP API를 read-only로 query합니다.
+
 ## 연계 문서
 
 - [Admin API Processing Layers](./processing-layers.md)

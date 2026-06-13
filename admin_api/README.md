@@ -1,6 +1,6 @@
 # Admin API
 
-`admin_api`는 MongoDB crawl 운영 상태 컬렉션을 읽어 admin dashboard용 read-only FastAPI endpoint를 제공합니다.
+`admin_api`는 MongoDB crawl 운영 상태 컬렉션과 내부 Prometheus API를 읽어 admin dashboard용 read-only FastAPI endpoint를 제공합니다.
 응답 DTO와 repository는 `admin_api`가 소유하며, `crawl_service`를 import하지 않습니다.
 
 ## 모듈
@@ -9,6 +9,8 @@
 - [`routes.py`](docs/ko/routes.md): crawl operations 대시보드 상태 엔드포인트
 - [`models.py`](docs/ko/models.md): admin 상태 응답 DTO
 - [`repository.py`](docs/ko/repository.md): crawl 파일/user/raw file 상태 read repository
+- [`prometheus.py`](docs/ko/prometheus.md): Prometheus HTTP API를 읽는 Gallery API metrics read repository
+- [`run_admin_api.sh`](docs/ko/run_admin_api.md): dev MongoDB 환경을 적용한 Admin API 실행 wrapper
 - [`tests/`](docs/ko/tests.md): Admin API 응답 계약과 MongoDB 읽기 검증
 
 English version: [README.en.md](README.en.md)
@@ -16,6 +18,7 @@ English version: [README.en.md](README.en.md)
 ## 책임
 
 - crawl 상태 컬렉션을 읽어 운영 대시보드 API 응답을 제공합니다.
+- 내부 Prometheus HTTP API를 읽어 Gallery API request/latency 지표를 admin 응답으로 변환합니다.
 - Admin API 공개 계약을 admin API-owned Pydantic DTO로 소유합니다.
 - crawl worker 내부 구현에 직접 의존하지 않습니다.
 - `crawl_service`를 import하지 않습니다.
@@ -23,6 +26,7 @@ English version: [README.en.md](README.en.md)
 ## 엔드포인트
 
 - `GET /admin/crawl-status`: crawl operations 대시보드 상태
+- `GET /admin/metrics/gallery-api`: Prometheus에서 읽은 Gallery API request/latency 지표
 
 ## 실행 방법
 
@@ -44,8 +48,16 @@ Admin API 서버:
 python3 -m uvicorn admin_api.app:app --host 0.0.0.0 --port 8001
 ```
 
+서비스 스크립트로 실행:
+
+```sh
+./admin_api/run_admin_api.sh
+```
+
 Admin API 기본 CORS origin은 `http://localhost:5174`와 `http://127.0.0.1:5174`입니다.
 필요하면 `ADMIN_API_CORS_ORIGINS` 또는 `ADMIN_API_CORS_ORIGIN_REGEX`로 조정합니다.
+Gallery API 메트릭 조회는 `PROMETHEUS_URL`을 사용하며 기본값은 `http://localhost:9090`입니다.
+`ADMIN_CRAWL_STATUS_CACHE_SECONDS`는 `/admin/crawl-status`의 in-process cache TTL이며 기본값은 `5`초입니다.
 
 ## 테스트
 

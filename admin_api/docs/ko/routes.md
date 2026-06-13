@@ -5,11 +5,14 @@
 ## 책임
 
 - `GET /admin/crawl-status` endpoint를 제공합니다.
+- `GET /admin/metrics/gallery-api` endpoint를 제공합니다.
 - repository에서 읽은 crawl 운영 상태를 Admin API response DTO로 반환합니다.
+- Prometheus에서 읽은 Gallery API metrics를 Admin API response DTO로 반환합니다.
 
 ## 비소유 책임
 
 - crawl worker 실행과 상태 쓰기는 `crawl_service`가 소유합니다.
+- Prometheus scrape와 time series 저장은 `prometheus` 서비스가 소유합니다.
 - dashboard 렌더링은 `admin-frontend`가 소유합니다.
 
 ## 관련 문서

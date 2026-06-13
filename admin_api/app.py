@@ -7,14 +7,16 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from admin_api.prometheus import prometheus_repository_from_env
 from admin_api.repository import repository_from_env
 from admin_api.routes import create_router
 
 
-def create_app(repository=None) -> FastAPI:
+def create_app(repository=None, metrics_repository=None) -> FastAPI:
     """Create the crawl operations admin API app with an injectable repository."""
 
     status_repository = repository or repository_from_env()
+    gallery_metrics_repository = metrics_repository or prometheus_repository_from_env()
 
     app = FastAPI(title="DCSS Arti Gallery Admin API")
     app.add_middleware(
@@ -25,7 +27,7 @@ def create_app(repository=None) -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    app.include_router(create_router(status_repository))
+    app.include_router(create_router(status_repository, gallery_metrics_repository))
     return app
 
 
