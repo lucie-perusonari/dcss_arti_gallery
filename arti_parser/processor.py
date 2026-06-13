@@ -8,7 +8,7 @@ from arti_parser.extractor import extract_artifact_documents
 from arti_parser.models import ArtifactDocument
 
 
-CURRENT_PARSER_VERSION = "artifact-parser-v1"
+CURRENT_PARSER_VERSION = "artifact-parser-v3"
 CURRENT_SCORING_VERSION = "artifact-scoring-v4"
 
 
