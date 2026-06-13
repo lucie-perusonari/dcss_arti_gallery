@@ -20,6 +20,10 @@
 - boolean plus token은 `True`로 변환합니다. 예: `Regen+` -> `("Regen", True)`.
 - 그 외 token은 boolean attribute로 취급합니다.
 
+`artifact_attributes`는 visible description label을 artifact당 한 번만 파싱한 뒤 property
+token과 매칭합니다. token의 `(key, value)`도 attribute 생성과 description 매칭에서 재사용해
+artifact별 반복 regex/parse 비용을 줄입니다.
+
 ## 변경 시 주의점
 
 - `INTERNAL_PROPERTY_TOKEN_KEYS`에 속한 token은 저장 attribute에서 제외됩니다.

@@ -14,7 +14,7 @@ repository에 기록합니다.
 
 ## 처리 흐름
 
-1. repository에서 현재 `parser_version`, `scoring_version` 기준 pending raw file을 조회합니다.
+1. repository에서 pending raw file을 조회합니다.
 2. raw file을 `MorgueRawText`로 바꾸고 `ArtifactProcessor.documents_from_raw_text`를 호출합니다.
 3. 성공하면 artifact upsert, stale artifact 삭제, 처리 완료 record 저장을 repository에 위임합니다.
 4. 예외가 발생하면 실패 record를 저장하고 다음 raw file 처리를 계속합니다.

@@ -26,4 +26,4 @@
 - 평가 입력은 `random_attributes`이므로 base/random 분리가 깨지면 점수가 왜곡됩니다.
 - base subtype intrinsic 속성은 `BASE_SUBTYPE_ATTRIBUTES`, base item intrinsic 속성은
   `BASE_ITEM_ATTRIBUTES`에 의존합니다.
-- slot 판정 데이터는 `constants.py`와 generated `dcss_data.py`가 합쳐진 값을 사용합니다.
+- slot 판정 데이터는 `constants.py`의 DCSS 정적 상수와 호환 alias에서 파생한 값을 사용합니다.

@@ -19,6 +19,16 @@ NUMERIC_STEP_KEYS = {"Stlth"}
 BOOLEAN_PLUS_KEYS = {"RegenMP", "Regen"}
 EXCLUDED_RANDOM_ARTIFACT_NAME_KEYS = {"sprint"}
 ITEM_STATUS_PREFIXES = {"chaotic", "choatic", "cursed"}
+STEP_PROPERTY_KEYS_BY_LENGTH = tuple(
+    sorted((*RESISTANCE_STEP_KEYS, *NUMERIC_STEP_KEYS), key=len, reverse=True)
+)
+MULTI_WORD_PROPERTY_TOKENS_BY_LENGTH = tuple(
+    sorted(
+        MULTI_WORD_PROPERTY_TOKENS,
+        key=lambda value: len(value.split()),
+        reverse=True,
+    )
+)
 
 
 def artifact_display_name(artifact_name: str) -> str:
@@ -69,11 +79,21 @@ def artifact_attributes(
     artifact_name: str,
     visible_item_description: list[str],
 ) -> list[ArtifactDocumentAttribute]:
-    return [
-        _attribute(token, _description_for_token(token, visible_item_description))
-        for token in _property_tokens(artifact_name)
-        if token.casefold() not in INTERNAL_PROPERTY_TOKEN_KEYS
-    ]
+    descriptions = _parsed_descriptions(visible_item_description)
+    attributes: list[ArtifactDocumentAttribute] = []
+    for token in _property_tokens(artifact_name):
+        if token.casefold() in INTERNAL_PROPERTY_TOKEN_KEYS:
+            continue
+        key, value = parse_property_token(token)
+        attributes.append(
+            ArtifactDocumentAttribute(
+                token=token,
+                key=key,
+                value=value,
+                description=_description_for_token(token, key, value, descriptions),
+            )
+        )
+    return attributes
 
 
 def is_random_artifact(
@@ -96,7 +116,7 @@ def parse_property_token(token: str) -> tuple[str, int | bool | None]:
     if signed_match:
         return signed_match.group("key"), int(signed_match.group("value"))
 
-    for key in sorted((*RESISTANCE_STEP_KEYS, *NUMERIC_STEP_KEYS), key=len, reverse=True):
+    for key in STEP_PROPERTY_KEYS_BY_LENGTH:
         suffix = token[len(key) :]
         if token.startswith(key) and suffix and set(suffix) <= {"+", "-"}:
             sign = -1 if suffix[0] == "-" else 1
@@ -165,39 +185,35 @@ def _property_group_tokens(group: str) -> list[str]:
 
 
 def _multi_word_token_at(words: list[str], index: int) -> str | None:
-    for token in sorted(
-        MULTI_WORD_PROPERTY_TOKENS,
-        key=lambda value: len(value.split()),
-        reverse=True,
-    ):
+    for token in MULTI_WORD_PROPERTY_TOKENS_BY_LENGTH:
         token_words = token.split()
         if words[index : index + len(token_words)] == token_words:
             return token
     return None
 
 
-def _attribute(token: str, description: str | None) -> ArtifactDocumentAttribute:
-    key, value = parse_property_token(token)
-    return ArtifactDocumentAttribute(
-        token=token,
-        key=key,
-        value=value,
-        description=description,
-    )
-
-
-def _description_for_token(
-    token: str,
+def _parsed_descriptions(
     visible_item_description: list[str],
-) -> str | None:
-    token_key, _ = parse_property_token(token)
+) -> list[tuple[str, str, int | bool | None, str]]:
+    descriptions: list[tuple[str, str, int | bool | None, str]] = []
     for description in visible_item_description:
         match = ARTIFACT_DESCRIPTION_RE.match(description)
         if not match:
             continue
         label = match.group("label").strip()
-        label_key, _ = parse_property_token(label)
-        if label == token or label_key == token_key:
+        label_key, label_value = parse_property_token(label)
+        descriptions.append((label, label_key, label_value, description))
+    return descriptions
+
+
+def _description_for_token(
+    token: str,
+    token_key: str,
+    token_value: int | bool | None,
+    descriptions: list[tuple[str, str, int | bool | None, str]],
+) -> str | None:
+    for label, label_key, label_value, description in descriptions:
+        if label == token or (label_key == token_key and label_value == token_value):
             return description
     return None
 

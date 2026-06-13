@@ -21,7 +21,12 @@ raw file은 다음 경우 처리 대상입니다.
 - `fetch_status`가 `fetched`입니다.
 - 이전 처리 record가 없습니다.
 - 이전 처리 상태가 `completed`가 아닙니다.
-- `content_hash`, `parser_version`, `scoring_version` 중 하나가 현재 값과 다릅니다.
+- `content_hash`가 현재 raw file 값과 다릅니다.
+
+pending scan은 먼저 raw file metadata만 읽어 처리 필요 여부를 판정하고, 실제 처리할
+raw file에 대해서만 `text` 본문을 다시 조회합니다. batch 내부 보조 조회는
+`player IN (...) AND name IN (...)` 교차 조합이 아니라 정확한 `(player, name)` 쌍 `$or`
+조건을 사용해야 합니다.
 
 ## 저장 동작
 
@@ -30,8 +35,12 @@ raw file은 다음 경우 처리 대상입니다.
 - 같은 raw file에 속하지만 이번 결과에 없는 occurrence evidence는 stale로 삭제합니다.
 - source evidence가 더 이상 남지 않은 canonical artifact 문서는 삭제합니다.
 - 처리 성공/실패 상태는 `artifact_processing_files`에 upsert합니다.
-- 저장 문서와 source evidence에는 `source_content_hash`, `parser_version`, `scoring_version`
-  metadata가 추가됩니다.
+- 저장 문서와 source evidence에는 `source_content_hash` metadata가 추가됩니다.
+
+stale source 삭제는 현재 raw file의 `sources.player`/`sources.file` 또는 legacy
+`source.player`/`source.file`에 매칭되는 artifact 문서만 조회해야 합니다. `artifacts`
+전체를 raw file마다 반복 scan하면 재처리 시간이 artifact 문서 수와 raw file 수의 곱으로
+증가합니다.
 
 ## 변경 시 주의점
 

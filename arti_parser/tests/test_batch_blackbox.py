@@ -2,11 +2,6 @@ from __future__ import annotations
 
 import unittest
 
-from arti_parser.processor import (
-    CURRENT_PARSER_VERSION,
-    CURRENT_SCORING_VERSION,
-    ArtifactProcessor,
-)
 from arti_parser.batch import ArtifactProcessingBatchProcessor
 from arti_parser.repository import (
     MongoArtifactProcessingRepository,
@@ -39,11 +34,13 @@ class _Collection:
     def __init__(self) -> None:
         self.documents: list[dict] = []
         self.indexes: list[tuple[object, dict]] = []
+        self.find_queries: list[dict] = []
 
     def create_index(self, spec, **kwargs) -> None:
         self.indexes.append((spec, kwargs))
 
     def find(self, query, projection=None):
+        self.find_queries.append(dict(query))
         documents = [dict(document) for document in self.documents if _matches(document, query)]
         if projection is not None:
             documents = [_project(document, projection) for document in documents]
@@ -53,6 +50,8 @@ class _Collection:
         for document in self.documents:
             if _matches(document, selector):
                 document.update(update["$set"])
+                for key in update.get("$unset", {}):
+                    document.pop(key, None)
                 return
         if upsert:
             self.documents.append(dict(update["$set"]))
@@ -103,8 +102,6 @@ class ArtifactProcessingBlackBoxTest(unittest.TestCase):
         )
 
         pending = repository.list_pending_raw_files(
-            parser_version=CURRENT_PARSER_VERSION,
-            scoring_version=CURRENT_SCORING_VERSION,
             limit=10,
             scan_batch_size=2,
         )
@@ -157,9 +154,12 @@ class ArtifactProcessingBlackBoxTest(unittest.TestCase):
         self.assertEqual(artifact["base_item"], "broad axe")
         self.assertEqual(artifact["source"]["player"], "wiiwiwi")
         self.assertEqual(artifact["source_content_hash"], "hash-1")
-        self.assertEqual(artifact["parser_version"], CURRENT_PARSER_VERSION)
+        self.assertNotIn("parser_version", artifact)
+        self.assertNotIn("scoring_version", artifact)
         self.assertEqual(processing.documents[0]["status"], PROCESSING_STATUS_COMPLETED)
         self.assertEqual(processing.documents[0]["artifact_count"], 1)
+        self.assertNotIn("parser_version", processing.documents[0])
+        self.assertNotIn("scoring_version", processing.documents[0])
 
         second_summary = ArtifactProcessingBatchProcessor(repository).process_batch(limit=10)
 
@@ -232,7 +232,7 @@ class ArtifactProcessingBlackBoxTest(unittest.TestCase):
         self.assertEqual(processing.documents[0]["status"], PROCESSING_STATUS_FAILED)
         self.assertIn("unsupported morgue raw extension", processing.documents[0]["error"])
 
-    def test_batch_uses_processor_owned_versions(self) -> None:
+    def test_stale_source_lookup_is_limited_to_current_raw_file(self) -> None:
         raw_files = _Collection()
         artifacts = _Collection()
         processing = _Collection()
@@ -241,33 +241,44 @@ class ArtifactProcessingBlackBoxTest(unittest.TestCase):
             artifacts_collection=artifacts,
             processing_collection=processing,
         )
-        raw_files.documents.append(
-            _raw_record(
-                "wiiwiwi",
-                "morgue-wiiwiwi-20260101-000001.txt",
-                "\n".join(
-                    [
-                        "Inventory:",
-                        ' a - the +6 broad axe "Axe" {heavy Slay+3 rF+ *Slow}',
-                        "   Skills:",
-                    ]
-                ),
-                "hash-1",
-            ).to_dict()
+        raw = _raw_record(
+            "wiiwiwi",
+            "morgue-wiiwiwi-20260101-000001.txt",
+            "\n".join(
+                [
+                    "Inventory:",
+                    ' a - the +6 broad axe "Axe" {heavy Slay+3 rF+ *Slow}',
+                    "   Skills:",
+                ]
+            ),
+            "hash-1",
+        )
+        raw_files.documents.append(raw.to_dict())
+        artifacts.documents.extend(
+            [
+                {
+                    "id": "stale-current-source",
+                    "source": {"player": "wiiwiwi", "file": raw.name},
+                },
+                {
+                    "id": "other-source",
+                    "source": {"player": "other", "file": "morgue-other-20260101-000001.txt"},
+                },
+            ]
         )
 
-        ArtifactProcessingBatchProcessor(
-            repository,
-            processor=ArtifactProcessor(
-                parser_version="artifact-parser-test",
-                scoring_version="artifact-scoring-test",
-            ),
-        ).process_batch(limit=10)
+        ArtifactProcessingBatchProcessor(repository).process_batch(limit=10)
 
-        self.assertEqual(artifacts.documents[0]["parser_version"], "artifact-parser-test")
-        self.assertEqual(artifacts.documents[0]["scoring_version"], "artifact-scoring-test")
-        self.assertEqual(processing.documents[0]["parser_version"], "artifact-parser-test")
-        self.assertEqual(processing.documents[0]["scoring_version"], "artifact-scoring-test")
+        self.assertIn(
+            {
+                "$or": [
+                    {"sources": {"$elemMatch": {"player": "wiiwiwi", "file": raw.name}}},
+                    {"source.player": "wiiwiwi", "source.file": raw.name},
+                ]
+            },
+            artifacts.find_queries,
+        )
+        self.assertTrue(any(document["id"] == "other-source" for document in artifacts.documents))
 
 
 def _raw_record(
@@ -298,8 +309,6 @@ def _processing_record(
         "player": player,
         "name": name,
         "content_hash": content_hash,
-        "parser_version": CURRENT_PARSER_VERSION,
-        "scoring_version": CURRENT_SCORING_VERSION,
         "status": status,
         "artifact_count": 1,
     }
@@ -307,8 +316,18 @@ def _processing_record(
 
 def _matches(document: dict, selector: dict) -> bool:
     for key, expected in selector.items():
+        if key == "$or":
+            if not any(_matches(document, candidate) for candidate in expected):
+                return False
+            continue
         actual = _value_at(document, key)
         if isinstance(expected, dict):
+            if "$elemMatch" in expected:
+                if not isinstance(actual, list):
+                    return False
+                if not any(_matches(item, expected["$elemMatch"]) for item in actual):
+                    return False
+                continue
             if "$in" in expected and actual not in expected["$in"]:
                 return False
             if "$nin" in expected and actual in expected["$nin"]:

@@ -75,6 +75,7 @@ def extract_artifact_documents(raw_text: MorgueRawText) -> list[ArtifactDocument
             item_class=classification.item_class,
             armour_slot=classification.armour_slot,
             jewellery_slot=classification.jewellery_slot,
+            all_attributes=classification.all_attributes,
             random_attributes=classification.random_attributes,
         )
         document = _artifact_document_from_parts(
@@ -174,7 +175,7 @@ def _parse_artifact(raw: _RawArtifact) -> _ParsedArtifact:
     )
 
 
-def _txt_blocks(lines: list[str]) -> Iterator[_RawBlock]:
+def _txt_blocks(lines: Iterable[str]) -> Iterator[_RawBlock]:
     for line_no, block_lines in _txt_inventory_item_blocks(lines):
         title = _candidate_title(block_lines[0])
         if title is None:
@@ -271,16 +272,14 @@ def _raw_artifact_from_block(
     )
 
 
-def _txt_inventory_item_blocks(lines: list[str]) -> list[tuple[int, list[str]]]:
-    inventory = _txt_inventory_lines(lines)
-    blocks: list[tuple[int, list[str]]] = []
+def _txt_inventory_item_blocks(lines: Iterable[str]) -> Iterator[tuple[int, list[str]]]:
     current_line_no: int | None = None
     current_block: list[str] = []
 
-    for line_no, line in inventory:
+    for line_no, line in _txt_inventory_lines(lines):
         if INVENTORY_ITEM_RE.match(line):
             if current_line_no is not None:
-                blocks.append((current_line_no, current_block))
+                yield current_line_no, current_block
             current_line_no = line_no
             current_block = [line]
             continue
@@ -289,24 +288,19 @@ def _txt_inventory_item_blocks(lines: list[str]) -> list[tuple[int, list[str]]]:
             current_block.append(line)
 
     if current_line_no is not None:
-        blocks.append((current_line_no, current_block))
-
-    return blocks
+        yield current_line_no, current_block
 
 
-def _txt_inventory_lines(lines: list[str]) -> list[tuple[int, str]]:
-    try:
-        inventory_start = lines.index("Inventory:") + 1
-    except ValueError:
-        return []
-
-    inventory_lines: list[tuple[int, str]] = []
-    for index, line in enumerate(lines[inventory_start:], start=inventory_start + 1):
+def _txt_inventory_lines(lines: Iterable[str]) -> Iterator[tuple[int, str]]:
+    in_inventory = False
+    for index, line in enumerate(lines, start=1):
+        if not in_inventory:
+            if line == "Inventory:":
+                in_inventory = True
+            continue
         if line.startswith("   Skills:"):
             break
-        inventory_lines.append((index, line))
-
-    return inventory_lines
+        yield index, line
 
 
 def _extract_txt_item_source(block_lines: list[str]) -> str | None:

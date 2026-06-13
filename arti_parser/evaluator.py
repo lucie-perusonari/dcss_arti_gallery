@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import cache
 from itertools import combinations
 
-from arti_parser.dcss_data import DCSS_ARMOUR_STATS, DCSS_WEAPON_STATS
+from arti_parser.constants import DCSS_ARMOUR_STATS, DCSS_WEAPON_STATS
 from arti_parser.models import ArtifactDocumentEvaluation
 from arti_parser.parser import parse_property_token
 
@@ -102,8 +103,23 @@ ARMOUR_BASE_AC = {
     "shield": 8,
     "tower shield": 13,
 }
+ARMOUR_BASE_SCORE = 10
+WEAPON_BASE_SCORE = 10
+HEAVY_ARMOUR_ER_THRESHOLD = 14
+TWO_HANDED_WEAPON_COST = 3
+ARMOUR_BASE_AC_MULTIPLIER = 1.75
+RESIST_SCORE = 10
+RESIST_PENALTY_MULTIPLIER = 1.5
+MINOR_RESIST_SCORE = RESIST_SCORE / 2
+REGEN_SCORE = RESIST_SCORE * 1.5
+STAT_POINT_SCORE = RESIST_SCORE / 6
+SLAY_POINT_SCORE = RESIST_SCORE / 4
+ARMOUR_NEGATIVE_SLAY_POINT_SCORE = RESIST_SCORE / 2.5
+ARMOUR_STAT_POINT_SCORE = SLAY_POINT_SCORE / 2
+MP_POINT_SCORE = RESIST_SCORE / 9
 
 SPEED_BRANDS = {"speed"}
+HOLY_BRANDS = {"holy", "holy wrath"}
 NORMAL_ATTACK_BRANDS = {
     "elec",
     "electrocution",
@@ -127,6 +143,48 @@ NORMAL_ATTACK_BRANDS = {
 WEAK_ATTACK_BRANDS = {"chaos", "protect", "protection", "distort", "distortion"}
 
 MAJOR_RESIST_KEYS = {"rF", "rC", "Will"}
+RESISTANCE_KEYS = {*MAJOR_RESIST_KEYS, "rN", "rElec", "rPois", "rCorr"}
+RARE_RESIST_SCORES = {"rElec": 13, "rPois": 13}
+STRENGTH_WEAPONS = {
+    "club",
+    "mace",
+    "flail",
+    "morningstar",
+    "eveningstar",
+    "great mace",
+    "hand axe",
+    "war axe",
+    "broad axe",
+    "battleaxe",
+    "executioner's axe",
+    "quarterstaff",
+    "lajatang",
+    "halberd",
+}
+DEXTERITY_WEAPONS = {
+    "dagger",
+    "short sword",
+    "rapier",
+    "falchion",
+    "long sword",
+    "scimitar",
+    "double sword",
+    "great sword",
+    "triple sword",
+    "sling",
+    "orcbow",
+    "arbalest",
+    "longbow",
+    "hand cannon",
+    "triple crossbow",
+}
+FLEX_STAT_WEAPONS = {
+    "whip",
+    "demon whip",
+    "spear",
+    "trident",
+    "demon trident",
+}
 DIRECT_DAMAGE_SCHOOLS = {"Fire", "Ice", "Earth", "Alch", "Air"}
 ELEMENTAL_SCHOOLS = {"Fire", "Ice", "Earth", "Air"}
 SPELL_SCHOOL_KEYS = {
@@ -164,10 +222,6 @@ COMMON_BOOLEAN_PENALTIES = {
     "-Cast": 20,
     "*Corrode": 18,
     "*Rage": 24,
-    "^Fragile": 8,
-    "Fragile": 8,
-    "^Drain": 8,
-    "^Contam": 8,
     "*Noise": 5,
 }
 
@@ -180,11 +234,18 @@ def evaluate_artifact_data(
     armour_slot: str | None,
     jewellery_slot: str | None,
     random_attributes: list[str],
+    all_attributes: list[str] | None = None,
 ) -> ArtifactDocumentEvaluation:
     """Evaluate artifact fields into the document evaluation shape."""
 
-    attributes = _evaluated_attributes(random_attributes)
     normalized_class = item_class.lower()
+    attributes = _evaluated_attributes(
+        _score_input_attributes(
+            item_class=normalized_class,
+            all_attributes=all_attributes,
+            random_attributes=random_attributes,
+        )
+    )
     if normalized_class == "weapon":
         parts = _weapon_score(base_item, enchantment, attributes)
     elif normalized_class == "staff":
@@ -192,7 +253,7 @@ def evaluate_artifact_data(
     elif normalized_class == "armour":
         parts = _armour_score(base_item, enchantment, armour_slot, attributes)
     elif normalized_class == "jewellery":
-        parts = _jewellery_score(attributes)
+        parts = _jewellery_score(attributes, jewellery_slot)
     else:
         parts = _fallback_score(attributes)
 
@@ -226,19 +287,14 @@ def _weapon_score(
         key = attribute.key
         value = attribute.int_value
         if attribute.token in SPEED_BRANDS:
-            offense += 30
-        elif attribute.token in NORMAL_ATTACK_BRANDS:
-            offense += 15
-        elif attribute.token in WEAK_ATTACK_BRANDS:
-            offense += 8
+            offense += base * 0.52
+        elif attribute.token in NORMAL_ATTACK_BRANDS or attribute.token in WEAK_ATTACK_BRANDS:
+            offense += base * _weapon_brand_multiplier(attribute.token)
         elif key == "Slay" and value:
-            offense += _positive(value) * 9
-            penalty += _negative_abs(value) * 9
-        elif key in {"Str", "Dex"} and value:
-            offense += _positive(value) * 3
-            penalty += _negative_abs(value) * 4
-        elif key == "Int" and value:
-            penalty += _negative_abs(value)
+            offense += _positive(value) * SLAY_POINT_SCORE
+            penalty += _negative_abs(value) * SLAY_POINT_SCORE
+        elif key in {"Str", "Dex", "Int"}:
+            continue
         elif key == "Regen" and attribute.value is True:
             utility += 12
         else:
@@ -251,6 +307,8 @@ def _weapon_score(
                         utility += common * 0.5
             penalty += _common_penalty_score(attribute)
 
+    offense += _weapon_stat_score(base_item, attributes)
+    penalty += _stat_penalty_score(attributes)
     return _ScoreParts(base=base, offense=offense, defense=defense, utility=utility, penalty=penalty)
 
 
@@ -288,6 +346,7 @@ def _staff_score(attributes: list[_EvaluatedAttribute]) -> _ScoreParts:
             penalty += _staff_penalty_score(attribute)
 
     offense += _staff_school_score(schools)
+    penalty += _stat_penalty_score(attributes)
     return _ScoreParts(offense=offense, defense=defense, utility=utility, penalty=penalty)
 
 
@@ -308,14 +367,13 @@ def _armour_score(
         key = attribute.key
         value = attribute.int_value
         if key == "Slay" and value:
-            offense += _positive(value) * 9
-            penalty += _negative_abs(value) * 9
+            offense += _positive(value) * SLAY_POINT_SCORE
+            penalty += _negative_abs(value) * ARMOUR_NEGATIVE_SLAY_POINT_SCORE
         elif key in {"AC", "EV", "SH"} and value:
             defense += _positive(value) * 3
             penalty += _negative_abs(value) * 3
         elif key in {"Str", "Dex", "Int"} and value:
-            utility += _positive(value)
-            penalty += _negative_abs(value) * 2
+            utility += _positive(value) * ARMOUR_STAT_POINT_SCORE
         else:
             score = _common_positive_score(attribute)
             category = _common_positive_category(attribute)
@@ -328,10 +386,14 @@ def _armour_score(
             penalty += _common_penalty_score(attribute)
 
     defense += _resistance_bundle_bonus(resist_count)
+    penalty += _stat_penalty_score(attributes)
     return _ScoreParts(base=base, offense=offense, defense=defense, utility=utility, penalty=penalty)
 
 
-def _jewellery_score(attributes: list[_EvaluatedAttribute]) -> _ScoreParts:
+def _jewellery_score(
+    attributes: list[_EvaluatedAttribute],
+    jewellery_slot: str | None,
+) -> _ScoreParts:
     offense = 0.0
     defense = 0.0
     utility = 0.0
@@ -341,14 +403,20 @@ def _jewellery_score(attributes: list[_EvaluatedAttribute]) -> _ScoreParts:
         key = attribute.key
         value = attribute.int_value
         if key == "Slay" and value:
-            offense += _positive(value) * 3
-            penalty += _negative_abs(value) * 3
+            offense += _positive(value) * SLAY_POINT_SCORE
+            penalty += _negative_abs(value) * SLAY_POINT_SCORE
         elif key in {"AC", "EV", "SH"} and value:
             defense += _positive(value) * 3
             penalty += _negative_abs(value) * 3
         elif key in {"Str", "Dex", "Int"} and value:
-            utility += _positive(value) * 2
-            penalty += _negative_abs(value) * 2
+            utility += _positive(value) * STAT_POINT_SCORE
+        elif key == "MP" and value:
+            utility += _positive(value) * MP_POINT_SCORE
+            penalty += _negative_abs(value) * MP_POINT_SCORE
+        elif key == "Regen" and attribute.value is True:
+            utility += REGEN_SCORE
+        elif jewellery_slot == "amulet" and key in {"Reflect", "RegenMP"} and attribute.value is True:
+            utility += RESIST_SCORE
         else:
             category = _common_positive_category(attribute)
             score = _common_positive_score(attribute)
@@ -358,6 +426,7 @@ def _jewellery_score(attributes: list[_EvaluatedAttribute]) -> _ScoreParts:
                 utility += score
             penalty += _common_penalty_score(attribute)
 
+    penalty += _stat_penalty_score(attributes)
     return _ScoreParts(offense=offense, defense=defense, utility=utility, penalty=penalty)
 
 
@@ -370,14 +439,18 @@ def _fallback_score(attributes: list[_EvaluatedAttribute]) -> _ScoreParts:
         key = attribute.key
         value = attribute.int_value
         if key == "Slay" and value:
-            offense += _positive(value) * 3
-            penalty += _negative_abs(value) * 3
+            offense += _positive(value) * SLAY_POINT_SCORE
+            penalty += _negative_abs(value) * SLAY_POINT_SCORE
         elif key in {"AC", "EV", "SH"} and value:
             defense += _positive(value) * 3
             penalty += _negative_abs(value) * 3
         elif key in {"Str", "Dex", "Int"} and value:
-            utility += _positive(value) * 2
-            penalty += _negative_abs(value) * 2
+            utility += _positive(value) * STAT_POINT_SCORE
+        elif key == "MP" and value:
+            utility += _positive(value) * MP_POINT_SCORE
+            penalty += _negative_abs(value) * MP_POINT_SCORE
+        elif key == "Regen" and attribute.value is True:
+            utility += REGEN_SCORE
         else:
             category = _common_positive_category(attribute)
             score = _common_positive_score(attribute)
@@ -386,6 +459,7 @@ def _fallback_score(attributes: list[_EvaluatedAttribute]) -> _ScoreParts:
             elif category == "utility":
                 utility += score
             penalty += _common_penalty_score(attribute)
+    penalty += _stat_penalty_score(attributes)
     return _ScoreParts(offense=offense, defense=defense, utility=utility, penalty=penalty)
 
 
@@ -395,14 +469,28 @@ def _enchantment_score(enchantment: int | None) -> int:
 
 def _armour_base_score(base_item: str, armour_slot: str | None) -> int:
     normalized = _normalize(base_item)
-    if normalized in DCSS_ARMOUR_STATS:
-        return int(DCSS_ARMOUR_STATS[normalized]["ac"]) * 3
+    stats = DCSS_ARMOUR_STATS.get(normalized)
+    if stats:
+        slot = stats.get("slot") or armour_slot
+        ac = int(stats.get("ac", 0))
+        er = _armour_encumbrance_rating(stats)
+        if slot == "body_armour":
+            base = ac * ARMOUR_BASE_AC_MULTIPLIER
+            if er >= HEAVY_ARMOUR_ER_THRESHOLD:
+                return max(0, round(base - max(0, er - HEAVY_ARMOUR_ER_THRESHOLD) * 0.5))
+            return max(0, round(base - er * 0.25))
+        if slot == "offhand":
+            return _clamp(round(6 + ac * 0.6 - er * 0.3), 6, 14)
+        if slot in {"cloak", "boots", "gloves", "helmet"}:
+            return 8
+        if slot == "orb":
+            return 6
     if normalized in ARMOUR_BASE_AC:
-        return ARMOUR_BASE_AC[normalized] * 3
+        return ARMOUR_BASE_SCORE
     if armour_slot in {"cloak", "boots", "gloves", "helmet"}:
-        return 15
+        return 8
     if armour_slot in {"orb", "cloak"} or normalized == "scarf":
-        return 10
+        return 6
     return 10
 
 
@@ -410,33 +498,96 @@ def _weapon_base_score(base_item: str) -> int:
     normalized = _normalize(base_item)
     stats = DCSS_WEAPON_STATS.get(normalized)
     if not stats:
-        return WEAPON_BASE_SCORES.get(normalized, 8)
-    damage = int(stats["damage"])
-    speed = int(stats["speed"])
-    min_delay = max(3, speed // 2)
-    speed_adjustment = max(0, 10 - min_delay) * 2
-    return max(2, round(damage * 1.4 + speed_adjustment))
+        return WEAPON_BASE_SCORE
+    power = _weapon_power(stats)
+    if _is_two_handed_weapon(stats):
+        one_handed_power = _one_handed_endgame_power(str(stats.get("skill", "")))
+        if one_handed_power > 0:
+            power = min(power, one_handed_power) + max(0.0, power - one_handed_power) * 0.5
+        power = max(0.0, power - TWO_HANDED_WEAPON_COST)
+    return _clamp(round(power * 0.6), 6, 16)
 
 
-def _common_positive_score(attribute: _EvaluatedAttribute) -> int:
+def _score_input_attributes(
+    *,
+    item_class: str,
+    all_attributes: list[str] | None,
+    random_attributes: list[str],
+) -> list[str]:
+    if item_class in {"armour", "jewellery"} and all_attributes is not None:
+        return _dedupe_resistance_tokens(all_attributes)
+    return random_attributes
+
+
+def _dedupe_resistance_tokens(tokens: list[str]) -> list[str]:
+    kept: list[str] = []
+    seen_resistance_keys: set[str] = set()
+    for token in tokens:
+        key, _ = parse_property_token(token)
+        if key in RESISTANCE_KEYS:
+            if key in seen_resistance_keys:
+                continue
+            seen_resistance_keys.add(key)
+        kept.append(token)
+    return kept
+
+
+def _armour_encumbrance_rating(stats: dict) -> float:
+    return abs(float(stats.get("ev_penalty", 0))) / 10
+
+
+def _weapon_power(stats: dict) -> float:
+    damage = float(stats.get("damage", 0))
+    min_delay = _weapon_min_delay(stats)
+    if min_delay <= 0:
+        return 0.0
+    return damage * 10 / min_delay
+
+
+def _weapon_min_delay(stats: dict) -> float:
+    speed = int(stats.get("speed", 10))
+    return max(3, speed // 2)
+
+
+def _weapon_brand_multiplier(token: str) -> float:
+    return 0.35 if token in HOLY_BRANDS else 0.25
+
+
+def _is_two_handed_weapon(stats: dict) -> bool:
+    return stats.get("min_1h_size") == "NUM_SIZE_LEVELS"
+
+
+@cache
+def _one_handed_endgame_power(skill: str) -> float:
+    if not skill:
+        return 0.0
+    powers = [
+        _weapon_power(stats)
+        for stats in DCSS_WEAPON_STATS.values()
+        if stats.get("skill") == skill and not _is_two_handed_weapon(stats)
+    ]
+    return max(powers, default=0.0)
+
+
+def _common_positive_score(attribute: _EvaluatedAttribute) -> float:
     value = attribute.int_value
     key = attribute.key
     if key in MAJOR_RESIST_KEYS and value and value > 0:
-        return value * 12
+        return _stacked_resist_score(key, value)
     if key == "rN" and value and value > 0:
-        return value * 6
+        return _stacked_resist_score(key, value)
     if key in {"rElec", "rPois", "rCorr"} and attribute.value is True:
-        return 12
+        return _resist_score_for_key(key)
     if key in {"AC", "EV", "SH"} and value and value > 0:
         return value * 3
     if key == "Regen" and attribute.value is True:
-        return 24
+        return REGEN_SCORE
     if key in HIGH_UTILITY_KEYS and attribute.value is True:
-        return 18
+        return 0
     if key in LOW_UTILITY_KEYS and attribute.value is True:
-        return 6
+        return 0
     if key == "MP" and value and value > 0:
-        return value
+        return value * MP_POINT_SCORE
     return 0
 
 
@@ -449,38 +600,32 @@ def _common_positive_category(attribute: _EvaluatedAttribute) -> str | None:
     return None
 
 
-def _armour_utility_score(attribute: _EvaluatedAttribute) -> int:
+def _armour_utility_score(attribute: _EvaluatedAttribute) -> float:
     key = attribute.key
     if key == "Regen":
-        return 16
-    if key == "SInv":
-        return 6
-    if key == "Rampage":
-        return 6
-    if key in {"+Inv", "+Blink"}:
-        return 4
+        return REGEN_SCORE
     if key == "MP":
-        return _positive(attribute.int_value)
+        return _positive(attribute.int_value) * MP_POINT_SCORE
     return 0
 
 
-def _common_penalty_score(attribute: _EvaluatedAttribute) -> int:
+def _common_penalty_score(attribute: _EvaluatedAttribute) -> float:
     key = attribute.key
     value = attribute.int_value
     if attribute.token in COMMON_BOOLEAN_PENALTIES:
         return COMMON_BOOLEAN_PENALTIES[attribute.token]
     if key in {"rF", "rC", "Will", "rElec", "rPois", "rCorr"} and value and value < 0:
-        return abs(value) * 12
+        return abs(value) * _resist_score_for_key(key) * RESIST_PENALTY_MULTIPLIER
     if key == "rN" and value and value < 0:
-        return abs(value) * 6
-    if key in {"Str", "Dex", "Int"} and value and value < 0:
-        return abs(value) * 2
+        return abs(value) * MINOR_RESIST_SCORE * RESIST_PENALTY_MULTIPLIER
+    if key in {"Str", "Dex", "Int"}:
+        return 0
     if key == "Stlth" and value and value < 0:
         return abs(value) * 2
     return 0
 
 
-def _staff_penalty_score(attribute: _EvaluatedAttribute) -> int:
+def _staff_penalty_score(attribute: _EvaluatedAttribute) -> float:
     if attribute.token == "*Silence":
         return 40
     if attribute.token == "-Cast":
@@ -489,9 +634,7 @@ def _staff_penalty_score(attribute: _EvaluatedAttribute) -> int:
 
 
 def _staff_int_penalty(value: int | None) -> int:
-    if value is None or value >= 0:
-        return 0
-    return round(abs(value) * 8 / 3)
+    return 0
 
 
 def _staff_school_score(schools: set[str]) -> int:
@@ -517,17 +660,68 @@ def _staff_school_score(schools: set[str]) -> int:
     return score
 
 
+def _weapon_stat_score(
+    base_item: str,
+    attributes: list[_EvaluatedAttribute],
+) -> float:
+    strength = _stat_value(attributes, "Str")
+    dexterity = _stat_value(attributes, "Dex")
+    normalized = _normalize(base_item)
+    if normalized in DEXTERITY_WEAPONS:
+        return _stat_score(dexterity)
+    if normalized in STRENGTH_WEAPONS:
+        return _stat_score(strength)
+    if normalized in FLEX_STAT_WEAPONS:
+        return _stat_score(max(strength, dexterity))
+    return _stat_score(max(strength, dexterity))
+
+
+def _stat_value(attributes: list[_EvaluatedAttribute], key: str) -> int:
+    total = 0
+    for attribute in attributes:
+        if attribute.key == key and attribute.int_value:
+            total += attribute.int_value
+    return total
+
+
+def _stat_score(value: int) -> float:
+    return _positive(value) * SLAY_POINT_SCORE
+
+
+def _stat_penalty_score(attributes: list[_EvaluatedAttribute]) -> float:
+    total_loss = sum(
+        _negative_abs(attribute.int_value)
+        for attribute in attributes
+        if attribute.key in {"Str", "Dex", "Int"}
+    )
+    excess_loss = max(0, total_loss - 4)
+    return excess_loss * STAT_POINT_SCORE
+
+
+def _resist_score_for_key(key: str) -> float:
+    if key == "rN":
+        return MINOR_RESIST_SCORE
+    return RARE_RESIST_SCORES.get(key, RESIST_SCORE)
+
+
+def _stacked_resist_score(key: str, value: int) -> float:
+    score = _resist_score_for_key(key)
+    if value <= 1:
+        return value * score
+    return score + (value - 1) * score * 1.5
+
+
 def _resistance_bundle_bonus(resist_count: int) -> int:
     bonus = 0
     if resist_count >= 2:
-        bonus += 8
+        bonus += round(RESIST_SCORE * 2 / 3)
     if resist_count >= 3:
-        bonus += 8
+        bonus += round(RESIST_SCORE * 2 / 3)
     return bonus
 
 
 def _is_resistance(attribute: _EvaluatedAttribute) -> bool:
-    return attribute.key in {"rF", "rC", "Will", "rN", "rElec", "rPois", "rCorr"}
+    return attribute.key in RESISTANCE_KEYS
 
 
 def _evaluated_attributes(tokens: list[str]) -> list[_EvaluatedAttribute]:
@@ -545,6 +739,10 @@ def _positive(value: int | None) -> int:
 
 def _negative_abs(value: int | None) -> int:
     return abs(value) if value is not None and value < 0 else 0
+
+
+def _clamp(value: int, minimum: int, maximum: int) -> int:
+    return max(minimum, min(maximum, value))
 
 
 def _normalize(value: str) -> str:

@@ -17,6 +17,21 @@ DEFAULT_MONGO_ARTIFACT_PROCESSING_COLLECTION = "artifact_processing_files"
 FETCH_STATUS_FETCHED = "fetched"
 PROCESSING_STATUS_COMPLETED = "completed"
 PROCESSING_STATUS_FAILED = "failed"
+RAW_FILE_METADATA_PROJECTION = {
+    "_id": 0,
+    "player": 1,
+    "name": 1,
+    "url": 1,
+    "extension": 1,
+    "content_hash": 1,
+    "fetch_status": 1,
+    "fetched_at": 1,
+    "fetch_error": 1,
+}
+RAW_FILE_TEXT_PROJECTION = {
+    **RAW_FILE_METADATA_PROJECTION,
+    "text": 1,
+}
 
 
 @dataclass(frozen=True)
@@ -54,8 +69,6 @@ class ArtifactProcessingRecord:
     player: str
     name: str
     content_hash: str
-    parser_version: str
-    scoring_version: str
     status: str
     artifact_count: int = 0
     processed_at: str | None = None
@@ -66,8 +79,6 @@ class ArtifactProcessingRecord:
             "player": _player_key(self.player),
             "name": self.name,
             "content_hash": self.content_hash,
-            "parser_version": self.parser_version,
-            "scoring_version": self.scoring_version,
             "status": self.status,
             "artifact_count": self.artifact_count,
             "processed_at": self.processed_at,
@@ -87,8 +98,6 @@ class ArtifactProcessingRepository(Protocol):
     def list_pending_raw_files(
         self,
         *,
-        parser_version: str,
-        scoring_version: str,
         limit: int,
         scan_batch_size: int,
     ) -> list[RawMorgueSource]:
@@ -99,8 +108,6 @@ class ArtifactProcessingRepository(Protocol):
         *,
         raw_file: RawMorgueSource,
         artifacts: list[ArtifactDocument],
-        parser_version: str,
-        scoring_version: str,
         processed_at: str,
     ) -> ArtifactSaveResult:
         ...
@@ -109,8 +116,6 @@ class ArtifactProcessingRepository(Protocol):
         self,
         *,
         raw_file: RawMorgueSource,
-        parser_version: str,
-        scoring_version: str,
         processed_at: str,
         error: str,
     ) -> None:
@@ -133,8 +138,6 @@ class MongoArtifactProcessingRepository:
     def list_pending_raw_files(
         self,
         *,
-        parser_version: str,
-        scoring_version: str,
         limit: int,
         scan_batch_size: int,
     ) -> list[RawMorgueSource]:
@@ -145,18 +148,7 @@ class MongoArtifactProcessingRepository:
         scan_batch_size = max(scan_batch_size, 1)
         cursor = self.raw_file_collection.find(
             {"fetch_status": FETCH_STATUS_FETCHED},
-            {
-                "_id": 0,
-                "player": 1,
-                "name": 1,
-                "url": 1,
-                "extension": 1,
-                "text": 1,
-                "content_hash": 1,
-                "fetch_status": 1,
-                "fetched_at": 1,
-                "fetch_error": 1,
-            },
+            RAW_FILE_METADATA_PROJECTION,
         ).sort([("player", 1), ("name", 1)])
         if hasattr(cursor, "batch_size"):
             cursor = cursor.batch_size(scan_batch_size)
@@ -168,31 +160,25 @@ class MongoArtifactProcessingRepository:
                 pending.extend(
                     self._pending_from_batch(
                         batch,
-                        parser_version=parser_version,
-                        scoring_version=scoring_version,
                     )
                 )
                 if len(pending) >= limit:
-                    return pending[:limit]
+                    return self._raw_files_with_text(pending[:limit])
                 batch = []
 
         if batch:
             pending.extend(
                 self._pending_from_batch(
                     batch,
-                    parser_version=parser_version,
-                    scoring_version=scoring_version,
                 )
             )
-        return pending[:limit]
+        return self._raw_files_with_text(pending[:limit])
 
     def save_artifacts_for_raw_file(
         self,
         *,
         raw_file: RawMorgueSource,
         artifacts: list[ArtifactDocument],
-        parser_version: str,
-        scoring_version: str,
         processed_at: str,
     ) -> ArtifactSaveResult:
         occurrence_canonical_ids = {
@@ -201,29 +187,35 @@ class MongoArtifactProcessingRepository:
         }
         stale_deleted = self._delete_stale_artifact_sources(raw_file, occurrence_canonical_ids)
         if self.artifacts_collection is not None:
+            existing_artifacts = self._existing_artifacts_by_id(
+                [artifact.id for artifact in artifacts]
+            )
+            update_operations = []
             for artifact in artifacts:
-                existing = self._find_artifact_by_id(artifact.id)
                 document = _canonical_artifact_mongo_document(
                     artifact,
                     raw_file=raw_file,
-                    parser_version=parser_version,
-                    scoring_version=scoring_version,
                     processed_at=processed_at,
-                    existing=existing,
+                    existing=existing_artifacts.get(artifact.id),
                 )
-                self.artifacts_collection.update_one(
-                    {"id": artifact.id},
-                    {"$set": document},
-                    upsert=True,
+                update_operations.append(
+                    _update_one_operation(
+                        {"id": artifact.id},
+                        {
+                            "$set": document,
+                            "$unset": _version_metadata_unset(),
+                        },
+                        upsert=True,
+                    )
                 )
+            if update_operations:
+                self._bulk_write_artifact_updates(update_operations)
 
         self._save_processing_record(
             ArtifactProcessingRecord(
                 player=raw_file.player,
                 name=raw_file.name,
                 content_hash=raw_file.content_hash,
-                parser_version=parser_version,
-                scoring_version=scoring_version,
                 status=PROCESSING_STATUS_COMPLETED,
                 artifact_count=len(artifacts),
                 processed_at=processed_at,
@@ -239,8 +231,6 @@ class MongoArtifactProcessingRepository:
         self,
         *,
         raw_file: RawMorgueSource,
-        parser_version: str,
-        scoring_version: str,
         processed_at: str,
         error: str,
     ) -> None:
@@ -249,8 +239,6 @@ class MongoArtifactProcessingRepository:
                 player=raw_file.player,
                 name=raw_file.name,
                 content_hash=raw_file.content_hash,
-                parser_version=parser_version,
-                scoring_version=scoring_version,
                 status=PROCESSING_STATUS_FAILED,
                 artifact_count=0,
                 processed_at=processed_at,
@@ -261,15 +249,12 @@ class MongoArtifactProcessingRepository:
     def _pending_from_batch(
         self,
         batch: list[RawMorgueSource],
-        *,
-        parser_version: str,
-        scoring_version: str,
     ) -> list[RawMorgueSource]:
         processing_records = self._processing_records_for_raw_files(batch)
         pending: list[RawMorgueSource] = []
         for raw_file in batch:
             record = processing_records.get((_player_key(raw_file.player), raw_file.name))
-            if record is None or _should_process(raw_file, record, parser_version, scoring_version):
+            if record is None or _should_process(raw_file, record):
                 pending.append(raw_file)
         return pending
 
@@ -279,16 +264,33 @@ class MongoArtifactProcessingRepository:
     ) -> dict[tuple[str, str], ArtifactProcessingRecord]:
         if self.processing_collection is None or not raw_files:
             return {}
-        players = sorted({_player_key(raw_file.player) for raw_file in raw_files})
-        names = sorted({raw_file.name for raw_file in raw_files})
         documents = self.processing_collection.find(
-            {
-                "player": {"$in": players},
-                "name": {"$in": names},
-            }
+            _raw_file_pair_query(raw_files, normalize_player=True)
         )
         records = [_processing_record_from_mongo(document) for document in documents]
         return {(_player_key(record.player), record.name): record for record in records}
+
+    def _raw_files_with_text(
+        self,
+        raw_files: list[RawMorgueSource],
+    ) -> list[RawMorgueSource]:
+        if self.raw_file_collection is None or not raw_files:
+            return raw_files
+        documents = self.raw_file_collection.find(
+            _raw_file_pair_query(raw_files, normalize_player=False),
+            RAW_FILE_TEXT_PROJECTION,
+        )
+        records = {
+            (record.player, record.name): record
+            for record in (
+                _raw_morgue_file_record_from_mongo(document)
+                for document in documents
+            )
+        }
+        return [
+            records.get((raw_file.player, raw_file.name), raw_file)
+            for raw_file in raw_files
+        ]
 
     def _delete_stale_artifact_sources(
         self,
@@ -298,7 +300,7 @@ class MongoArtifactProcessingRepository:
         if self.artifacts_collection is None:
             return 0
         stale_removed = 0
-        for document in list(self.artifacts_collection.find({})):
+        for document in list(self.artifacts_collection.find(_artifact_source_query(raw_file))):
             sources = _artifact_sources_from_document(document)
             kept_sources = [
                 source
@@ -324,11 +326,31 @@ class MongoArtifactProcessingRepository:
                 self.artifacts_collection.delete_many({"id": document["id"]})
         return stale_removed
 
-    def _find_artifact_by_id(self, artifact_id: str) -> dict | None:
+    def _existing_artifacts_by_id(self, artifact_ids: list[str]) -> dict[str, dict]:
         if self.artifacts_collection is None:
-            return None
-        documents = list(self.artifacts_collection.find({"id": artifact_id}))
-        return documents[0] if documents else None
+            return {}
+        ids = sorted(set(artifact_ids))
+        if not ids:
+            return {}
+        documents = self.artifacts_collection.find({"id": {"$in": ids}})
+        return {
+            str(document.get("id", "")): document
+            for document in documents
+            if document.get("id")
+        }
+
+    def _bulk_write_artifact_updates(self, operations: list[Any]) -> None:
+        if self.artifacts_collection is None:
+            return
+        if hasattr(self.artifacts_collection, "bulk_write"):
+            self.artifacts_collection.bulk_write(operations, ordered=False)
+            return
+        for operation in operations:
+            self.artifacts_collection.update_one(
+                operation._filter,
+                operation._doc,
+                upsert=operation._upsert,
+            )
 
     def _save_processing_record(self, record: ArtifactProcessingRecord) -> None:
         if self.processing_collection is None:
@@ -336,7 +358,10 @@ class MongoArtifactProcessingRepository:
         document = record.to_dict()
         self.processing_collection.update_one(
             {"player": document["player"], "name": document["name"]},
-            {"$set": document},
+            {
+                "$set": document,
+                "$unset": _version_metadata_unset(),
+            },
             upsert=True,
         )
 
@@ -384,37 +409,33 @@ def _artifact_mongo_document(
     artifact: ArtifactDocument,
     *,
     raw_file: RawMorgueSource,
-    parser_version: str,
-    scoring_version: str,
 ) -> dict:
     document = artifact.to_dict()
     document["source"]["player"] = _player_key(raw_file.player)
     document["source_content_hash"] = raw_file.content_hash
-    document["parser_version"] = parser_version
-    document["scoring_version"] = scoring_version
     return document
+
+
+def _update_one_operation(filter_document: dict, update_document: dict, *, upsert: bool):
+    from pymongo import UpdateOne
+
+    return UpdateOne(filter_document, update_document, upsert=upsert)
 
 
 def _canonical_artifact_mongo_document(
     artifact: ArtifactDocument,
     *,
     raw_file: RawMorgueSource,
-    parser_version: str,
-    scoring_version: str,
     processed_at: str,
     existing: dict | None,
 ) -> dict:
     candidate = _artifact_mongo_document(
         artifact,
         raw_file=raw_file,
-        parser_version=parser_version,
-        scoring_version=scoring_version,
     )
     source = _artifact_source_evidence(
         artifact,
         raw_file=raw_file,
-        parser_version=parser_version,
-        scoring_version=scoring_version,
         processed_at=processed_at,
     )
     sources = _merge_artifact_source(
@@ -436,8 +457,6 @@ def _artifact_source_evidence(
     artifact: ArtifactDocument,
     *,
     raw_file: RawMorgueSource,
-    parser_version: str,
-    scoring_version: str,
     processed_at: str,
 ) -> dict:
     return {
@@ -449,8 +468,6 @@ def _artifact_source_evidence(
         "item_location": artifact.item_location,
         "item_source": artifact.item_source,
         "source_content_hash": raw_file.content_hash,
-        "parser_version": parser_version,
-        "scoring_version": scoring_version,
         "processed_at": processed_at,
     }
 
@@ -458,7 +475,7 @@ def _artifact_source_evidence(
 def _artifact_sources_from_document(document: dict) -> list[dict]:
     sources = document.get("sources")
     if isinstance(sources, list):
-        return [dict(source) for source in sources if isinstance(source, dict)]
+        return [_without_version_metadata(source) for source in sources if isinstance(source, dict)]
 
     source = document.get("source")
     if not isinstance(source, dict):
@@ -473,10 +490,42 @@ def _artifact_sources_from_document(document: dict) -> list[dict]:
             "item_location": document.get("item_location"),
             "item_source": document.get("item_source"),
             "source_content_hash": document.get("source_content_hash", ""),
-            "parser_version": document.get("parser_version", ""),
-            "scoring_version": document.get("scoring_version", ""),
         }
     ]
+
+
+def _artifact_source_query(raw_file: RawMorgueSource) -> dict:
+    player = _player_key(raw_file.player)
+    return {
+        "$or": [
+            {"sources": {"$elemMatch": {"player": player, "file": raw_file.name}}},
+            {"source.player": player, "source.file": raw_file.name},
+        ]
+    }
+
+
+def _raw_file_pair_query(
+    raw_files: list[RawMorgueSource],
+    *,
+    normalize_player: bool,
+) -> dict:
+    pairs = sorted(
+        {
+            (
+                _player_key(raw_file.player) if normalize_player else raw_file.player,
+                raw_file.name,
+            )
+            for raw_file in raw_files
+        }
+    )
+    if not pairs:
+        return {"player": {"$in": []}}
+    return {
+        "$or": [
+            {"player": player, "name": name}
+            for player, name in pairs
+        ]
+    }
 
 
 def _merge_artifact_source(sources: list[dict], source: dict) -> list[dict]:
@@ -548,8 +597,6 @@ def _apply_representative_source(document: dict, source: dict) -> None:
     document["item_location"] = source.get("item_location")
     document["item_source"] = source.get("item_source")
     document["source_content_hash"] = source.get("source_content_hash", "")
-    document["parser_version"] = source.get("parser_version", "")
-    document["scoring_version"] = source.get("scoring_version", "")
 
 
 def _is_source_for_raw_file(source: dict, raw_file: RawMorgueSource) -> bool:
@@ -584,20 +631,18 @@ def _representative_rank(document: dict) -> tuple[int, int, int]:
 def _without_mongo_id(document: dict) -> dict:
     copy = dict(document)
     copy.pop("_id", None)
+    copy.pop("parser_version", None)
+    copy.pop("scoring_version", None)
     return copy
 
 
 def _should_process(
     raw_file: RawMorgueSource,
     record: ArtifactProcessingRecord,
-    parser_version: str,
-    scoring_version: str,
 ) -> bool:
     return (
         record.status != PROCESSING_STATUS_COMPLETED
         or record.content_hash != raw_file.content_hash
-        or record.parser_version != parser_version
-        or record.scoring_version != scoring_version
     )
 
 
@@ -620,13 +665,22 @@ def _processing_record_from_mongo(document: dict) -> ArtifactProcessingRecord:
         player=document["player"],
         name=document["name"],
         content_hash=document.get("content_hash", ""),
-        parser_version=document.get("parser_version", ""),
-        scoring_version=document.get("scoring_version", ""),
         status=document.get("status", ""),
         artifact_count=int(document.get("artifact_count", 0)),
         processed_at=document.get("processed_at"),
         error=document.get("error"),
     )
+
+
+def _version_metadata_unset() -> dict[str, str]:
+    return {"parser_version": "", "scoring_version": ""}
+
+
+def _without_version_metadata(document: dict) -> dict:
+    copy = dict(document)
+    copy.pop("parser_version", None)
+    copy.pop("scoring_version", None)
+    return copy
 
 
 def _player_key(player: str) -> str:

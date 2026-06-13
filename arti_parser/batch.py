@@ -56,8 +56,6 @@ class ArtifactProcessingBatchProcessor:
 
     def process_batch(self, limit: int | None = None) -> ArtifactProcessingSummary:
         raw_files = self.repository.list_pending_raw_files(
-            parser_version=self.processor.parser_version,
-            scoring_version=self.processor.scoring_version,
             limit=limit or self.config.batch_size,
             scan_batch_size=self.config.scan_batch_size,
         )
@@ -79,15 +77,11 @@ class ArtifactProcessingBatchProcessor:
             result = self.repository.save_artifacts_for_raw_file(
                 raw_file=raw_file,
                 artifacts=artifacts,
-                parser_version=self.processor.parser_version,
-                scoring_version=self.processor.scoring_version,
                 processed_at=_utc_now(),
             )
         except Exception as exc:
             self.repository.save_processing_failure(
                 raw_file=raw_file,
-                parser_version=self.processor.parser_version,
-                scoring_version=self.processor.scoring_version,
                 processed_at=_utc_now(),
                 error=str(exc),
             )

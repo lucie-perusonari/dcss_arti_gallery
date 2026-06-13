@@ -17,8 +17,7 @@ artifact read model을 재생성하는 배치 처리 모듈입니다.
 - [`evaluator.py`](docs/evaluator.md): random attributes와 item metadata를 점수/등급으로 평가합니다.
 - [`models.py`](docs/models.md): MongoDB에 저장되는 canonical `ArtifactDocument` Pydantic 모델입니다.
 - [`repository.py`](docs/repository.md): `raw_morgue_files`, `artifacts`, `artifact_processing_files` 접근 계층입니다.
-- [`constants.py`](docs/constants.md): 파싱/분류/평가에 쓰는 정규식과 lookup table입니다.
-- [`dcss_data.py`](docs/dcss_data.md): 공식 DCSS source tree를 참고해 정리한 item/unrandart 정적 데이터입니다.
+- [`constants.py`](docs/constants.md): 파싱/분류 정규식, lookup table, 공식 DCSS item/unrandart 정적 상수입니다.
 - [`worker.py`](docs/worker.md): 기존 호출 호환을 위한 batch entrypoint alias입니다.
 - [`process_raw_morgue_files.sh`](docs/process_raw_morgue_files.md): batch 실행 shell wrapper입니다.
 
@@ -32,7 +31,7 @@ artifact read model을 재생성하는 배치 처리 모듈입니다.
 - 랜덤 속성 기준으로 artifact 평가 점수와 등급을 계산합니다.
 - `artifacts` 컬렉션에 갤러리/API가 읽는 canonical artifact document를 upsert합니다.
 - 같은 raw file에서 더 이상 나오지 않는 이전 artifact source evidence는 삭제합니다.
-- `artifact_processing_files`에 처리 성공/실패, content hash, parser/scoring 버전을 기록합니다.
+- `artifact_processing_files`에 처리 성공/실패와 content hash를 기록합니다.
 
 `crawl_service`, `api`, `admin_api`의 책임을 대신하지 않습니다. 특히 remote crawl,
 gallery HTTP API, admin HTTP API 로직은 이 모듈에 두지 않습니다.
@@ -57,8 +56,7 @@ raw_morgue_files
 
 1. `batch.py`가 `repository.py`를 통해 `fetch_status: "fetched"`이고 재처리가 필요한 raw
    file을 조회합니다.
-2. `processor.py`가 raw text 하나를 처리하는 상위 진입점 역할을 하며 현재 parser/scoring
-   version을 제공합니다.
+2. `processor.py`가 raw text 하나를 처리하는 상위 진입점 역할을 합니다.
 3. `extractor.py`가 `.txt`의 `Inventory:` 섹션 또는 `.lst`의 level/shop/location 문맥에서
    artifact 후보 block을 추출합니다.
 4. `parser.py`가 이름, 강화 수치, base item, property token을 파싱하고 unrandart/plain magic
@@ -68,7 +66,7 @@ raw_morgue_files
 6. `evaluator.py`가 `random_attributes` 기준으로 점수와 등급을 계산합니다.
 7. `models.py`의 `ArtifactDocument` shape로 저장 문서를 조립합니다.
 8. `repository.py`가 canonical artifact를 upsert하고, 같은 raw file에서 사라진 stale source evidence를 삭제하며,
-   `artifact_processing_files`에 성공/실패와 version metadata를 기록합니다.
+   `artifact_processing_files`에 성공/실패 상태를 기록합니다.
 
 주요 컬렉션:
 
@@ -76,9 +74,20 @@ raw_morgue_files
 - `artifacts`: `api`와 `frontend`가 사용하는 artifact read model입니다.
 - `artifact_processing_files`: raw file별 artifact 재생성 상태입니다.
 
-재처리 여부는 raw file의 `content_hash`, 현재 `parser_version`, 현재
-`scoring_version`, 그리고 이전 처리 상태가 `completed`인지로 결정합니다.
-파서나 평가 로직을 변경한 뒤 버전을 올리면 기존 raw 원본도 다시 처리됩니다.
+재처리 여부는 raw file의 `content_hash`와 이전 처리 상태가 `completed`인지로 결정합니다.
+파서나 평가 로직 변경 뒤 기존 raw 원본까지 다시 처리해야 한다면
+`artifact_processing_files`의 대상 처리 record를 제거하거나 상태를 미완료로 되돌려 재처리
+대상에 포함시킵니다.
+
+### Stale source 삭제 주의
+
+`repository.py`는 raw file 하나를 다시 처리할 때 같은 raw file에서 사라진 stale source evidence만
+삭제해야 합니다. 이 로직에서 `artifacts` 전체를 full scan하면 batch가 raw file 수만큼 전체 컬렉션을
+반복 스캔하게 되어 재처리가 심각하게 느려집니다.
+
+Stale 후보는 반드시 현재 raw file의 source metadata로 제한합니다. 기존 문서 호환을 위해
+`sources.player`/`sources.file`과 legacy `source.player`/`source.file` 조건을 모두 사용하되, 두 조건은
+각각 MongoDB index를 타야 합니다.
 
 ## 실행
 
@@ -155,8 +164,7 @@ MongoDB 연결 환경 변수:
 - `source`: 대표 occurrence의 player, file, URL, line metadata입니다.
 - `sources`, `occurrence_ids`, `source_count`, `first_source`, `first_discovered_by`, `known_seeds`, `updated_at`: canonical artifact에 누적된 source evidence metadata입니다.
 
-저장 시 repository가 `source_content_hash`, `parser_version`, `scoring_version`도 함께
-추가합니다.
+저장 시 repository가 `source_content_hash`도 함께 추가합니다.
 
 ## 개발 규칙
 
