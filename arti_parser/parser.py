@@ -18,10 +18,26 @@ RESISTANCE_STEP_KEYS = {"rF", "rC", "rN", "Will", "rElec", "rPois", "rCorr"}
 NUMERIC_STEP_KEYS = {"Stlth"}
 BOOLEAN_PLUS_KEYS = {"RegenMP", "Regen"}
 EXCLUDED_RANDOM_ARTIFACT_NAME_KEYS = {"sprint"}
+ITEM_STATUS_PREFIXES = {"chaotic", "choatic", "cursed"}
 
 
 def artifact_display_name(artifact_name: str) -> str:
-    return _strip_property_block(artifact_name).removeprefix("the ").strip()
+    return _strip_item_status_prefixes(
+        _strip_property_block(artifact_name).removeprefix("the ").strip()
+    )
+
+
+def normalized_artifact_name(artifact_name: str) -> str:
+    display_name = artifact_display_name(artifact_name)
+    property_block = _property_block(artifact_name)
+    article = "the " if artifact_name.strip().casefold().startswith("the ") else ""
+    return f"{article}{display_name}{property_block}".strip()
+
+
+def artifact_status_prefixes(artifact_name: str) -> list[str]:
+    return _item_status_prefixes(
+        _strip_property_block(artifact_name).removeprefix("the ").strip()
+    )
 
 
 def artifact_enchantment_and_base_text(display_name: str) -> tuple[int | None, str]:
@@ -64,12 +80,14 @@ def is_random_artifact(
     *,
     display_name: str,
     base_subtype: str | None,
+    status_prefixes: list[str] | None = None,
 ) -> bool:
     name_key = _identity_key(display_name)
-    if name_key in UNRANDART_NAME_KEYS:
-        return False
-    if name_key in EXCLUDED_RANDOM_ARTIFACT_NAME_KEYS:
-        return False
+    if not status_prefixes:
+        if name_key in UNRANDART_NAME_KEYS:
+            return False
+        if name_key in EXCLUDED_RANDOM_ARTIFACT_NAME_KEYS:
+            return False
     return not _is_plain_magic_item(display_name, base_subtype)
 
 
@@ -93,6 +111,26 @@ def parse_property_token(token: str) -> tuple[str, int | bool | None]:
 
 def _strip_property_block(artifact_name: str) -> str:
     return ARTIFACT_PROPERTY_BLOCK_RE.sub("", artifact_name).strip()
+
+
+def _property_block(artifact_name: str) -> str:
+    match = ARTIFACT_PROPERTY_BLOCK_RE.search(artifact_name.strip())
+    return f" {match.group(0)}" if match else ""
+
+
+def _strip_item_status_prefixes(display_name: str) -> str:
+    words = display_name.strip().split()
+    while words and words[0].casefold() in ITEM_STATUS_PREFIXES:
+        words.pop(0)
+    return " ".join(words)
+
+
+def _item_status_prefixes(display_name: str) -> list[str]:
+    prefixes: list[str] = []
+    words = display_name.strip().split()
+    while words and words[0].casefold() in ITEM_STATUS_PREFIXES:
+        prefixes.append(words.pop(0).casefold())
+    return prefixes
 
 
 def _property_tokens(artifact_name: str) -> list[str]:
@@ -173,7 +211,7 @@ def _is_plain_magic_item(display_name: str, base_subtype: str | None) -> bool:
 
 
 def _identity_key(name: str) -> str:
-    name = name.strip().removeprefix("cursed ").strip()
+    name = _strip_item_status_prefixes(name)
     name = ENCHANTMENT_PREFIX_RE.sub("", name)
     return _normalize_key(name)
 

@@ -26,7 +26,9 @@ from arti_parser.parser import (
     artifact_base_item,
     artifact_display_name,
     artifact_enchantment_and_base_text,
+    artifact_status_prefixes,
     is_random_artifact,
+    normalized_artifact_name,
 )
 from arti_parser.models import (
     ArtifactDocument,
@@ -57,6 +59,7 @@ def extract_artifact_documents(raw_text: MorgueRawText) -> list[ArtifactDocument
         if not is_random_artifact(
             display_name=parsed.display_name,
             base_subtype=parsed.raw.base_subtype,
+            status_prefixes=parsed.status_prefixes,
         ):
             continue
         classification = classify_artifact(
@@ -113,7 +116,9 @@ class _RawArtifact:
 @dataclass(frozen=True)
 class _ParsedArtifact:
     raw: _RawArtifact
+    normalized_name: str
     display_name: str
+    status_prefixes: list[str]
     enchantment: int | None
     base_item: str
     attributes: list[ArtifactDocumentAttribute]
@@ -160,7 +165,9 @@ def _parse_artifact(raw: _RawArtifact) -> _ParsedArtifact:
     base_item = artifact_base_item(base_text, raw.base_subtype)
     return _ParsedArtifact(
         raw=raw,
+        normalized_name=normalized_artifact_name(raw.name),
         display_name=display_name,
+        status_prefixes=artifact_status_prefixes(raw.name),
         enchantment=enchantment,
         base_item=base_item,
         attributes=artifact_attributes(raw.name, raw.visible_item_description),
@@ -363,7 +370,7 @@ def _artifact_document_from_parts(
         id=_artifact_id_from_key(parsed.display_name, canonical_key),
         occurrence_id=_artifact_id_from_key(parsed.raw.name, occurrence_key),
         canonical_key=canonical_key,
-        name=parsed.raw.name,
+        name=parsed.normalized_name,
         base_item=parsed.base_item,
         base_subtype=parsed.raw.base_subtype,
         item_class=classification.item_class,
