@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Review DCSS artifact crawler, evaluator, API, persistence, and WebTiles-style gallery changes for defects and contract regressions.
+description: Review DCSS crawl, parser/scoring, persistence, API, admin, and WebTiles-style gallery changes for defects and contract regressions.
 ---
 
 # Code Review
@@ -16,11 +16,10 @@ This is a findings-first review. Do not rewrite code unless the user explicitly 
 - The user request and review scope
 - Current diff or named files
 - Relevant docs for the touched layer:
-  - `docs/README.md`
-  - relevant module `docs/ko/data-types.md`
-  - relevant module `docs/ko/processing-layers.md`
-  - `crawl_service/docs/ko/artifact_scoring_formula.md`
-  - `crawl_service/docs/ko/randart_properties.md`
+  - `README.md`
+  - affected service README
+  - affected service `docs/ko/data-types.md` and `docs/ko/processing-layers.md`, when present
+  - relevant `arti_parser/docs/*.md`, `arti_parser/models.py`, and `arti_parser/processor.py` for parser, scoring, or document changes
   - `frontend/docs/ko/style-sources.md` for WebTiles UI changes
 - Relevant tests and validation output, if available
 
@@ -37,10 +36,12 @@ This is a findings-first review. Do not rewrite code unless the user explicitly 
 ## Review Criteria
 
 - Morgue parsing must keep enough raw evidence to debug source-specific failures.
-- Randart scoring must not over-score base item intrinsic properties.
+- Randart scoring in `arti_parser` must not over-score base item intrinsic properties.
 - API response fields must stay aligned with `ArtifactDocument` and frontend TypeScript types.
+- Admin API response fields must stay aligned with admin frontend TypeScript types.
 - Gallery UI should preserve the DCSS/WebTiles item description feel where that is the requested surface.
 - Tests should cover parser fixtures, classifier/evaluator invariants, API document shape, or frontend build failures according to the changed layer.
+- Root `scripts/` should not gain new ownership. Apply the shared script policy uniformly: `.sh` run scripts live under the owning service or `infra/dev`, mock/test helpers live in tests, and generators live with the generated artifact owner.
 
 ## Expected Output
 
