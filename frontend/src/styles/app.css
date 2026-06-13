@@ -80,6 +80,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   height: 28px;
   padding: 2px 6px;
   border-bottom: 1px solid #626262;
@@ -92,19 +93,41 @@ button {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
 }
 
 .topbar nav {
+  flex: 0 0 auto;
   font-size: 13px;
+  white-space: nowrap;
+}
+
+.topbar > div {
+  flex: 1 1 auto;
 }
 
 .brand-mark {
+  flex: 0 0 auto;
   color: var(--color-14);
   font-weight: bold;
 }
 
 .topbar__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--color-15);
+}
+
+.topbar__github {
+  color: var(--color-11);
+  text-decoration: none;
+}
+
+.topbar__github:hover {
+  color: var(--color-15);
+  text-decoration: underline;
 }
 
 .gallery-layout {
@@ -228,6 +251,36 @@ h1 {
 
 .nickname-crawl__status--submitting {
   color: var(--color-14);
+}
+
+.nickname-crawl-modal {
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+.nickname-crawl-modal .ui-popup-overlay {
+  z-index: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  cursor: default;
+}
+
+.nickname-crawl-modal .ui-popup-outer {
+  z-index: 1;
+  width: min(100%, 42ch);
+}
+
+.nickname-crawl-modal__form {
+  width: 100%;
+  min-width: 0;
+}
+
+.nickname-crawl-modal__form .nickname-crawl__status {
+  display: block;
+  margin-top: 0.7em;
 }
 
 .search-field {
@@ -765,6 +818,10 @@ h1 {
     min-height: calc(100vh - 28px);
   }
 
+  .topbar {
+    min-width: 0;
+  }
+
   .inventory-panel {
     overflow: hidden;
     border-right: 0;
@@ -805,6 +862,26 @@ h1 {
 
   .describe-item > .body {
     max-height: 480px;
+  }
+
+  .nickname-crawl-modal .ui-popup-outer {
+    width: calc(100vw - 24px);
+    max-width: 42ch;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar {
+    gap: 6px;
+  }
+
+  .topbar > div,
+  .topbar nav {
+    gap: 6px;
+  }
+
+  .topbar__status {
+    display: none;
   }
 }
 

@@ -13,8 +13,11 @@ export function WebtilesShell({ children }: WebtilesShellProps) {
           <span className="topbar__title">Artifact Gallery</span>
         </div>
         <nav aria-label="Gallery status">
-          <span>archive api</span>
-          <span>webtiles style</span>
+          <span className="topbar__status">archive api</span>
+          <span className="topbar__status">webtiles style</span>
+          <a className="topbar__github" href="https://github.com/lucie-perusonari/dcss_arti_gallery" target="_blank" rel="noreferrer">
+            GitHub
+          </a>
         </nav>
       </header>
       {children}
