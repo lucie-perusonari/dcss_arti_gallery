@@ -219,20 +219,37 @@ def present_artifact_document(document: dict[str, Any]) -> ArtifactDocument:
 def _display_attributes(document: dict[str, Any]) -> list[dict[str, str | bool]]:
     by_token = {attribute["token"]: attribute for attribute in document.get("attributes", [])}
     description_lines = document.get("visible_item_description", [])
+    base_attributes = set(document.get("base_attributes", []))
     display_attributes: list[dict[str, str | bool]] = []
     for token in document.get("all_attributes", []):
         stored = by_token.get(token)
-        key, _ = _key_value(token)
+        key, value = _key_value(token)
         if stored:
             key = stored.get("key", key)
+            value = stored.get("value", value)
+        elif token in base_attributes and _has_visible_attribute_with_key(by_token, key):
+            continue
         display_attributes.append(
             {
                 "token": token,
                 "isBrand": token in BRAND_TOKENS,
-                "description": _description_for_token(token, key, description_lines),
+                "description": _description_for_token(token, key, value, description_lines),
             }
         )
     return display_attributes
+
+
+def _has_visible_attribute_with_key(
+    by_token: dict[str, dict[str, Any]],
+    key: str,
+) -> bool:
+    for visible_token, attribute in by_token.items():
+        visible_key = attribute.get("key")
+        if visible_key is None:
+            visible_key, _ = _key_value(visible_token)
+        if visible_key == key:
+            return True
+    return False
 
 
 def _display_description(attributes: list[dict[str, str | bool]]) -> str:
@@ -270,6 +287,7 @@ def _key_value(token: str) -> tuple[str, int | bool | None]:
 def _description_for_token(
     token: str,
     key: str,
+    value: int | bool | None,
     description_lines: list[str],
 ) -> str:
     for index, line in enumerate(description_lines):
@@ -277,8 +295,8 @@ def _description_for_token(
         if not match:
             continue
         label = match.group("label").strip()
-        label_key, _ = _key_value(label)
-        if label != token and label_key != key:
+        label_key, label_value = _key_value(label)
+        if label != token and (label_key != key or label_value != value):
             continue
 
         parts = [match.group("text").strip()]

@@ -3,5 +3,6 @@ fastapi>=0.115
 httpx>=0.28
 pydantic>=2.9
 pymongo>=4.10
+prometheus-client>=0.21
 requests>=2.32
 uvicorn>=0.30

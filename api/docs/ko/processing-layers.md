@@ -11,7 +11,8 @@
 
 ## 내부 계층
 
-- `api.app`: 갤러리 FastAPI app factory, CORS 설정, 갤러리 라우터 연결
+- `api.app`: 갤러리 FastAPI app factory, CORS 설정, 메트릭 middleware, 갤러리 라우터 연결
+- `api.metrics`: Prometheus registry, HTTP 요청 count/duration/in-flight 지표, `/metrics` endpoint
 - `api.repository`: MongoDB artifact read repository, 검색/filter/sort
 - `api.models`: frontend-facing artifact response DTO
 - `api.routes`: `/artifacts`, `/artifacts/{artifact_id}`, `/artifact-types`, `/filters`
@@ -24,6 +25,15 @@ MongoDB artifacts collection
   -> api-owned Pydantic DTO
   -> FastAPI response
   -> frontend
+```
+
+메트릭 흐름은 Gallery API 요청 처리와 분리된 운영 관측 경로입니다.
+
+```text
+FastAPI request middleware
+  -> api.metrics registry
+  -> /metrics
+  -> Prometheus scrape
 ```
 
 ## 연계 문서

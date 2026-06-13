@@ -7,6 +7,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from api.metrics import install_api_metrics
 from api.repository import repository_from_env
 from api.routes import create_router
 
@@ -25,6 +26,7 @@ def create_app(repository=None) -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    install_api_metrics(app)
     app.include_router(create_router(artifact_repository))
     return app
 
