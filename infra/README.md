@@ -34,7 +34,9 @@
 
 ## Prod 정책
 
-- `infra/prod/docker-compose.yml`은 Gallery API, Admin API, MongoDB, Prometheus, Grafana, reverse proxy를 묶는 운영 배포 예시입니다.
+- `infra/prod/docker-compose.yml`은 Gallery frontend, Gallery API, Admin API, MongoDB, Prometheus, Grafana, reverse proxy를 묶는 운영 배포 예시입니다.
+- 운영 Gallery frontend 정적 파일은 prod compose의 `reverse-proxy` 이미지가 빌드해 Caddy에서 제공합니다.
+- Admin frontend 정적 배포는 아직 prod compose에 포함하지 않습니다.
 - prod MongoDB index DDL은 compose의 `mongo-indexes` service가 `infra/ensure_mongo_indexes.py`를 통해 수행합니다.
 - Prometheus는 host `127.0.0.1:9090`에만 bind하고, reverse proxy는 `/metrics`, `/docs`, `/redoc`, `/openapi.json`을 외부에 노출하지 않습니다.
 - Admin API는 Prometheus HTTP API를 내부 network에서 read-only로 query하며, 기본 host bind는 `127.0.0.1:8001`입니다.
@@ -60,7 +62,7 @@ docker compose -f infra/dev/docker-compose.yml up -d mongo mongo-indexes
 운영 compose:
 
 ```sh
-ARTIFACT_API_CORS_ORIGINS=https://<frontend-host> PUBLIC_API_PORT=8000 docker compose -f infra/prod/docker-compose.yml up -d --build
+docker compose -f infra/prod/docker-compose.yml up -d --build
 ssh -L 9090:127.0.0.1:9090 <server>
 ssh -L 3000:127.0.0.1:3000 <server>
 ```

@@ -1,6 +1,18 @@
-:80 {
-	@blocked path /metrics /docs /redoc /openapi.json
-	respond @blocked 404
+{$PUBLIC_DOMAIN} {
+	encode zstd gzip
 
-	reverse_proxy api:8000
+	route {
+		@blocked_api path /api/metrics /api/docs /api/redoc /api/openapi.json
+		respond @blocked_api 404
+
+		handle_path /api/* {
+			reverse_proxy api:8000
+		}
+
+		handle {
+			root * /srv/frontend
+			try_files {path} /index.html
+			file_server
+		}
+	}
 }
