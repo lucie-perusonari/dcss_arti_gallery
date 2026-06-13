@@ -66,6 +66,7 @@
 - 리뷰/감사 요청은 `.agents/skills/code-review/SKILL.md`를 사용합니다.
 - 테스트 추가/수정/설계가 명시된 작업은 `.agents/skills/test-generation/SKILL.md`를 사용합니다.
 - WebTiles UI 표시와 충실도 작업은 `.agents/skills/webtiles-ui/SKILL.md`를 사용합니다.
+- git 이력/브랜치/커밋/PR 작업은 `.agents/skills/git-workflow/SKILL.md`를 사용합니다.
 
 ## 미정
 
