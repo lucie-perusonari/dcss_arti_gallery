@@ -1,0 +1,97 @@
+"""Ensure MongoDB indexes owned by the infra layer."""
+
+from __future__ import annotations
+
+import os
+import sys
+import time
+from typing import Any
+
+from pymongo import MongoClient
+from pymongo.errors import PyMongoError, ServerSelectionTimeoutError
+
+
+DEFAULT_MONGO_URI = "mongodb://localhost:27018"
+DEFAULT_MONGO_DATABASE = "dcss_arti_gallery_dev"
+DEFAULT_MONGO_COLLECTION = "artifacts"
+DEFAULT_MONGO_CRAWL_FILES_COLLECTION = "crawl_files"
+DEFAULT_MONGO_CRAWL_USERS_COLLECTION = "crawl_users"
+DEFAULT_MONGO_RAW_FILES_COLLECTION = "raw_morgue_files"
+DEFAULT_MONGO_ARTIFACT_PROCESSING_COLLECTION = "artifact_processing_files"
+CONNECT_TIMEOUT_MS = 1000
+RETRY_COUNT = 30
+RETRY_DELAY_SECONDS = 0.5
+
+
+def main() -> int:
+    uri = os.environ.get("MONGODB_URI", DEFAULT_MONGO_URI)
+    database_name = os.environ.get("MONGODB_DATABASE", DEFAULT_MONGO_DATABASE)
+    client = MongoClient(uri, serverSelectionTimeoutMS=CONNECT_TIMEOUT_MS)
+
+    try:
+        _wait_for_mongo(client)
+        database = client[database_name]
+        _ensure_indexes(database)
+    except PyMongoError as exc:
+        print(f"failed to ensure MongoDB indexes: {exc}", file=sys.stderr)
+        return 1
+    finally:
+        client.close()
+
+    print(f"MongoDB indexes ensured: {uri} / {database_name}", file=sys.stderr)
+    return 0
+
+
+def _wait_for_mongo(client: MongoClient) -> None:
+    last_error: Exception | None = None
+    for _attempt in range(RETRY_COUNT):
+        try:
+            client.admin.command("ping")
+            return
+        except ServerSelectionTimeoutError as exc:
+            last_error = exc
+            time.sleep(RETRY_DELAY_SECONDS)
+    if last_error is not None:
+        raise last_error
+
+
+def _ensure_indexes(database: Any) -> None:
+    artifacts = database[os.environ.get("MONGODB_COLLECTION", DEFAULT_MONGO_COLLECTION)]
+    crawl_files = database[
+        os.environ.get("MONGODB_CRAWL_FILES_COLLECTION", DEFAULT_MONGO_CRAWL_FILES_COLLECTION)
+    ]
+    crawl_users = database[
+        os.environ.get("MONGODB_CRAWL_USERS_COLLECTION", DEFAULT_MONGO_CRAWL_USERS_COLLECTION)
+    ]
+    raw_files = database[
+        os.environ.get("MONGODB_RAW_FILES_COLLECTION", DEFAULT_MONGO_RAW_FILES_COLLECTION)
+    ]
+    processing = database[
+        os.environ.get(
+            "MONGODB_ARTIFACT_PROCESSING_COLLECTION",
+            DEFAULT_MONGO_ARTIFACT_PROCESSING_COLLECTION,
+        )
+    ]
+
+    crawl_files.create_index([("player", 1), ("name", 1)], unique=True)
+
+    crawl_users.create_index("player", unique=True)
+    crawl_users.create_index("observed_at")
+
+    raw_files.create_index([("player", 1), ("name", 1)], unique=True)
+    raw_files.create_index("content_hash")
+    raw_files.create_index("fetch_status")
+
+    artifacts.create_index("id", unique=True)
+    artifacts.create_index([("source.player", 1), ("source.file", 1)])
+    artifacts.create_index([("evaluation.total", -1)])
+    artifacts.create_index("item_class")
+
+    processing.create_index([("player", 1), ("name", 1)], unique=True)
+    processing.create_index("status")
+    processing.create_index("content_hash")
+    processing.create_index([("parser_version", 1), ("scoring_version", 1)])
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

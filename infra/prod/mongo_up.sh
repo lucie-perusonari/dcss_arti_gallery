@@ -5,6 +5,11 @@ set -eu
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 . "$SCRIPT_DIR/mongo_env.sh"
 
+if [ "${CONFIRM_PROD:-0}" != "1" ]; then
+    echo "Refusing to manage production MongoDB without CONFIRM_PROD=1." >&2
+    exit 1
+fi
+
 if ! command -v docker >/dev/null 2>&1; then
     echo "docker command not found" >&2
     exit 1

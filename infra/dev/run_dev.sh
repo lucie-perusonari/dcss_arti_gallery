@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
+ROOT_DIR=$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)
 FRONTEND_DIR="$ROOT_DIR/frontend"
 
 API_HOST="${API_HOST:-0.0.0.0}"
@@ -12,6 +12,7 @@ FRONTEND_PORT="${FRONTEND_PORT:-5173}"
 VITE_ARTIFACT_API_URL="${VITE_ARTIFACT_API_URL:-http://127.0.0.1:${API_PORT}}"
 API_READY_URL="${API_READY_URL:-${VITE_ARTIFACT_API_URL}/filters}"
 API_READY_TIMEOUT_SECONDS="${API_READY_TIMEOUT_SECONDS:-30}"
+RUN_CRAWL_WORKER="${RUN_CRAWL_WORKER:-0}"
 
 api_pid=""
 crawl_worker_pid=""
@@ -104,12 +105,16 @@ require_port_free "$API_HOST" "$API_PORT" "API"
 require_port_free "$FRONTEND_HOST" "$FRONTEND_PORT" "Frontend"
 
 echo "Starting MongoDB..."
-eval "$("$ROOT_DIR/infra/mongo/mongo_up.sh")"
+eval "$("$ROOT_DIR/infra/dev/mongo_up.sh")"
 
-echo "Starting crawl worker ..."
-cd "$ROOT_DIR"
-python3 -m crawl_service.worker &
-crawl_worker_pid=$!
+if [ "$RUN_CRAWL_WORKER" = "1" ]; then
+  echo "Starting crawl worker ..."
+  cd "$ROOT_DIR"
+  python3 -m crawl_service.worker &
+  crawl_worker_pid=$!
+else
+  echo "Skipping crawl worker. Set RUN_CRAWL_WORKER=1 to enable live morgue crawl."
+fi
 
 echo "Starting API at http://$API_HOST:$API_PORT ..."
 cd "$ROOT_DIR"
@@ -133,11 +138,18 @@ frontend_pid=$!
 echo
 echo "DCSS Artifact Gallery is running:"
 echo "  API:      $VITE_ARTIFACT_API_URL"
-echo "  Crawl:    background worker"
+if [ "$RUN_CRAWL_WORKER" = "1" ]; then
+  echo "  Crawl:    background worker"
+else
+  echo "  Crawl:    disabled"
+fi
 echo "  Frontend: http://$FRONTEND_HOST:$FRONTEND_PORT"
 echo
-echo "Press Ctrl-C to stop the API, crawl worker, and frontend. MongoDB remains running; stop it with infra/mongo/mongo_down.sh."
+echo "Press Ctrl-C to stop the API, optional crawl worker, and frontend. MongoDB remains running; stop it with infra/dev/mongo_down.sh."
 
-while kill -0 "$api_pid" 2>/dev/null && kill -0 "$crawl_worker_pid" 2>/dev/null && kill -0 "$frontend_pid" 2>/dev/null; do
+while kill -0 "$api_pid" 2>/dev/null && kill -0 "$frontend_pid" 2>/dev/null; do
+  if [ -n "$crawl_worker_pid" ] && ! kill -0 "$crawl_worker_pid" 2>/dev/null; then
+    break
+  fi
   sleep 1
 done

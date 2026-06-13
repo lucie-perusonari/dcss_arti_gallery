@@ -1,0 +1,13 @@
+# `ensure_mongo_indexes.py`
+
+`ensure_mongo_indexes.py`는 MongoDB collection index DDL을 적용하는 infra 스크립트입니다.
+
+## 책임
+
+- application repository가 런타임에서 index를 생성하지 않도록 DDL 책임을 `infra`에 둡니다.
+- dev/prod MongoDB lifecycle script에서 호출되어 필요한 index를 보장합니다.
+- crawl, processing, gallery read 경로에서 사용하는 collection index를 한곳에서 관리합니다.
+
+## 비소유 책임
+
+- application data read/write 로직은 각 서비스 repository가 소유합니다.
