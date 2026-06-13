@@ -45,8 +45,20 @@ When `source.url` is present, the detail panel uses it as the original morgue li
   - `search: string`
   - `type: ArtifactType | 'all'`
   - `slot: string`
+  - `luxuryOnly: boolean`
+  - `player: string`
+  - `timeRange: '30d' | 'all'`
 
-`slot` is a frontend display filter, not a Gallery API query parameter.
+`player` is sent as the Gallery API `player` query parameter.
+
+`timeRange` is sent as the Gallery API `since` query parameter. The default `30d` limits the view to recent games,
+while `all` removes the date range.
+
+`slot` is a frontend display filter, not a Gallery API query parameter. The frontend keeps the API result list for the
+current type/search/player filters and derives the displayed list with `slot`, so selecting one secondary filter does
+not remove the other secondary filter buttons for the same type.
+
+Jewellery `slot` values are normalized to `ring` or `amulet`.
 
 ## Related Docs
 

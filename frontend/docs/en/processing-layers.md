@@ -11,9 +11,8 @@ This document defines the API boundary and UI layers for the gallery frontend.
 
 ## Internal Layers
 
-- `src/api`: Gallery API client backed by `VITE_ARTIFACT_API_URL`; falls back to local mock data when the API URL is missing
+- `src/api`: Gallery API client backed by `VITE_ARTIFACT_API_URL`
 - `src/types`: TypeScript artifact types used for API responses and gallery rendering
-- `src/data`: local mock artifact data and DCSS tile mappings
 - `src/components`: WebTiles-style panels, filters, cards, item details, and nickname crawl UI
 - `public/tiles`: local DCSS tile PNG assets
 - `docs/en/style-sources.md`: WebTiles CSS/font source notes

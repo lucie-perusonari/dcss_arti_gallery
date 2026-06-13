@@ -7,6 +7,7 @@
 - `npm` 사용 가능 여부를 확인합니다.
 - `frontend/node_modules`가 없으면 `npm install`을 실행합니다.
 - `HOST`, `PORT` 환경 변수를 읽어 Vite dev server host/port를 정합니다.
+- `VITE_ARTIFACT_API_URL`이 없으면 `http://127.0.0.1:8000`을 기본 Gallery API URL로 사용합니다.
 - `frontend` 디렉터리에서 `npm run dev`를 실행합니다.
 
 ## 비소유 책임

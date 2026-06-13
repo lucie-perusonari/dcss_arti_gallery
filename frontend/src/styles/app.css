@@ -495,6 +495,32 @@ h1 {
   padding: 4px;
 }
 
+.artifact-detail-modal {
+  display: none;
+}
+
+.artifact-detail-popup__close {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 2;
+  min-width: 7ch;
+  margin: 0;
+  padding: 1px 6px;
+  border: 1px solid #1d1b15;
+  border-radius: 0;
+  background: #1d1b15;
+  color: var(--color-7);
+  line-height: 1.2em;
+  cursor: pointer;
+}
+
+.artifact-detail-popup__close:hover {
+  border-color: #7d623c;
+  background: #111;
+  color: var(--color-15);
+}
+
 .ui-popup--modal {
   position: fixed;
   inset: 0;
@@ -639,6 +665,90 @@ h1 {
 
 .menu_txt:not(.menu_crt_shrink) {
   width: 80ch;
+}
+
+@media (max-width: 859px) {
+  html,
+  body,
+  #root {
+    min-width: 0;
+  }
+
+  body {
+    overflow: hidden;
+  }
+
+  .topbar {
+    min-width: 0;
+  }
+
+  .topbar nav {
+    display: none;
+  }
+
+  .gallery-layout {
+    display: block;
+    height: calc(100dvh - 28px);
+    min-height: calc(100dvh - 28px);
+  }
+
+  .inventory-panel {
+    height: 100%;
+    border-right: 0;
+  }
+
+  #ui-stack {
+    display: none;
+  }
+
+  .artifact-detail-modal {
+    display: flex;
+  }
+
+  .artifact-detail-modal .ui-popup-overlay {
+    z-index: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    cursor: default;
+  }
+
+  .artifact-detail-modal .ui-popup-outer {
+    z-index: 1;
+    width: min(100%, 82ch);
+    max-width: calc(100vw - 8px);
+    max-height: calc(100dvh - 8px);
+    padding: 28px 10px 12px;
+  }
+
+  .artifact-detail-modal .ui-popup-inner {
+    max-height: calc(100dvh - 50px);
+  }
+
+  .artifact-detail-modal .describe-item {
+    font-size: 14px;
+  }
+
+  .artifact-detail-modal .describe-item > .header {
+    grid-template-columns: 44px minmax(0, 1fr);
+    min-height: 40px;
+    margin-bottom: 16px;
+  }
+
+  .artifact-detail-modal .describe-item > .header > canvas {
+    width: 40px;
+    height: 40px;
+  }
+
+  .artifact-detail-modal .describe-item > .body {
+    max-height: calc(100dvh - 164px);
+    padding-right: 8px;
+  }
+
+  .artifact-detail-modal .describe-item > .actions {
+    margin-top: 14px;
+  }
 }
 
 #game .fg0,
@@ -837,7 +947,7 @@ h1 {
     height: auto;
   }
 
-  .artifact-detail-popup {
+  .artifact-detail-popup:not(.artifact-detail-modal) {
     position: relative;
     align-items: flex-start;
     padding: 4px;

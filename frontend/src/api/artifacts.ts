@@ -1,4 +1,3 @@
-import { mockArtifacts } from "../data/mockArtifacts";
 import type {
   Artifact,
   ArtifactFilters,
@@ -6,6 +5,8 @@ import type {
 } from "../types/artifact";
 
 const API_BASE_URL = (import.meta.env.VITE_ARTIFACT_API_URL ?? "").trim();
+const ARTIFACTS_PER_TYPE_LIMIT = 200;
+const ARTIFACTS_PAGE_LIMIT = 1000;
 
 type ArtifactResponse = {
   artifacts: Artifact[];
@@ -24,10 +25,13 @@ export type PlayerArtifactsResponse = {
   artifacts?: Artifact[];
 };
 
-const delay = (ms: number) =>
-  new Promise((resolve) => window.setTimeout(resolve, ms));
-
 const apiUrl = (path: string) => `${API_BASE_URL.replace(/\/$/, "")}${path}`;
+
+function requireApiBaseUrl() {
+  if (!API_BASE_URL) {
+    throw new Error("VITE_ARTIFACT_API_URL is required");
+  }
+}
 
 async function apiError(response: Response, fallback: string) {
   let detail = "";
@@ -40,54 +44,83 @@ async function apiError(response: Response, fallback: string) {
   return new Error(`${fallback} with ${response.status}${detail}`);
 }
 
-const matchesFilters = (artifact: Artifact, filters: ArtifactFilters) => {
-  const search = filters.search.trim().toLowerCase();
-  const player = filters.player.trim().toLowerCase();
-  const searchable = [
-    artifact.name,
-    artifact.baseItem,
-    artifact.subtype,
-    artifact.randomAttributes.join(" "),
-  ]
-    .join(" ")
-    .toLowerCase();
+async function fetchArtifacts(
+  params: URLSearchParams,
+  limit = ARTIFACTS_PER_TYPE_LIMIT,
+): Promise<Artifact[]> {
+  params.set("limit", String(limit));
 
-  return (
-    (filters.type === "all" || artifact.type === filters.type) &&
-    (!search || searchable.includes(search)) &&
-    (!player || artifact.source.player.toLowerCase() === player)
+  const response = await fetch(apiUrl(`/artifacts?${params.toString()}`));
+  if (!response.ok) {
+    throw await apiError(response, "Artifact API failed");
+  }
+
+  const data = (await response.json()) as ArtifactResponse;
+  return data.artifacts;
+}
+
+async function fetchAllArtifacts(params: URLSearchParams): Promise<Artifact[]> {
+  const artifacts: Artifact[] = [];
+  let offset = 0;
+
+  while (true) {
+    const pageParams = new URLSearchParams(params);
+    pageParams.set("offset", String(offset));
+    const page = await fetchArtifacts(pageParams, ARTIFACTS_PAGE_LIMIT);
+    artifacts.push(...page);
+
+    if (page.length < ARTIFACTS_PAGE_LIMIT) break;
+    offset += ARTIFACTS_PAGE_LIMIT;
+  }
+
+  return artifacts;
+}
+
+function uniqueArtifacts(artifactGroups: Artifact[][]): Artifact[] {
+  const byId = new Map<string, Artifact>();
+  for (const artifact of artifactGroups.flat()) {
+    byId.set(artifact.id, artifact);
+  }
+  return Array.from(byId.values()).sort(
+    (left, right) => right.score.total - left.score.total,
   );
-};
+}
 
 export const artifactApi = {
   async listArtifacts(filters: ArtifactFilters): Promise<Artifact[]> {
-    if (!API_BASE_URL) {
-      await delay(120);
-      return mockArtifacts.filter((artifact) =>
-        matchesFilters(artifact, filters),
-      );
-    }
+    requireApiBaseUrl();
 
     const params = new URLSearchParams();
     if (filters.search.trim()) params.set("q", filters.search.trim());
-    if (filters.type !== "all") params.set("type", filters.type);
     if (filters.player.trim()) params.set("player", filters.player.trim());
     params.set("since", filters.timeRange);
 
-    const response = await fetch(apiUrl(`/artifacts?${params.toString()}`));
-    if (!response.ok) {
-      throw await apiError(response, "Artifact API failed");
+    if (filters.timeRange !== "all") {
+      params.set("type", filters.type);
+      if (filters.type === "all") params.delete("type");
+      return fetchAllArtifacts(params);
     }
 
-    const data = (await response.json()) as ArtifactResponse;
-    return data.artifacts;
+    if (filters.type !== "all") {
+      params.set("type", filters.type);
+      return fetchArtifacts(params, ARTIFACTS_PER_TYPE_LIMIT);
+    }
+
+    const types = (await this.listTypes()).filter(
+      (type): type is ArtifactType => type !== "all",
+    );
+    const artifactGroups = await Promise.all(
+      types.map((type) => {
+        const typedParams = new URLSearchParams(params);
+        typedParams.set("type", type);
+        return fetchArtifacts(typedParams);
+      }),
+    );
+    return uniqueArtifacts(artifactGroups);
   },
 
   async getArtifact(id: string): Promise<Artifact | null> {
-    if (!API_BASE_URL) {
-      await delay(80);
-      return mockArtifacts.find((artifact) => artifact.id === id) ?? null;
-    }
+    requireApiBaseUrl();
 
     const response = await fetch(apiUrl(`/artifacts/${id}`));
     if (response.status === 404) return null;
@@ -99,9 +132,7 @@ export const artifactApi = {
   },
 
   async listTypes(): Promise<Array<ArtifactType | "all">> {
-    if (!API_BASE_URL) {
-      return ["all", "weapon", "armour", "jewellery", "talisman", "staff", "misc"];
-    }
+    requireApiBaseUrl();
 
     const response = await fetch(apiUrl("/artifact-types"));
     if (!response.ok) {
@@ -118,34 +149,16 @@ export const artifactApi = {
     if (!nickname) {
       throw new Error("Nickname is required");
     }
-
-    if (!API_BASE_URL) {
-      await delay(180);
-      const artifacts = mockArtifacts.filter(
-        (artifact) => artifact.source.player.toLowerCase() === nickname.toLowerCase(),
-      );
-      return {
-        nickname,
-        status: "completed",
-        artifactCount: artifacts.length,
-        message: `Loaded ${artifacts.length} stored artifacts for ${nickname}.`,
-        artifacts,
-      };
-    }
+    requireApiBaseUrl();
 
     const params = new URLSearchParams({ player: nickname, since: "30d" });
-    const response = await fetch(apiUrl(`/artifacts?${params.toString()}`));
-    if (!response.ok) {
-      throw await apiError(response, "Player artifact API failed");
-    }
-
-    const data = (await response.json()) as ArtifactResponse;
+    const artifacts = await fetchAllArtifacts(params);
     return {
       nickname,
       status: "completed",
-      message: `Loaded ${data.artifacts.length} stored artifacts for ${nickname}.`,
-      artifactCount: data.artifacts.length,
-      artifacts: data.artifacts,
+      message: `Loaded ${artifacts.length} stored artifacts for ${nickname}.`,
+      artifactCount: artifacts.length,
+      artifacts,
     };
   },
 };
