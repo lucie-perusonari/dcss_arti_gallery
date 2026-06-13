@@ -12,7 +12,7 @@ from pymongo.errors import PyMongoError, ServerSelectionTimeoutError
 
 
 DEFAULT_MONGO_URI = "mongodb://localhost:27018"
-DEFAULT_MONGO_DATABASE = "dcss_arti_gallery_dev"
+DEFAULT_MONGO_DATABASE = "dcss_arti_gallery"
 DEFAULT_MONGO_COLLECTION = "artifacts"
 DEFAULT_MONGO_CRAWL_FILES_COLLECTION = "crawl_files"
 DEFAULT_MONGO_CRAWL_USERS_COLLECTION = "crawl_users"

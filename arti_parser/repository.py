@@ -11,7 +11,7 @@ from typing import Any, Protocol
 from arti_parser.models import ArtifactDocument
 
 
-DEFAULT_MONGO_URI = "mongodb://localhost:27017"
+DEFAULT_MONGO_URI = "mongodb://localhost:27018"
 DEFAULT_MONGO_DATABASE = "dcss_arti_gallery"
 DEFAULT_MONGO_RAW_FILES_COLLECTION = "raw_morgue_files"
 DEFAULT_MONGO_ARTIFACTS_COLLECTION = "artifacts"
