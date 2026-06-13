@@ -7,6 +7,8 @@
 - application repository가 런타임에서 index를 생성하지 않도록 DDL 책임을 `infra`에 둡니다.
 - dev/prod MongoDB lifecycle script에서 호출되어 필요한 index를 보장합니다.
 - crawl, processing, gallery read 경로에서 사용하는 collection index를 한곳에서 관리합니다.
+- `artifacts`에는 canonical `id`, `canonical_key`, 대표 `source`, 누적 `sources` evidence 조회에
+  필요한 index를 둡니다.
 
 ## 비소유 책임
 

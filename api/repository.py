@@ -48,10 +48,14 @@ class MongoArtifactReadRepository:
         if item_type and item_type != "all":
             mongo_filter["item_class"] = item_type
         if player and player.strip():
-            mongo_filter["source.player"] = {
+            player_filter = {
                 "$regex": f"^{_escape_regex(player.strip().lower())}$",
                 "$options": "i",
             }
+            mongo_filter["$or"] = [
+                {"source.player": player_filter},
+                {"sources.player": player_filter},
+            ]
 
         documents = [_document_from_mongo(document) for document in self.collection.find(mongo_filter)]
         if query:

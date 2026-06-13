@@ -83,7 +83,11 @@ def _ensure_indexes(database: Any) -> None:
     raw_files.create_index("fetch_status")
 
     artifacts.create_index("id", unique=True)
+    artifacts.create_index("canonical_key", unique=True, sparse=True)
     artifacts.create_index([("source.player", 1), ("source.file", 1)])
+    artifacts.create_index([("sources.player", 1), ("sources.file", 1)])
+    artifacts.create_index("sources.occurrence_id")
+    artifacts.create_index("occurrence_ids")
     artifacts.create_index([("evaluation.total", -1)])
     artifacts.create_index("item_class")
 
