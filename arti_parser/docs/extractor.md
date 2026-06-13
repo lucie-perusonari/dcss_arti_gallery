@@ -17,10 +17,13 @@
 1. raw 확장자에 따라 `.txt` 또는 `.lst` block을 찾습니다.
 2. block title에서 artifact 후보 이름을 얻습니다.
 3. `parser.py`로 display name, enchantment, base item, property token을 파싱합니다.
-4. unrandart와 일반 magic item을 제외합니다.
+4. `cursed`/`chaotic` 같은 item status prefix를 제거한 이름으로 unrandart와 일반 magic item을 제외합니다.
 5. `classifier.py`로 item metadata와 base/random attribute를 분리합니다.
 6. `evaluator.py`로 점수와 등급을 계산합니다.
 7. source metadata, visible description, raw block, 위치 정보를 포함한 문서를 만듭니다.
+
+원문 title은 `raw_text_block`과 occurrence evidence에 유지하고, 저장 문서의 `name`에는
+출력용 normalized name을 사용합니다.
 
 ## 변경 시 주의점
 
