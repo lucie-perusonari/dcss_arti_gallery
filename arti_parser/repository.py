@@ -195,25 +195,27 @@ class MongoArtifactProcessingRepository:
         scoring_version: str,
         processed_at: str,
     ) -> ArtifactSaveResult:
-        artifact_ids = [artifact.id for artifact in artifacts]
-        stale_deleted = self._delete_stale_artifacts(raw_file, artifact_ids)
-        if self.artifacts_collection is not None and artifacts:
-            operations = [
-                _update_one(
+        occurrence_canonical_ids = {
+            artifact.occurrence_id: artifact.id
+            for artifact in artifacts
+        }
+        stale_deleted = self._delete_stale_artifact_sources(raw_file, occurrence_canonical_ids)
+        if self.artifacts_collection is not None:
+            for artifact in artifacts:
+                existing = self._find_artifact_by_id(artifact.id)
+                document = _canonical_artifact_mongo_document(
+                    artifact,
+                    raw_file=raw_file,
+                    parser_version=parser_version,
+                    scoring_version=scoring_version,
+                    processed_at=processed_at,
+                    existing=existing,
+                )
+                self.artifacts_collection.update_one(
                     {"id": artifact.id},
-                    {
-                        "$set": _artifact_mongo_document(
-                            artifact,
-                            raw_file=raw_file,
-                            parser_version=parser_version,
-                            scoring_version=scoring_version,
-                        )
-                    },
+                    {"$set": document},
                     upsert=True,
                 )
-                for artifact in artifacts
-            ]
-            self.artifacts_collection.bulk_write(operations, ordered=False)
 
         self._save_processing_record(
             ArtifactProcessingRecord(
@@ -264,7 +266,7 @@ class MongoArtifactProcessingRepository:
         scoring_version: str,
     ) -> list[RawMorgueSource]:
         processing_records = self._processing_records_for_raw_files(batch)
-        pending: list[RawMorgueFileRecord] = []
+        pending: list[RawMorgueSource] = []
         for raw_file in batch:
             record = processing_records.get((_player_key(raw_file.player), raw_file.name))
             if record is None or _should_process(raw_file, record, parser_version, scoring_version):
@@ -288,21 +290,45 @@ class MongoArtifactProcessingRepository:
         records = [_processing_record_from_mongo(document) for document in documents]
         return {(_player_key(record.player), record.name): record for record in records}
 
-    def _delete_stale_artifacts(
+    def _delete_stale_artifact_sources(
         self,
         raw_file: RawMorgueSource,
-        current_artifact_ids: list[str],
+        current_occurrence_canonical_ids: dict[str, str],
     ) -> int:
         if self.artifacts_collection is None:
             return 0
-        selector: dict[str, Any] = {
-            "source.player": _player_key(raw_file.player),
-            "source.file": raw_file.name,
-        }
-        if current_artifact_ids:
-            selector["id"] = {"$nin": current_artifact_ids}
-        result = self.artifacts_collection.delete_many(selector)
-        return int(getattr(result, "deleted_count", 0))
+        stale_removed = 0
+        for document in list(self.artifacts_collection.find({})):
+            sources = _artifact_sources_from_document(document)
+            kept_sources = [
+                source
+                for source in sources
+                if _should_keep_source_evidence(
+                    source,
+                    raw_file=raw_file,
+                    document_id=document.get("id", ""),
+                    current_occurrence_canonical_ids=current_occurrence_canonical_ids,
+                )
+            ]
+            removed = len(sources) - len(kept_sources)
+            if removed == 0:
+                continue
+            stale_removed += removed
+            if kept_sources:
+                self.artifacts_collection.update_one(
+                    {"id": document["id"]},
+                    {"$set": _artifact_document_with_sources(document, kept_sources)},
+                    upsert=False,
+                )
+            else:
+                self.artifacts_collection.delete_many({"id": document["id"]})
+        return stale_removed
+
+    def _find_artifact_by_id(self, artifact_id: str) -> dict | None:
+        if self.artifacts_collection is None:
+            return None
+        documents = list(self.artifacts_collection.find({"id": artifact_id}))
+        return documents[0] if documents else None
 
     def _save_processing_record(self, record: ArtifactProcessingRecord) -> None:
         if self.processing_collection is None:
@@ -369,6 +395,198 @@ def _artifact_mongo_document(
     return document
 
 
+def _canonical_artifact_mongo_document(
+    artifact: ArtifactDocument,
+    *,
+    raw_file: RawMorgueSource,
+    parser_version: str,
+    scoring_version: str,
+    processed_at: str,
+    existing: dict | None,
+) -> dict:
+    candidate = _artifact_mongo_document(
+        artifact,
+        raw_file=raw_file,
+        parser_version=parser_version,
+        scoring_version=scoring_version,
+    )
+    source = _artifact_source_evidence(
+        artifact,
+        raw_file=raw_file,
+        parser_version=parser_version,
+        scoring_version=scoring_version,
+        processed_at=processed_at,
+    )
+    sources = _merge_artifact_source(
+        _artifact_sources_from_document(existing or {}),
+        source,
+    )
+
+    if existing and _representative_rank(existing) > _representative_rank(candidate):
+        document = _without_mongo_id(existing)
+        document.setdefault("id", artifact.id)
+        document.setdefault("canonical_key", artifact.canonical_key)
+    else:
+        document = candidate
+
+    return _artifact_document_with_sources(document, sources, updated_at=processed_at)
+
+
+def _artifact_source_evidence(
+    artifact: ArtifactDocument,
+    *,
+    raw_file: RawMorgueSource,
+    parser_version: str,
+    scoring_version: str,
+    processed_at: str,
+) -> dict:
+    return {
+        "occurrence_id": artifact.occurrence_id,
+        "player": _player_key(raw_file.player),
+        "file": raw_file.name,
+        "url": artifact.source.url,
+        "line": artifact.source.line,
+        "item_location": artifact.item_location,
+        "item_source": artifact.item_source,
+        "source_content_hash": raw_file.content_hash,
+        "parser_version": parser_version,
+        "scoring_version": scoring_version,
+        "processed_at": processed_at,
+    }
+
+
+def _artifact_sources_from_document(document: dict) -> list[dict]:
+    sources = document.get("sources")
+    if isinstance(sources, list):
+        return [dict(source) for source in sources if isinstance(source, dict)]
+
+    source = document.get("source")
+    if not isinstance(source, dict):
+        return []
+    return [
+        {
+            "occurrence_id": document.get("occurrence_id", document.get("id", "")),
+            "player": _player_key(source.get("player", "")),
+            "file": source.get("file", ""),
+            "url": source.get("url"),
+            "line": source.get("line"),
+            "item_location": document.get("item_location"),
+            "item_source": document.get("item_source"),
+            "source_content_hash": document.get("source_content_hash", ""),
+            "parser_version": document.get("parser_version", ""),
+            "scoring_version": document.get("scoring_version", ""),
+        }
+    ]
+
+
+def _merge_artifact_source(sources: list[dict], source: dict) -> list[dict]:
+    merged: list[dict] = []
+    replaced = False
+    for existing in sources:
+        if existing.get("occurrence_id") == source["occurrence_id"]:
+            merged.append(dict(source))
+            replaced = True
+        else:
+            merged.append(dict(existing))
+    if not replaced:
+        merged.append(dict(source))
+    return merged
+
+
+def _artifact_document_with_sources(
+    document: dict,
+    sources: list[dict],
+    *,
+    updated_at: str | None = None,
+) -> dict:
+    updated = _without_mongo_id(document)
+    updated["sources"] = [dict(source) for source in sources]
+    updated["occurrence_ids"] = [
+        str(source["occurrence_id"])
+        for source in sources
+        if source.get("occurrence_id")
+    ]
+    updated["source_count"] = len(sources)
+    if sources:
+        first_source = dict(sources[0])
+        updated["first_source"] = first_source
+        updated["first_discovered_by"] = first_source.get("player", "")
+        if not _source_in_sources(updated.get("source"), sources):
+            _apply_representative_source(updated, first_source)
+    else:
+        updated["first_source"] = None
+        updated["first_discovered_by"] = ""
+    if updated_at is not None:
+        updated["updated_at"] = updated_at
+    updated.setdefault("known_seeds", [])
+    return updated
+
+
+def _source_in_sources(source: Any, sources: list[dict]) -> bool:
+    if not isinstance(source, dict):
+        return False
+    source_file = source.get("file")
+    source_line = source.get("line")
+    return any(
+        candidate.get("file") == source_file and candidate.get("line") == source_line
+        for candidate in sources
+    )
+
+
+def _public_source_from_evidence(source: dict) -> dict:
+    return {
+        "player": source.get("player", ""),
+        "file": source.get("file", ""),
+        "url": source.get("url"),
+        "line": source.get("line"),
+    }
+
+
+def _apply_representative_source(document: dict, source: dict) -> None:
+    document["source"] = _public_source_from_evidence(source)
+    document["occurrence_id"] = source.get("occurrence_id", "")
+    document["item_location"] = source.get("item_location")
+    document["item_source"] = source.get("item_source")
+    document["source_content_hash"] = source.get("source_content_hash", "")
+    document["parser_version"] = source.get("parser_version", "")
+    document["scoring_version"] = source.get("scoring_version", "")
+
+
+def _is_source_for_raw_file(source: dict, raw_file: RawMorgueSource) -> bool:
+    return (
+        _player_key(str(source.get("player", ""))) == _player_key(raw_file.player)
+        and source.get("file") == raw_file.name
+    )
+
+
+def _should_keep_source_evidence(
+    source: dict,
+    *,
+    raw_file: RawMorgueSource,
+    document_id: str,
+    current_occurrence_canonical_ids: dict[str, str],
+) -> bool:
+    if not _is_source_for_raw_file(source, raw_file):
+        return True
+    occurrence_id = str(source.get("occurrence_id", ""))
+    return current_occurrence_canonical_ids.get(occurrence_id) == document_id
+
+
+def _representative_rank(document: dict) -> tuple[int, int, int]:
+    source_file = str(document.get("source", {}).get("file", ""))
+    source_rank = 1 if source_file.endswith(".txt") else 0
+    description_rank = len(document.get("visible_item_description", []))
+    evaluation = document.get("evaluation", {})
+    score_rank = int(evaluation.get("total", 0)) if isinstance(evaluation, dict) else 0
+    return (source_rank, description_rank, score_rank)
+
+
+def _without_mongo_id(document: dict) -> dict:
+    copy = dict(document)
+    copy.pop("_id", None)
+    return copy
+
+
 def _should_process(
     raw_file: RawMorgueSource,
     record: ArtifactProcessingRecord,
@@ -381,12 +599,6 @@ def _should_process(
         or record.parser_version != parser_version
         or record.scoring_version != scoring_version
     )
-
-
-def _update_one(selector: dict, update: dict, *, upsert: bool):
-    from pymongo import UpdateOne
-
-    return UpdateOne(selector, update, upsert=upsert)
 
 
 def _raw_morgue_file_record_from_mongo(document: dict) -> RawMorgueSource:

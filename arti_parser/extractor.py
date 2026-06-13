@@ -51,7 +51,7 @@ PLAYER_RE = re.compile(r"morgue-(?P<player>.+?)-\d{8}-\d{6}\.(?:txt|lst)$")
 def extract_artifact_documents(raw_text: MorgueRawText) -> list[ArtifactDocument]:
     """Build storage-ready artifact documents from one raw morgue text."""
 
-    documents_by_id: dict[str, ArtifactDocument] = {}
+    documents: list[ArtifactDocument] = []
     for raw_artifact in _raw_artifacts(raw_text):
         parsed = _parse_artifact(raw_artifact)
         if not is_random_artifact(
@@ -79,9 +79,9 @@ def extract_artifact_documents(raw_text: MorgueRawText) -> list[ArtifactDocument
             classification=classification,
             evaluation=evaluation,
         )
-        documents_by_id[document.id] = document
+        documents.append(document)
     return sorted(
-        documents_by_id.values(),
+        documents,
         key=lambda document: document.evaluation.total,
         reverse=True,
     )
@@ -349,9 +349,20 @@ def _artifact_document_from_parts(
 ) -> ArtifactDocument:
     source_file = parsed.raw.source_name or ""
     line_no = parsed.raw.line_no
-    document_key = "|".join([source_file, str(line_no), parsed.raw.name])
+    occurrence_key = "|".join([source_file, str(line_no), parsed.raw.name])
+    canonical_key = _artifact_canonical_key(
+        display_name=parsed.display_name,
+        base_item=parsed.base_item,
+        enchantment=parsed.enchantment,
+        brand=classification.brand,
+        item_class=classification.item_class,
+        item_subtype=classification.item_subtype,
+        random_attributes=classification.random_attributes,
+    )
     return ArtifactDocument(
-        id=_artifact_id_from_key(parsed.raw.name, document_key),
+        id=_artifact_id_from_key(parsed.display_name, canonical_key),
+        occurrence_id=_artifact_id_from_key(parsed.raw.name, occurrence_key),
+        canonical_key=canonical_key,
         name=parsed.raw.name,
         base_item=parsed.base_item,
         base_subtype=parsed.raw.base_subtype,
@@ -388,6 +399,32 @@ def _artifact_id_from_key(name: str, key: str) -> str:
     digest = hashlib.sha1(key.encode("utf-8")).hexdigest()[:10]
     slug = ARTIFACT_ID_SLUG_RE.sub("-", name.lower()).strip("-")
     return f"{slug[:48]}-{digest}" if slug else digest
+
+
+def _artifact_canonical_key(
+    *,
+    display_name: str,
+    base_item: str,
+    enchantment: int | None,
+    brand: str | None,
+    item_class: str,
+    item_subtype: str,
+    random_attributes: list[str],
+) -> str:
+    parts = [
+        _normalize_key(display_name),
+        _normalize_key(base_item),
+        "" if enchantment is None else str(enchantment),
+        _normalize_key(brand or ""),
+        _normalize_key(item_class),
+        _normalize_key(item_subtype),
+        ",".join(sorted((_normalize_key(attribute) for attribute in random_attributes))),
+    ]
+    return "\x1f".join(parts)
+
+
+def _normalize_key(value: str) -> str:
+    return " ".join(value.casefold().split())
 
 
 def _player_from_source(source_file: str) -> str:

@@ -45,11 +45,13 @@ class ArtifactDocumentEvaluation(BaseModel):
 
 
 class ArtifactDocument(BaseModel):
-    """Canonical artifact document stored by crawl_service."""
+    """Canonical artifact document stored by arti_parser."""
 
     model_config = ConfigDict(frozen=True)
 
     id: str
+    occurrence_id: str
+    canonical_key: str
     name: str
     base_item: str
     base_subtype: str | None
