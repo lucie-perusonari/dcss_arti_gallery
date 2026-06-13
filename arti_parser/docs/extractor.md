@@ -24,7 +24,7 @@
 
 ## 변경 시 주의점
 
-- `extract_artifact_documents`는 같은 raw file 안의 중복 document id를 dedupe하고
-  `evaluation.total` 내림차순으로 반환합니다.
-- artifact id는 source file, line, raw name 기반 key에서 만들어집니다.
+- `extract_artifact_documents`는 발견한 occurrence를 `evaluation.total` 내림차순으로 반환합니다.
+- `id`는 normalized artifact signature 기반 canonical key에서 만들어집니다.
+- `occurrence_id`는 source file, line, raw name 기반 key에서 만들어집니다.
 - `.lst`의 `item_location`, `item_source`는 갤러리의 위치/상점 표시 근거입니다.

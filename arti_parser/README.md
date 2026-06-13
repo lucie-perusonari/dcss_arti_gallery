@@ -15,7 +15,7 @@ artifact read model을 재생성하는 배치 처리 모듈입니다.
 - [`parser.py`](docs/parser.md): artifact 이름, enchantment, base item, property token, randart 여부를 파싱합니다.
 - [`classifier.py`](docs/classifier.md): item class/subtype, armour/jewellery slot, brand, base/random attributes를 분류합니다.
 - [`evaluator.py`](docs/evaluator.md): random attributes와 item metadata를 점수/등급으로 평가합니다.
-- [`models.py`](docs/models.md): MongoDB에 저장되는 `ArtifactDocument` occurrence Pydantic 모델입니다.
+- [`models.py`](docs/models.md): MongoDB에 저장되는 canonical `ArtifactDocument` Pydantic 모델입니다.
 - [`repository.py`](docs/repository.md): `raw_morgue_files`, `artifacts`, `artifact_processing_files` 접근 계층입니다.
 - [`constants.py`](docs/constants.md): 파싱/분류/평가에 쓰는 정규식과 lookup table입니다.
 - [`dcss_data.py`](docs/dcss_data.md): 공식 DCSS source tree를 참고해 정리한 item/unrandart 정적 데이터입니다.
@@ -30,8 +30,8 @@ artifact read model을 재생성하는 배치 처리 모듈입니다.
 - unrandart와 일반 magic item을 제외하고 랜덤 아티팩트만 문서화합니다.
 - base item intrinsic 속성과 랜덤 속성을 분리합니다.
 - 랜덤 속성 기준으로 artifact 평가 점수와 등급을 계산합니다.
-- `artifacts` 컬렉션에 갤러리/API가 읽는 artifact occurrence document를 upsert합니다.
-- 같은 raw file에서 더 이상 나오지 않는 이전 artifact 문서는 삭제합니다.
+- `artifacts` 컬렉션에 갤러리/API가 읽는 canonical artifact document를 upsert합니다.
+- 같은 raw file에서 더 이상 나오지 않는 이전 artifact source evidence는 삭제합니다.
 - `artifact_processing_files`에 처리 성공/실패, content hash, parser/scoring 버전을 기록합니다.
 
 `crawl_service`, `api`, `admin_api`의 책임을 대신하지 않습니다. 특히 remote crawl,
@@ -67,7 +67,7 @@ raw_morgue_files
    random 속성을 분리합니다.
 6. `evaluator.py`가 `random_attributes` 기준으로 점수와 등급을 계산합니다.
 7. `models.py`의 `ArtifactDocument` shape로 저장 문서를 조립합니다.
-8. `repository.py`가 artifact를 upsert하고, 같은 raw file에서 사라진 stale artifact를 삭제하며,
+8. `repository.py`가 canonical artifact를 upsert하고, 같은 raw file에서 사라진 stale source evidence를 삭제하며,
    `artifact_processing_files`에 성공/실패와 version metadata를 기록합니다.
 
 주요 컬렉션:
@@ -138,20 +138,22 @@ MongoDB 연결 환경 변수:
 
 ## 출력 문서
 
-`artifacts` 문서는 현재 raw source occurrence 단위의 `ArtifactDocument` 형태로 저장됩니다.
-같은 artifact가 여러 `.lst`/`.txt` snapshot에서 반복 관측되면 여러 문서가 생길 수 있으며,
-canonical dedupe 설계는 [ISSUE.md](ISSUE.md)에 별도 이슈로 정리합니다. 주요 필드는 다음과
-같습니다.
+`artifacts` 문서는 canonical `ArtifactDocument` 형태로 저장됩니다. 같은 artifact signature가
+여러 `.lst`/`.txt` snapshot에서 반복 관측되어도 `id`가 같으면 하나의 문서로 병합하고,
+관측 source evidence는 `sources`에 누적합니다. 주요 필드는 다음과 같습니다.
 
-- `id`: raw source, line, display name 기반 artifact 식별자입니다.
+- `id`: source metadata를 제외한 normalized artifact signature 기반 canonical 식별자입니다.
+- `occurrence_id`: raw source, line, display name 기반 occurrence 식별자입니다.
+- `canonical_key`: `id` 계산에 쓰는 normalized artifact signature입니다.
 - `name`, `base_item`, `base_subtype`: 표시 이름과 base item 정보입니다.
 - `item_class`, `item_subtype`, `weapon_subtype`, `armour_slot`, `jewellery_slot`: 갤러리 필터와 렌더링에 쓰는 분류 필드입니다.
 - `attributes`: 파싱된 property token, normalized key/value, visible description입니다.
 - `all_attributes`, `base_attributes`, `random_attributes`: 전체 속성, base intrinsic 속성, 실제 랜덤 속성입니다.
 - `evaluation`: 총점, practical score, rarity score, grade, 세부 점수입니다.
 - `visible_item_description`, `visible_description_labels`, `raw_text_block`: UI 표시와 디버깅용 원문 근거입니다.
-- `item_location`, `item_source`: `.lst`에서 확인한 위치/상점 정보입니다.
-- `source`: player, file, URL, line metadata입니다.
+- `item_location`, `item_source`: 대표 occurrence에서 확인한 위치/상점 정보입니다.
+- `source`: 대표 occurrence의 player, file, URL, line metadata입니다.
+- `sources`, `occurrence_ids`, `source_count`, `first_source`, `first_discovered_by`, `known_seeds`, `updated_at`: canonical artifact에 누적된 source evidence metadata입니다.
 
 저장 시 repository가 `source_content_hash`, `parser_version`, `scoring_version`도 함께
 추가합니다.

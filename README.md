@@ -60,4 +60,4 @@ crawl status collections
 - `frontend`는 갤러리 화면을 소유하고, persisted artifact data는 Gallery API를 통해서만 읽습니다.
 - `admin-frontend`는 운영 대시보드를 소유하고, crawl 상태 데이터는 Admin API를 통해서만 읽습니다.
 - `infra`는 MongoDB lifecycle script와 index 같은 인프라 작업을 소유합니다. application repository가 infra DDL을 대신 수행하지 않습니다.
-- 루트 `scripts/`는 장기적으로 제거 대상입니다. 실행용 스크립트는 해당 서비스 아래에 두고, mock 검증 로직은 테스트 파일 안에 둡니다. 생성용 스크립트는 강한 재사용 필요성이 있을 때만 유지합니다.
+- 루트 `scripts/`는 장기적으로 제거 대상입니다. 실행용 스크립트는 해당 서비스 아래에 두고, mock 검증 로직과 테스트 fixture 생성기는 테스트 파일 또는 테스트 패키지 안에 둡니다. 운영 로직에 빠지면 안 되는 필수 생성기만 예외적으로 서비스 아래에 유지합니다.

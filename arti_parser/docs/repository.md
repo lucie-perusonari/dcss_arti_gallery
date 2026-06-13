@@ -1,7 +1,8 @@
 # repository.py
 
 `repository.py`는 MongoDB-backed artifact processing repository입니다. raw source 조회,
-pending 판정, artifact upsert, stale 삭제, 처리 상태 기록을 담당합니다.
+pending 판정, canonical artifact upsert, stale source evidence 삭제, 처리 상태 기록을
+담당합니다.
 
 ## 주요 구성
 
@@ -24,10 +25,13 @@ raw file은 다음 경우 처리 대상입니다.
 
 ## 저장 동작
 
-- 현재 raw file에서 생성된 artifact는 `id` 기준으로 upsert합니다.
-- 같은 `source.player`, `source.file`에 속하지만 이번 결과에 없는 artifact는 stale로 삭제합니다.
+- 현재 raw file에서 생성된 artifact는 canonical `id` 기준으로 upsert합니다.
+- 같은 canonical `id`가 이미 있으면 새 문서를 만들지 않고 `sources` evidence를 병합합니다.
+- 같은 raw file에 속하지만 이번 결과에 없는 occurrence evidence는 stale로 삭제합니다.
+- source evidence가 더 이상 남지 않은 canonical artifact 문서는 삭제합니다.
 - 처리 성공/실패 상태는 `artifact_processing_files`에 upsert합니다.
-- 저장 문서에는 `source_content_hash`, `parser_version`, `scoring_version` metadata가 추가됩니다.
+- 저장 문서와 source evidence에는 `source_content_hash`, `parser_version`, `scoring_version`
+  metadata가 추가됩니다.
 
 ## 변경 시 주의점
 

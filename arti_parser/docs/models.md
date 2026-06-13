@@ -1,19 +1,21 @@
 # models.py
 
-`models.py`는 MongoDB `artifacts` 컬렉션에 저장되는 artifact occurrence document shape를
-정의합니다. 현재 문서는 raw source에서 관측된 occurrence 단위이며, canonical dedupe 설계는
-상위 [ISSUE.md](../ISSUE.md)에 별도 이슈로 둡니다.
+`models.py`는 MongoDB `artifacts` 컬렉션에 저장되는 canonical artifact document shape를
+정의합니다. raw source에서 관측된 occurrence identity는 `occurrence_id`와 `sources` evidence로
+보존합니다.
 
 ## 주요 모델
 
 - `ArtifactDocumentSource`: 원본 player, file, URL, line metadata입니다.
 - `ArtifactDocumentAttribute`: property token, normalized key/value, visible description입니다.
 - `ArtifactDocumentEvaluation`: 점수와 등급 결과입니다.
-- `ArtifactDocument`: 갤러리/API가 읽는 artifact occurrence read model 본문입니다.
+- `ArtifactDocument`: 갤러리/API가 읽는 canonical artifact read model 본문입니다.
 
 ## `ArtifactDocument` 핵심 필드
 
-- `id`: artifact 문서 식별자입니다.
+- `id`: normalized artifact signature 기반 canonical artifact 식별자입니다.
+- `occurrence_id`: 대표 occurrence의 source file, line, raw name 기반 식별자입니다.
+- `canonical_key`: canonical `id` 계산에 쓰는 normalized artifact signature입니다.
 - `name`, `base_item`, `base_subtype`: 이름과 base item 정보입니다.
 - `item_class`, `item_subtype`, `weapon_subtype`, `armour_slot`, `jewellery_slot`: 필터와 렌더링에
   쓰는 분류 필드입니다.
@@ -22,8 +24,10 @@
 - `evaluation`: 점수와 등급입니다.
 - `visible_item_description`, `visible_description_labels`, `raw_text_block`: UI 표시와 디버깅용
   원문 근거입니다.
-- `item_location`, `item_source`: `.lst` 또는 `.txt`에서 확인한 위치/상점/source 정보입니다.
-- `source`: player, source file, URL, line metadata입니다.
+- `item_location`, `item_source`: 대표 occurrence에서 확인한 위치/상점/source 정보입니다.
+- `source`: 대표 occurrence의 player, source file, URL, line metadata입니다.
+- `sources`, `occurrence_ids`, `source_count`, `first_source`, `first_discovered_by`, `known_seeds`, `updated_at`: repository가
+  저장 시 추가하는 canonical source evidence metadata입니다.
 
 ## 변경 시 주의점
 
