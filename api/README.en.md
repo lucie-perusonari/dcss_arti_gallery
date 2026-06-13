@@ -1,6 +1,6 @@
 # Gallery API
 
-`api` reads artifact read models and crawl status data stored in MongoDB and serves them through FastAPI.
+`api` reads artifact read models stored in MongoDB and serves gallery FastAPI endpoints.
 The API response model is owned by `api` and may duplicate the `crawl_service` document model.
 
 `api` does not import `crawl_service`. The boundary between the two projects is the MongoDB-stored document shape
@@ -8,14 +8,11 @@ and the API-owned Pydantic DTOs.
 
 ## Responsibilities
 
-- `app.py`: FastAPI app factory, CORS setup, and gallery/admin router wiring
+- `app.py`: gallery FastAPI app factory, CORS setup, and gallery router wiring
 - `routes.py`: gallery read endpoints
 - `models.py`: artifact API response DTOs
 - `presenter.py`: converts persisted artifact documents into public response shapes
-- `repository.py`: MongoDB artifact read repository
-- `admin_routes.py`: crawl operations dashboard status endpoints
-- `admin_models.py`: admin status response DTOs
-- `admin_repository.py`: read repository for crawl file/user/raw file status
+- `repository.py`: MongoDB artifact read repository. DDL such as index creation is owned by `infra/`.
 
 ## Endpoints
 
@@ -23,7 +20,6 @@ and the API-owned Pydantic DTOs.
 - `GET /artifacts/{artifact_id}`: read a single artifact
 - `GET /artifact-types`: list available artifact types
 - `GET /filters`: gallery filter metadata
-- `GET /admin/crawl-status`: crawl operations dashboard status
 
 ## Runtime
 
@@ -36,24 +32,17 @@ python3 -m pip install -r requirements.txt
 Local MongoDB:
 
 ```sh
-eval "$(infra/mongo/mongo_up.sh)"
+eval "$(infra/dev/mongo_up.sh)"
 ```
 
-API server:
+Gallery API server:
 
 ```sh
 python3 -m uvicorn api.app:app --host 0.0.0.0 --port 8000
 ```
 
-The default CORS origins are `http://localhost:5173` and `http://127.0.0.1:5173`.
+The gallery API default CORS origins are `http://localhost:5173` and `http://127.0.0.1:5173`.
 Adjust them with `ARTIFACT_API_CORS_ORIGINS` or `ARTIFACT_API_CORS_ORIGIN_REGEX` if needed.
-The admin dev server defaults to port `5174`, so run the API with an origin list like this when the admin dashboard
-calls it directly:
-
-```sh
-ARTIFACT_API_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://127.0.0.1:5174 \
-  python3 -m uvicorn api.app:app --host 0.0.0.0 --port 8000
-```
 
 ## Tests
 
@@ -61,8 +50,7 @@ ARTIFACT_API_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://127
 python3 -m unittest discover -s api/tests -t .
 ```
 
-When the API/frontend contract changes, run the API tests together with `cd frontend && npm run build`.
-When the admin status contract changes, run the API tests together with `cd admin-frontend && npm run build`.
+The API tests verify that Gallery API responses expose only the fields required by the frontend `Artifact` contract.
 
 ## Related Docs
 

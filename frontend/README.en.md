@@ -35,10 +35,10 @@ Connect to the Gallery API:
 VITE_ARTIFACT_API_URL=http://127.0.0.1:8000 npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-From the repository root, you can use:
+From the repository root, you can use the service script:
 
 ```sh
-./scripts/run_frontend.sh
+./frontend/run_frontend.sh
 ```
 
 ## Build

@@ -41,7 +41,7 @@ export function DcssItemDescription({ artifact }: DcssItemDescriptionProps) {
 }
 
 function itemDescriptionBody(artifact: Artifact) {
-  const description = artifact.dcssDescription || artifact.rawDescription.join('\n');
+  const description = artifact.dcssDescription;
   const lines = description.split('\n');
   const firstContentIndex = lines.findIndex((line) => line.trim());
   if (firstContentIndex === -1) return '';

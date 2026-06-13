@@ -1,12 +1,12 @@
-# DCSS 프론트엔드 참고 자료
+# DCSS 아이템 설명창 참고 자료
 
-이 디렉터리는 프론트엔드 디자인 구현 때 참고할 실제 DCSS 화면 자료입니다.
+이 디렉터리는 프론트엔드 아이템 설명창 디자인 구현 때 참고할 실제 DCSS 화면 자료입니다.
 자료 출처는 DCInside 로그라이크 갤러리로 제한합니다.
 
 이미지 자산은 문서 디렉터리가 아니라 `frontend/reference/dcinside-log-gallery/`에 둡니다.
 현재 React 구현 결과 스크린샷은 `frontend/reference/screenshots/current-ui/`에 따로 둡니다.
 
-## 주요 아이템 설명
+## 아이템 설명창
 
 아이템 상세 패널 구현은 아래 이미지를 우선 기준으로 삼습니다.
 
@@ -58,89 +58,19 @@
 
    ![Korean jewellery description](../../reference/dcinside-log-gallery/jewellery-description-korean.png)
 
-## 목록, 메뉴, 행
-
-갤러리 리스트, 카드, 필터 결과, 모바일 행 밀도를 조정할 때 참고합니다.
-
-1. 모바일/확대 아이템 한 줄
-
-   긴 randart 이름과 속성 목록이 한 줄에서 어떻게 보이는지 확인합니다.
-
-   ![Mobile artifact row](../../reference/dcinside-log-gallery/mobile-artifact-row.jpg)
-
-2. 장비 목록
-
-   장비 카테고리, 착용 상태, 타일, 문자 hotkey, 아이템명, 속성 목록의 간격을 확인합니다.
-
-   ![Equipment list mobile](../../reference/dcinside-log-gallery/equipment-list-mobile.png)
-
-3. 상점 아이템 목록
-
-   가격, hotkey, 아이콘, 이름, 속성 목록, 선택 행 highlight의 밀도를 확인합니다.
-
-   ![Shop item list](../../reference/dcinside-log-gallery/shop-item-list.png)
-
-4. Acquirement 아이템 메뉴
-
-   팝업 테두리, 선택 행 highlight, 메뉴 하단 명령줄을 확인합니다.
-
-   ![Acquirement item menu](../../reference/dcinside-log-gallery/acquirement-item-menu.png)
-
-5. 메시지 로그의 artifact 링크
-
-   하단 로그에서 artifact 이름이 색상 링크처럼 표시되는 방식을 확인합니다.
-
-   ![Message log artifact link](../../reference/dcinside-log-gallery/message-log-artifact-link.png)
-
-## WebTiles 셸
-
-전체 화면 구성, 우측 상태 패널, 팝업 overlay, 검은 여백, 지도/메시지 밀도를 조정할 때 참고합니다.
-
-1. 현재 WebTiles 플레이 화면
-
-   브라우저에서 실행 중인 현재 WebTiles 화면입니다.
-
-   ![Current WebTiles play screen](../../reference/dcinside-log-gallery/webtiles-current-play-screen.png)
-
-2. WebTiles 팝업 overlay
-
-   중앙 팝업, 배경 dim 처리, 오른쪽 상태 패널과 채팅 박스가 함께 있는 화면입니다.
-
-   ![WebTiles popup overlay](../../reference/dcinside-log-gallery/webtiles-popup-overlay.png)
-
-3. WebTiles 지도/상태 crop
-
-   지도, minimap, 오른쪽 상태 텍스트가 보이는 crop입니다.
-
-   ![WebTiles map status crop](../../reference/dcinside-log-gallery/webtiles-map-status-crop.png)
-
-4. 한글판 legacy tiles inventory
-
-   오래된 한글판 화면이지만, 타일 기반 장비/인벤토리/상태 패널 밀도 참고로만 사용합니다.
-
-   ![Legacy Korean tiles inventory](../../reference/dcinside-log-gallery/legacy-korean-tiles-inventory.png)
-
 ## 출처 메모
 
 - `artifact-gloves-description.png`: DCInside 로그라이크 갤러리 `ㄷㅈ)상급장갑`, <https://gall.dcinside.com/board/view/?id=rlike&no=511423&page=1>.
-- `mobile-artifact-row.jpg`: DCInside 로그라이크 갤러리 `ㄷㅈ) 그래서 이거 들고 승천하면 되죠?`, <https://gall.dcinside.com/board/view/?id=rlike&no=518762&page=1>.
-- `webtiles-current-play-screen.png`: DCInside 로그라이크 갤러리 `ㄷㅈ)검정드라코 쉐슆 올룬클`, <https://gall.dcinside.com/board/view/?id=rlike&no=493572>.
 - `armour-description-large.png`: DCInside 로그라이크 갤러리 `ㄷㅈ) 신이름 아티`, <https://gall.dcinside.com/board/view/?id=rlike&no=510916&page=1>.
 - `armour-description-equipped.png`: DCInside 로그라이크 갤러리 `ㄷㅈ) 1층 황금용갑옷`, <https://gall.dcinside.com/board/view/?id=rlike&no=515834&page=1>.
 - `armour-description-scrollbar.png`: DCInside 로그라이크 갤러리 `ㄷㅈ) 이거 뭔데`, <https://gall.dcinside.com/board/view/?id=rlike&no=508025&page=1>.
-- `message-log-artifact-link.png`: DCInside 로그라이크 갤러리 `ㄷㅈ) 변이 선물`, <https://gall.dcinside.com/board/view/?id=rlike&no=507529&page=1>.
-- `webtiles-popup-overlay.png` and `webtiles-map-status-crop.png`: DCInside 로그라이크 갤러리 `ㄷㅈ) '시시하군'`, <https://gall.dcinside.com/board/view/?id=rlike&no=518532&page=1>.
 - `jewellery-description-korean.png`: DCInside 로그라이크 갤러리 `ㄷㅈ) 장검전사 부문 돌품명품 출품`, <https://gall.dcinside.com/board/view/?id=rlike&no=516900&page=1>.
-- `shop-item-list.png`: DCInside 로그라이크 갤러리 `ㄷㅈ)고자그 치곤 좋은거 나온`, <https://gall.dcinside.com/board/view/?id=rlike&no=518324&page=1>.
-- `acquirement-item-menu.png`: DCInside 로그라이크 갤러리 `ㄷㅈ) 오카왈도 니뮤ㅠㅠ`, <https://gall.dcinside.com/board/view/?id=rlike&no=518030&page=1>.
 - `gloves-description-equipped-short.png` and `gloves-description-short.png`: DCInside 로그라이크 갤러리 `ㄷㅈ) 이끼 미노타 장갑 추천해주세요`, <https://gall.dcinside.com/board/view/?id=rlike&no=517805&page=1>.
 - `jewellery-description-english.png`: DCInside 로그라이크 갤러리 `돌죽 아주 조금 안 좋은 불저 냉저 반지`, <https://gall.dcinside.com/board/view/?id=rlike&no=518662&page=1>.
-- `equipment-list-mobile.png`: DCInside 로그라이크 갤러리 `ㄷㅈ) 문어 탈리스만 선택존`, <https://gall.dcinside.com/board/view/?id=rlike&no=518522&page=1>.
-- `legacy-korean-tiles-inventory.png`: DCInside 로그라이크 갤러리 `ㄷㅈ) 0.13 버전 오랫만에 클리어 해본 후기`, <https://gall.dcinside.com/board/view/?id=rlike&no=389186&page=1>.
 
 ## 디자인 사용
 
 - Use `artifact-gloves-description.png`, `armour-description-large.png`, and `jewellery-description-english.png` before changing `DcssItemDescription`.
 - Preserve the real DCSS structure: item tile plus title row, black background, monospace body, property explanation rows, acquisition/source lines, search prefix lines, and bottom action row.
-- Use list/menu references before changing gallery card density, selected states, or mobile rows.
+- Do not use list, menu, full WebTiles shell, map, status, inventory, or message-log captures as design reference in this directory.
 - Do not use non-DCInside images as frontend design reference in this directory.

@@ -46,7 +46,6 @@ const matchesFilters = (artifact: Artifact, filters: ArtifactFilters) => {
     artifact.name,
     artifact.baseItem,
     artifact.subtype,
-    artifact.origin,
     artifact.randomAttributes.join(" "),
   ]
     .join(" ")

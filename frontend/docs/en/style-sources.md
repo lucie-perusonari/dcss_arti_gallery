@@ -21,7 +21,7 @@ The item detail panel uses the same class naming as WebTiles.
 - The item tile in `.describe-item > .header` is rendered as a 32x32 `canvas`, following the WebTiles describe panel structure.
 - The local mock app does not run the DCSS game client, but the item description window is rendered with the same popup layout, font, color palette, canvas tile slot, and `pre-wrap` behavior used by WebTiles.
 
-For the actual DCSS layout density, item grid spacing, dark background, pixel tile treatment, and monospace description text, use `frontend/reference/dcinside-log-gallery/`.
+For the actual DCSS item description panel density, dark background, pixel tile treatment, and monospace description text, use `frontend/reference/dcinside-log-gallery/`.
 When changing the item detail panel, start by checking `artifact-gloves-description.png`, `armour-description-large.png`, and `jewellery-description-english.png`.
 
 The screenshots in `frontend/reference/screenshots/current-ui/` are implementation checkpoints, not the design source of truth.

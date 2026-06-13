@@ -10,18 +10,6 @@
 - 정의 위치: `api.models.ArtifactSource`
 - 필드:
   - `player: str`
-  - `file: str`
-  - `url: str | None`
-  - `line: int`
-
-## `ArtifactAttribute`
-
-- 정의 위치: `api.models.ArtifactAttribute`
-- 필드:
-  - `token: str`
-  - `kind: str`
-  - `description: str`
-  - `scoreImpact: str`
 
 ## `ArtifactEvaluation`
 
@@ -44,30 +32,12 @@
 - 용도: Gallery API가 반환하는 artifact read model
 - 주요 필드:
   - `id`, `name`, `baseItem`, `type`, `subtype`, `tile`
-  - `enchantment`, `brand`, `origin`
   - `source: ArtifactSource`
-  - `attributes: list[ArtifactAttribute]`
-  - `allAttributes`, `baseAttributes`, `randomAttributes`
-  - `allAttributeText`, `baseAttributeText`, `randomAttributeText`
-  - `evaluation: ArtifactEvaluation`
+  - `randomAttributes: list[str]`
   - `score: ArtifactEvaluation`
-  - `rawDescription: list[str]`
   - `dcssDescription: str`
-
-## `CrawlStatus`
-
-- 정의 위치: `api.admin_models.CrawlStatus`
-- 용도: admin dashboard 상태 응답
-- 필드:
-  - `artifactCount: int`
-  - `rawFiles: RawFileStatus`
-  - `crawlFiles: dict[str, int]`
-  - `crawlUsers: dict[str, int]`
-  - `latest: LatestActivity`
-  - `recentErrors: list[CrawlError]`
 
 ## 연계 문서
 
 - [API Processing Layers](./processing-layers.md)
 - [Frontend Data Types](../../../frontend/docs/ko/data-types.md)
-- [Admin Frontend Data Types](../../../admin-frontend/docs/ko/data-types.md)

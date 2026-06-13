@@ -8,15 +8,6 @@ The TypeScript types must stay aligned with the Gallery API response shape.
 - Defined in: `frontend/src/types/artifact.ts`
 - Values: `weapon`, `armour`, `jewellery`, `talisman`, `staff`, `misc`
 
-## `ArtifactAttribute`
-
-- Defined in: `frontend/src/types/artifact.ts`
-- Fields:
-  - `token: string`
-  - `kind: 'resistance' | 'stat' | 'property' | 'penalty' | 'brand' | 'spell_school'`
-  - `description: string`
-  - `scoreImpact: 'positive' | 'negative' | 'neutral'`
-
 ## `ArtifactEvaluation`
 
 - Defined in: `frontend/src/types/artifact.ts`
@@ -35,13 +26,10 @@ The TypeScript types must stay aligned with the Gallery API response shape.
 - Purpose: gallery list/detail rendering state
 - Key fields:
   - `id`, `name`, `baseItem`, `type`, `subtype`, `tile`
-  - `enchantment`, `brand`, `origin`
   - `source`
-  - `attributes`, `randomAttributes`
-  - `allAttributes`, `baseAttributes`
-  - `allAttributeText`, `baseAttributeText`, `randomAttributeText`
-  - `evaluation`, `score`
-  - `rawDescription`, `dcssDescription`
+  - `randomAttributes`
+  - `score`
+  - `dcssDescription`
 
 ## Related Docs
 

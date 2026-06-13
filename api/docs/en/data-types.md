@@ -11,18 +11,6 @@ public API contract.
 - Defined in: `api.models.ArtifactSource`
 - Fields:
   - `player: str`
-  - `file: str`
-  - `url: str | None`
-  - `line: int`
-
-## `ArtifactAttribute`
-
-- Defined in: `api.models.ArtifactAttribute`
-- Fields:
-  - `token: str`
-  - `kind: str`
-  - `description: str`
-  - `scoreImpact: str`
 
 ## `ArtifactEvaluation`
 
@@ -45,30 +33,12 @@ public API contract.
 - Purpose: artifact read model returned by the Gallery API
 - Key fields:
   - `id`, `name`, `baseItem`, `type`, `subtype`, `tile`
-  - `enchantment`, `brand`, `origin`
   - `source: ArtifactSource`
-  - `attributes: list[ArtifactAttribute]`
-  - `allAttributes`, `baseAttributes`, `randomAttributes`
-  - `allAttributeText`, `baseAttributeText`, `randomAttributeText`
-  - `evaluation: ArtifactEvaluation`
+  - `randomAttributes: list[str]`
   - `score: ArtifactEvaluation`
-  - `rawDescription: list[str]`
   - `dcssDescription: str`
-
-## `CrawlStatus`
-
-- Defined in: `api.admin_models.CrawlStatus`
-- Purpose: admin dashboard status response
-- Fields:
-  - `artifactCount: int`
-  - `rawFiles: RawFileStatus`
-  - `crawlFiles: dict[str, int]`
-  - `crawlUsers: dict[str, int]`
-  - `latest: LatestActivity`
-  - `recentErrors: list[CrawlError]`
 
 ## Related Docs
 
 - [API Processing Layers](./processing-layers.md)
 - [Frontend Data Types](../../../frontend/docs/en/data-types.md)
-- [Admin Frontend Data Types](../../../admin-frontend/docs/en/data-types.md)

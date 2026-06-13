@@ -25,41 +25,6 @@ BRAND_TOKENS = {
     "vampirism",
     "vorpal",
 }
-STAT_KEYS = {"Str", "Int", "Dex", "AC", "EV", "SH", "Slay", "MP"}
-RESISTANCE_KEYS = {"rF", "rC", "rN", "rPois", "rElec", "rCorr", "Will"}
-SPELL_SCHOOL_KEYS = {
-    "Alch",
-    "Air",
-    "Conj",
-    "Earth",
-    "Fire",
-    "Forge",
-    "Hexes",
-    "Ice",
-    "Necro",
-    "Summ",
-    "Tloc",
-}
-PENALTY_KEYS = {
-    "*Corrode",
-    "*Drain",
-    "*Rage",
-    "*Slow",
-    "*Tele",
-    "^Contam",
-    "^Drain",
-    "^Fragile",
-    "^Harm",
-    "^Rampage",
-    "^Rage",
-    "^Regen",
-    "^Slow",
-    "^Tele",
-    "Harm",
-    "NoPotionHeal",
-}
-
-
 def _variant_paths(category: str, slug: str, count: int) -> tuple[str, ...]:
     return tuple(f"/tiles/randart/{category}/{slug}-{index}.png" for index in range(1, count + 1))
 
@@ -240,60 +205,39 @@ def present_artifact_document(document: dict[str, Any]) -> ArtifactDocument:
         "type": data["item_class"],
         "subtype": data["item_subtype"],
         "tile": _tile_for(data),
-        "enchantment": _enchantment_text(data.get("enchantment")),
-        "brand": data.get("brand"),
-        "origin": "",
-        "source": data["source"],
-        "attributes": attributes,
-        "allAttributes": data.get("all_attributes", []),
-        "baseAttributes": data.get("base_attributes", []),
+        "source": {"player": data["source"].get("player", "")},
         "randomAttributes": data.get("random_attributes", []),
-        "allAttributeText": data.get("all_attribute_text", ""),
-        "baseAttributeText": data.get("base_attribute_text", ""),
-        "randomAttributeText": data.get("random_attribute_text", ""),
-        "evaluation": evaluation,
         "score": evaluation,
-        "rawDescription": description.splitlines(),
         "dcssDescription": description,
     }
     return ArtifactDocument.model_validate(response)
 
 
-def _display_attributes(document: dict[str, Any]) -> list[dict[str, str]]:
+def _display_attributes(document: dict[str, Any]) -> list[dict[str, str | bool]]:
     by_token = {attribute["token"]: attribute for attribute in document.get("attributes", [])}
-    base_attributes = set(document.get("base_attributes", []))
-    random_attributes = set(document.get("random_attributes", []))
     description_lines = document.get("visible_item_description", [])
-    display_attributes: list[dict[str, str]] = []
+    display_attributes: list[dict[str, str | bool]] = []
     for token in document.get("all_attributes", []):
         stored = by_token.get(token)
-        key, value = _key_value(token)
+        key, _ = _key_value(token)
         if stored:
             key = stored.get("key", key)
-            value = stored.get("value", value)
         display_attributes.append(
             {
                 "token": token,
-                "kind": _attribute_kind(token, key),
+                "isBrand": token in BRAND_TOKENS,
                 "description": _description_for_token(token, key, description_lines),
-                "scoreImpact": _score_impact(
-                    token,
-                    key,
-                    value,
-                    base_attributes,
-                    random_attributes,
-                ),
             }
         )
     return display_attributes
 
 
-def _display_description(attributes: list[dict[str, str]]) -> str:
+def _display_description(attributes: list[dict[str, str | bool]]) -> str:
     lines: list[str] = []
     for attribute in attributes:
-        if attribute["kind"] == "brand":
+        if attribute["isBrand"]:
             continue
-        description = attribute["description"].strip()
+        description = str(attribute["description"]).strip()
         if description:
             lines.append(f"{attribute['token']}: {description}")
         else:
@@ -320,20 +264,6 @@ def _key_value(token: str) -> tuple[str, int | bool | None]:
     return token, True
 
 
-def _attribute_kind(token: str, key: str) -> str:
-    if token in BRAND_TOKENS:
-        return "brand"
-    if key in STAT_KEYS:
-        return "stat"
-    if key in RESISTANCE_KEYS:
-        return "resistance"
-    if key in SPELL_SCHOOL_KEYS:
-        return "spell_school"
-    if key in PENALTY_KEYS:
-        return "penalty"
-    return "property"
-
-
 def _description_for_token(
     token: str,
     key: str,
@@ -357,22 +287,6 @@ def _description_for_token(
                 parts.append(stripped)
         return " ".join(parts).strip()
     return ""
-
-
-def _score_impact(
-    token: str,
-    key: str,
-    value: int | bool | None,
-    base_attributes: set[str],
-    random_attributes: set[str],
-) -> str:
-    if token in base_attributes:
-        return "neutral"
-    if key in PENALTY_KEYS:
-        return "negative"
-    if isinstance(value, int) and value < 0:
-        return "negative"
-    return "positive" if token in random_attributes else "neutral"
 
 
 def _tile_for(document: dict[str, Any]) -> str:
@@ -441,9 +355,3 @@ def _looks_like_boots(name: str) -> bool:
 
 def _looks_like_gloves(name: str) -> bool:
     return "pair of " in name and any(word in name for word in ("gloves", "gauntlets"))
-
-
-def _enchantment_text(enchantment: int | None) -> str | None:
-    if enchantment is None:
-        return None
-    return f"{enchantment:+d}"
