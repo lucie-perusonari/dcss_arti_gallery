@@ -3,19 +3,41 @@
 from __future__ import annotations
 
 import posixpath
-import time
+import re
 import urllib.parse
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
+from dataclasses import dataclass
 
 import requests
 from bs4 import BeautifulSoup
 
-from crawl_service.morgue.constants import (
-    DEFAULT_TIMEOUT,
-    DEFAULT_USER_AGENT,
-    MORGUE_FILE_RE,
+DEFAULT_TIMEOUT = 20.0
+DEFAULT_USER_AGENT = "dcss-arti-gallery-crawler/0.1"
+MORGUE_FILE_RE = re.compile(
+    r"^\.?morgue-(?P<player>.+?)-(?P<stamp>\d{8}-\d{6})\.(?P<ext>txt|lst)$"
 )
-from crawl_service.morgue.types import MorgueFile, MorgueRawText, MorgueUser
+
+
+
+@dataclass(frozen=True)
+class MorgueUser:
+    """A remote morgue user directory entry."""
+
+    nickname: str
+    url: str
+    modified_at: str
+
+
+@dataclass(frozen=True)
+class MorgueFile:
+    """A remote morgue txt/lst directory entry."""
+
+    name: str
+    url: str
+
+    @property
+    def extension(self) -> str:
+        return self.name.rsplit(".", 1)[-1]
 
 
 def _normalized_morgue_file_name(name: str) -> str:
@@ -39,9 +61,6 @@ def _get(
             verify=verify_tls,
         )
         response.raise_for_status()
-
-        
-
 
         return response
     except requests.RequestException as exc:
@@ -70,7 +89,7 @@ def fetch_morgue_files(
     verify_tls: bool = True,
     user_agent: str = DEFAULT_USER_AGENT,
 ) -> list[MorgueFile]:
-    """Fetch a morgue directory HTML page and return txt/lst file entries."""
+    """Fetch a remote remote morgue directory HTML page and return txt/lst file entries."""
 
     html = _get(
         morgue_url,
@@ -87,7 +106,7 @@ def fetch_morgue_users(
     verify_tls: bool = True,
     user_agent: str = DEFAULT_USER_AGENT,
 ) -> list[MorgueUser]:
-    """Fetch the root morgue directory and return player directory entries."""
+    """Fetch the root remote remote morgue directory and return player directory entries."""
 
     html = _get(
         morgue_root_url,
@@ -190,32 +209,3 @@ def select_recent_morgue_files(
         raise ValueError("file_limit must be greater than 0")
     return entries[-file_limit:]
 
-
-def build_morgue_raw_texts(
-    files: list[MorgueFile],
-    fetch_file: Callable[..., str] = fetch_morgue_file_text,
-    timeout: float = DEFAULT_TIMEOUT,
-    verify_tls: bool = True,
-    user_agent: str = DEFAULT_USER_AGENT,
-    delay: float = 0.2,
-) -> list[MorgueRawText]:
-    """Convert remote morgue file entries into parser-ready raw text values."""
-
-    raw_texts: list[MorgueRawText] = []
-    for index, file in enumerate(files):
-        if index:
-            time.sleep(delay)
-        raw_texts.append(
-            MorgueRawText(
-                name=file.name,
-                url=file.url,
-                extension=file.extension,
-                text=fetch_file(
-                    file.url,
-                    timeout=timeout,
-                    verify_tls=verify_tls,
-                    user_agent=user_agent,
-                ),
-            )
-        )
-    return raw_texts
