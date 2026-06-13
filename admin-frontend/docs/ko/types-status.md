@@ -4,7 +4,7 @@
 
 ## 책임
 
-- `CrawlStatus`, `RawFileStatus`, `LatestActivity`, `CrawlError` 타입을 정의합니다.
+- `CrawlStatus`, `RawFileStatus`, `LatestActivity`, `CrawlError`, `GalleryApiMetrics` 타입을 정의합니다.
 - Admin API response DTO와 frontend 사용 경계를 정렬합니다.
 
 ## 변경 규칙

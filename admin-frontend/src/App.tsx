@@ -1,22 +1,35 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { fetchCrawlStatus } from './api/status';
-import type { CrawlStatus } from './types/status';
+import { fetchCrawlStatus, fetchGalleryApiMetrics } from './api/status';
+import type { CrawlStatus, GalleryApiMetrics } from './types/status';
 
 const REFRESH_MS = 15_000;
+const GRAFANA_URL = (import.meta.env.VITE_GRAFANA_URL ?? '').trim();
 
 export function App() {
   const [status, setStatus] = useState<CrawlStatus | null>(null);
+  const [galleryApiMetrics, setGalleryApiMetrics] = useState<GalleryApiMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [metricsError, setMetricsError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
-    let timer: number | undefined;
+    const crawlController = new AbortController();
+    const metricsController = new AbortController();
+    let crawlTimer: number | undefined;
+    let metricsTimer: number | undefined;
 
-    const load = () => {
-      fetchCrawlStatus()
+    const scheduleCrawlStatus = () => {
+      crawlTimer = window.setTimeout(loadCrawlStatus, REFRESH_MS);
+    };
+    const scheduleGalleryMetrics = () => {
+      metricsTimer = window.setTimeout(loadGalleryMetrics, REFRESH_MS);
+    };
+
+    const loadCrawlStatus = () => {
+      fetchCrawlStatus(crawlController.signal)
         .then((nextStatus) => {
           if (!active) return;
           setStatus(nextStatus);
@@ -24,20 +37,42 @@ export function App() {
           setLastUpdated(new Date().toLocaleString());
         })
         .catch((reason: unknown) => {
-          if (!active) return;
-          setError(reason instanceof Error ? reason.message : 'Failed to load crawl status');
+          if (!active || isAbortError(reason)) return;
+          setError(errorMessage(reason, 'Failed to load crawl status'));
         })
         .finally(() => {
-          if (active) setLoading(false);
+          if (!active) return;
+          setLoading(false);
+          scheduleCrawlStatus();
         });
     };
 
-    load();
-    timer = window.setInterval(load, REFRESH_MS);
+    const loadGalleryMetrics = () => {
+      fetchGalleryApiMetrics(metricsController.signal)
+        .then((nextMetrics) => {
+          if (!active) return;
+          setGalleryApiMetrics(nextMetrics);
+          setMetricsError(null);
+        })
+        .catch((reason: unknown) => {
+          if (!active || isAbortError(reason)) return;
+          setMetricsError(errorMessage(reason, 'Failed to load Gallery API metrics'));
+        })
+        .finally(() => {
+          if (!active) return;
+          scheduleGalleryMetrics();
+        });
+    };
+
+    loadCrawlStatus();
+    loadGalleryMetrics();
 
     return () => {
       active = false;
-      if (timer) window.clearInterval(timer);
+      crawlController.abort();
+      metricsController.abort();
+      if (crawlTimer) window.clearTimeout(crawlTimer);
+      if (metricsTimer) window.clearTimeout(metricsTimer);
     };
   }, []);
 
@@ -55,7 +90,7 @@ export function App() {
 
       <section className="toolbar">
         <span>{loading ? 'Loading status...' : `Updated ${lastUpdated ?? '-'}`}</span>
-        {error && <strong>{error}</strong>}
+        {(error || metricsError) && <strong>{[error, metricsError].filter(Boolean).join(' / ')}</strong>}
       </section>
 
       <section className="metric-grid" aria-label="Crawl metrics">
@@ -67,7 +102,29 @@ export function App() {
         <Metric label="Process failed" value={status?.rawFiles.processFailed ?? 0} tone="bad" />
       </section>
 
+      <section className="metric-grid" aria-label="Gallery API metrics">
+        <Metric label="API req/s" value={formatRate(galleryApiMetrics?.requestRatePerSecond)} />
+        <Metric
+          label="API 5xx/s"
+          value={formatRate(galleryApiMetrics?.errorRatePerSecond)}
+          tone={(galleryApiMetrics?.errorRatePerSecond ?? 0) > 0 ? 'bad' : 'neutral'}
+        />
+        <Metric label="API p95" value={formatDuration(galleryApiMetrics?.p95LatencySeconds)} />
+        <Metric label="In-flight" value={formatNumber(galleryApiMetrics?.inFlightRequests)} />
+      </section>
+
       <section className="content-grid">
+        <Panel title="Gallery API">
+          <KeyValue label="Status" value={galleryApiMetrics?.status ?? 'unknown'} />
+          <KeyValue label="Window" value={galleryApiMetrics ? `${galleryApiMetrics.windowSeconds}s` : '-'} />
+          <KeyValue label="Prometheus" value={galleryApiMetrics?.error ?? 'ok'} />
+          {GRAFANA_URL && (
+            <a className="panel-link" href={GRAFANA_URL} rel="noreferrer" target="_blank">
+              Open Grafana
+            </a>
+          )}
+        </Panel>
+
         <Panel title="Latest Activity">
           <KeyValue label="Fetched" value={status?.latest.fetchedAt} />
           <KeyValue label="Processed" value={status?.latest.processedAt} />
@@ -103,11 +160,11 @@ export function App() {
   );
 }
 
-function Metric({ label, value, tone = 'neutral' }: { label: string; value: number; tone?: 'neutral' | 'warn' | 'bad' }) {
+function Metric({ label, value, tone = 'neutral' }: { label: string; value: number | string; tone?: 'neutral' | 'warn' | 'bad' }) {
   return (
     <div className={`metric metric--${tone}`}>
       <span>{label}</span>
-      <strong>{value.toLocaleString()}</strong>
+      <strong>{typeof value === 'number' ? value.toLocaleString() : value}</strong>
     </div>
   );
 }
@@ -153,4 +210,26 @@ function statusHealth(status: CrawlStatus | null): { label: string; tone: 'ok' |
     return { label: 'Processing backlog', tone: 'warn' };
   }
   return { label: 'Healthy', tone: 'ok' };
+}
+
+function errorMessage(reason: unknown, fallback: string) {
+  return reason instanceof Error ? reason.message : fallback;
+}
+
+function isAbortError(reason: unknown) {
+  return reason instanceof DOMException && reason.name === 'AbortError';
+}
+
+function formatNumber(value?: number | null) {
+  return value == null ? '-' : value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+}
+
+function formatRate(value?: number | null) {
+  return value == null ? '-' : value.toLocaleString(undefined, { maximumFractionDigits: 3 });
+}
+
+function formatDuration(value?: number | null) {
+  if (value == null) return '-';
+  if (value < 1) return `${Math.round(value * 1000)}ms`;
+  return `${value.toLocaleString(undefined, { maximumFractionDigits: 2 })}s`;
 }

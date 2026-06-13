@@ -19,4 +19,4 @@ This document defines the API boundary and UI layers for the crawl operations da
 ## Related Docs
 
 - [Admin Frontend Data Types](./data-types.md)
-- [API Data Types](../../../api/docs/en/data-types.md)
+- [Admin API Data Types](../../../admin_api/docs/en/data-types.md)

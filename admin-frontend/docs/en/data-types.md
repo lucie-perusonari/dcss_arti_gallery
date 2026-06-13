@@ -45,4 +45,4 @@ This document defines the status types consumed by the crawl operations dashboar
 ## Related Docs
 
 - [Admin Frontend Processing Layers](./processing-layers.md)
-- [API Data Types](../../../api/docs/en/data-types.md)
+- [Admin API Data Types](../../../admin_api/docs/en/data-types.md)

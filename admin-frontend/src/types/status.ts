@@ -29,3 +29,13 @@ export type CrawlStatus = {
   latest: LatestActivity;
   recentErrors: CrawlError[];
 };
+
+export type GalleryApiMetrics = {
+  status: 'ok' | 'unavailable' | string;
+  windowSeconds: number;
+  requestRatePerSecond?: number | null;
+  errorRatePerSecond?: number | null;
+  p95LatencySeconds?: number | null;
+  inFlightRequests?: number | null;
+  error?: string | null;
+};

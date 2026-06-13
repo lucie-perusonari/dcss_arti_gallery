@@ -157,6 +157,18 @@ h3 {
   grid-column: 1 / -1;
 }
 
+.panel-link {
+  display: inline-flex;
+  margin-top: 12px;
+  color: #70d69b;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.panel-link:hover {
+  text-decoration: underline;
+}
+
 .key-value {
   display: grid;
   grid-template-columns: 160px minmax(0, 1fr);

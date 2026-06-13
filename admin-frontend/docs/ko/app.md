@@ -6,6 +6,8 @@
 
 - Admin API에서 받은 crawl status를 화면 상태로 렌더링합니다.
 - artifact count, raw file processing status, crawl file/user status, latest activity, recent errors를 표시합니다.
+- Gallery API request rate, 5xx rate, p95 latency, in-flight 요청 수를 표시합니다.
+- `VITE_GRAFANA_URL`이 있으면 Gallery API 패널에 Grafana dashboard 링크를 표시합니다.
 - loading/error/empty state를 dashboard UI에 반영합니다.
 
 ## 관련 문서

@@ -42,7 +42,19 @@
   - `latest: LatestActivity`
   - `recentErrors: CrawlError[]`
 
+## `GalleryApiMetrics`
+
+- 정의 위치: `admin-frontend/src/types/status.ts`
+- 필드:
+  - `status: 'ok' | 'unavailable' | string`
+  - `windowSeconds: number`
+  - `requestRatePerSecond?: number | null`
+  - `errorRatePerSecond?: number | null`
+  - `p95LatencySeconds?: number | null`
+  - `inFlightRequests?: number | null`
+  - `error?: string | null`
+
 ## 연계 문서
 
 - [Admin Frontend Processing Layers](./processing-layers.md)
-- [API Data Types](../../../api/docs/ko/data-types.md)
+- [Admin API Data Types](../../../admin_api/docs/ko/data-types.md)

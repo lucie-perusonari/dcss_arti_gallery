@@ -7,8 +7,11 @@ It reads crawl file/user/raw file status from the Admin API endpoint and present
 
 - `src/App.tsx`: crawl status dashboard UI
 - `src/api/status.ts`: admin API client backed by `VITE_ADMIN_API_URL`
+- `src/types/status.ts`: TypeScript types for Admin API responses
 - `src/styles.css`: dashboard layout and status styling
 - `vite.config.ts`: Vite build/dev configuration
+- `run_admin.sh`: admin frontend dev server wrapper
+- `tests/test_mock_smoke.py`: mock admin API smoke test
 
 ## Runtime
 
