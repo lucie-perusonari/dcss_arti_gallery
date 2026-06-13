@@ -1,4 +1,4 @@
-"""FastAPI gallery API server."""
+"""FastAPI admin API server."""
 
 from __future__ import annotations
 
@@ -7,16 +7,16 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.repository import repository_from_env
-from api.routes import create_router
+from admin_api.repository import repository_from_env
+from admin_api.routes import create_router
 
 
 def create_app(repository=None) -> FastAPI:
-    """Create the gallery API app with an injectable repository."""
+    """Create the crawl operations admin API app with an injectable repository."""
 
-    artifact_repository = repository or repository_from_env()
+    status_repository = repository or repository_from_env()
 
-    app = FastAPI(title="DCSS Arti Gallery API")
+    app = FastAPI(title="DCSS Arti Gallery Admin API")
     app.add_middleware(
         CORSMiddleware,
         allow_origins=_allowed_origins(),
@@ -25,22 +25,22 @@ def create_app(repository=None) -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    app.include_router(create_router(artifact_repository))
+    app.include_router(create_router(status_repository))
     return app
 
 
 def _allowed_origins() -> list[str]:
-    configured = os.environ.get("ARTIFACT_API_CORS_ORIGINS")
+    configured = os.environ.get("ADMIN_API_CORS_ORIGINS")
     if configured:
         return [origin.strip() for origin in configured.split(",") if origin.strip()]
     return [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
     ]
 
 
 def _allowed_origin_regex() -> str | None:
-    configured = os.environ.get("ARTIFACT_API_CORS_ORIGIN_REGEX")
+    configured = os.environ.get("ADMIN_API_CORS_ORIGIN_REGEX")
     if configured:
         return configured
     return (
@@ -49,7 +49,7 @@ def _allowed_origin_regex() -> str | None:
         r"10(?:\.\d{1,3}){3}|"
         r"192\.168(?:\.\d{1,3}){2}|"
         r"172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2}"
-        r"):5173$"
+        r"):5174$"
     )
 
 

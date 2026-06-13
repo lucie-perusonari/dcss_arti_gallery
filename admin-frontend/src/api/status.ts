@@ -1,6 +1,6 @@
 import type { CrawlStatus } from '../types/status';
 
-const API_BASE_URL = (import.meta.env.VITE_ADMIN_API_URL ?? 'http://127.0.0.1:8000').trim();
+const API_BASE_URL = (import.meta.env.VITE_ADMIN_API_URL ?? 'http://127.0.0.1:8001').trim();
 
 const mockStatus: CrawlStatus = {
   artifactCount: 0,

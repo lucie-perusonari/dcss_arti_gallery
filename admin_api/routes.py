@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from api.admin_repository import CrawlStatusRepository
+from admin_api.repository import CrawlStatusRepository
 
 
-def create_admin_router(status_repository: CrawlStatusRepository) -> APIRouter:
+def create_router(status_repository: CrawlStatusRepository) -> APIRouter:
     router = APIRouter(prefix="/admin")
 
     @router.get("/crawl-status")

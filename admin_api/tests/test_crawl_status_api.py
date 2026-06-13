@@ -4,9 +4,9 @@ import unittest
 
 from fastapi.testclient import TestClient
 
-from api.app import create_app
-from api.tests.helpers import artifact_document
-from api.tests.mongo_test_utils import (
+from admin_api.app import create_app
+from admin_api.models import CrawlStatus, LatestActivity, RawFileStatus
+from admin_api.tests.mongo_test_utils import (
     drop_crawl_status_repository_collections,
     mongo_crawl_status_repository_for_test,
 )
@@ -14,13 +14,13 @@ from api.tests.mongo_test_utils import (
 
 class AdminCrawlStatusApiTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.repository = mongo_crawl_status_repository_for_test("api_admin_test")
+        self.repository = mongo_crawl_status_repository_for_test("admin_api_test")
 
     def tearDown(self) -> None:
         drop_crawl_status_repository_collections(self.repository)
 
     def test_admin_crawl_status_summarizes_crawl_collections(self) -> None:
-        self.repository.artifacts_collection.insert_many([artifact_document()])
+        self.repository.artifacts_collection.insert_many([{"id": "artifact-1"}])
         self.repository.raw_files_collection.insert_many(
             [
                 {
@@ -76,7 +76,7 @@ class AdminCrawlStatusApiTest(unittest.TestCase):
                 },
             ]
         )
-        client = TestClient(create_app(admin_repository=self.repository))
+        client = TestClient(create_app(self.repository))
 
         response = client.get("/admin/crawl-status")
 
@@ -98,6 +98,60 @@ class AdminCrawlStatusApiTest(unittest.TestCase):
         self.assertEqual(
             {error["kind"] for error in data["recentErrors"]},
             {"fetch", "process", "file", "user"},
+        )
+
+
+class MockCrawlStatusApiTest(unittest.TestCase):
+    def test_admin_crawl_status_uses_injected_mock_repository(self) -> None:
+        client = TestClient(create_app(MockCrawlStatusRepository()))
+
+        response = client.get("/admin/crawl-status")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "artifactCount": 7,
+                "rawFiles": {
+                    "total": 9,
+                    "fetched": 8,
+                    "fetchFailed": 1,
+                    "processPending": 2,
+                    "processProcessed": 6,
+                    "processFailed": 1,
+                },
+                "crawlFiles": {"completed": 6, "failed": 1},
+                "crawlUsers": {"completed": 3, "pending": 2},
+                "latest": {
+                    "fetchedAt": "2026-01-01T00:02:00+00:00",
+                    "processedAt": "2026-01-01T00:03:00+00:00",
+                    "scannedAt": "2026-01-01T00:04:00+00:00",
+                },
+                "recentErrors": [],
+            },
+        )
+
+
+class MockCrawlStatusRepository:
+    def get_crawl_status(self) -> CrawlStatus:
+        return CrawlStatus(
+            artifactCount=7,
+            rawFiles=RawFileStatus(
+                total=9,
+                fetched=8,
+                fetchFailed=1,
+                processPending=2,
+                processProcessed=6,
+                processFailed=1,
+            ),
+            crawlFiles={"completed": 6, "failed": 1},
+            crawlUsers={"completed": 3, "pending": 2},
+            latest=LatestActivity(
+                fetchedAt="2026-01-01T00:02:00+00:00",
+                processedAt="2026-01-01T00:03:00+00:00",
+                scannedAt="2026-01-01T00:04:00+00:00",
+            ),
+            recentErrors=[],
         )
 
 

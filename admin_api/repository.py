@@ -5,11 +5,11 @@ from __future__ import annotations
 import os
 from typing import Any, Protocol
 
-from api.admin_models import CrawlError, CrawlStatus, LatestActivity, RawFileStatus
+from admin_api.models import CrawlError, CrawlStatus, LatestActivity, RawFileStatus
 
 
-DEFAULT_MONGO_URI = "mongodb://localhost:27017"
-DEFAULT_MONGO_DATABASE = "dcss_arti_gallery"
+DEFAULT_MONGO_URI = "mongodb://localhost:27018"
+DEFAULT_MONGO_DATABASE = "dcss_arti_gallery_dev"
 DEFAULT_MONGO_COLLECTION = "artifacts"
 DEFAULT_MONGO_CRAWL_FILES_COLLECTION = "crawl_files"
 DEFAULT_MONGO_CRAWL_USERS_COLLECTION = "crawl_users"
