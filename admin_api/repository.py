@@ -10,11 +10,12 @@ from admin_api.models import CrawlError, CrawlStatus, LatestActivity, RawFileSta
 
 
 DEFAULT_MONGO_URI = "mongodb://localhost:27018"
-DEFAULT_MONGO_DATABASE = "dcss_arti_gallery_dev"
+DEFAULT_MONGO_DATABASE = "dcss_arti_gallery"
 DEFAULT_MONGO_COLLECTION = "artifacts"
 DEFAULT_MONGO_CRAWL_FILES_COLLECTION = "crawl_files"
 DEFAULT_MONGO_CRAWL_USERS_COLLECTION = "crawl_users"
 DEFAULT_MONGO_RAW_FILES_COLLECTION = "raw_morgue_files"
+DEFAULT_MONGO_ARTIFACT_PROCESSING_COLLECTION = "artifact_processing_files"
 DEFAULT_CRAWL_STATUS_CACHE_SECONDS = 5.0
 
 RAW_FILE_STATUS_PROJECTION = {
@@ -43,6 +44,14 @@ CRAWL_USER_STATUS_PROJECTION = {
     "scanned_at": True,
     "error": True,
 }
+PROCESSING_STATUS_PROJECTION = {
+    "_id": False,
+    "player": True,
+    "name": True,
+    "status": True,
+    "processed_at": True,
+    "error": True,
+}
 
 
 class CrawlStatusRepository(Protocol):
@@ -59,12 +68,14 @@ class MongoCrawlStatusRepository:
         raw_files_collection,
         crawl_files_collection,
         crawl_users_collection,
+        processing_collection=None,
         cache_ttl_seconds: float = DEFAULT_CRAWL_STATUS_CACHE_SECONDS,
     ) -> None:
         self.artifacts_collection = artifacts_collection
         self.raw_files_collection = raw_files_collection
         self.crawl_files_collection = crawl_files_collection
         self.crawl_users_collection = crawl_users_collection
+        self.processing_collection = processing_collection
         self.cache_ttl_seconds = cache_ttl_seconds
         self._cached_status: CrawlStatus | None = None
         self._cached_at = 0.0
@@ -77,6 +88,17 @@ class MongoCrawlStatusRepository:
         raw_file_status, latest_raw_activity, raw_errors = _raw_file_status_from_collection(
             self.raw_files_collection
         )
+        processing_status = _processing_status_from_collection(
+            self.processing_collection,
+            raw_file_status=raw_file_status,
+        )
+        if processing_status is not None:
+            raw_file_status, processed_at, processing_errors = processing_status
+            latest_raw_activity["processed_at"] = processed_at
+            raw_errors = [
+                error for error in raw_errors if error.kind != "process"
+            ]
+            raw_errors.extend(processing_errors)
         crawl_file_counts, crawl_file_errors = _crawl_file_status_from_collection(self.crawl_files_collection)
         crawl_user_counts, latest_scanned_at, crawl_user_errors = _crawl_user_status_from_collection(
             self.crawl_users_collection
@@ -115,6 +137,10 @@ def repository_from_env() -> MongoCrawlStatusRepository:
             "MONGODB_CRAWL_USERS_COLLECTION",
             DEFAULT_MONGO_CRAWL_USERS_COLLECTION,
         ),
+        processing_collection=os.environ.get(
+            "MONGODB_ARTIFACT_PROCESSING_COLLECTION",
+            DEFAULT_MONGO_ARTIFACT_PROCESSING_COLLECTION,
+        ),
         cache_ttl_seconds=_env_float("ADMIN_CRAWL_STATUS_CACHE_SECONDS", DEFAULT_CRAWL_STATUS_CACHE_SECONDS),
     )
 
@@ -126,6 +152,7 @@ def create_mongo_crawl_status_repository(
     raw_files_collection: str = DEFAULT_MONGO_RAW_FILES_COLLECTION,
     crawl_files_collection: str = DEFAULT_MONGO_CRAWL_FILES_COLLECTION,
     crawl_users_collection: str = DEFAULT_MONGO_CRAWL_USERS_COLLECTION,
+    processing_collection: str | None = None,
     cache_ttl_seconds: float = DEFAULT_CRAWL_STATUS_CACHE_SECONDS,
     client_factory: Any | None = None,
 ) -> MongoCrawlStatusRepository:
@@ -140,6 +167,7 @@ def create_mongo_crawl_status_repository(
         database_handle[raw_files_collection],
         database_handle[crawl_files_collection],
         database_handle[crawl_users_collection],
+        database_handle[processing_collection] if processing_collection else None,
         cache_ttl_seconds,
     )
 
@@ -202,6 +230,34 @@ def _raw_file_counts(collection) -> tuple[int, dict[str, int], dict[str, int]]:
 
 def _facet_counts(documents: list[dict]) -> dict[str, int]:
     return {str(document.get("_id") or "unknown"): int(document.get("count", 0)) for document in documents}
+
+
+def _processing_status_from_collection(
+    collection,
+    *,
+    raw_file_status: RawFileStatus,
+) -> tuple[RawFileStatus, str | None, list[CrawlError]] | None:
+    if collection is None or collection.find_one({}, {"_id": True}) is None:
+        return None
+
+    counts = _status_counts_from_collection(collection, "status")
+    completed = counts.get("completed", 0) + counts.get("processed", 0)
+    failed = counts.get("failed", 0)
+    pending = max(raw_file_status.fetched - completed - failed, 0)
+    return (
+        RawFileStatus(
+            total=raw_file_status.total,
+            fetched=raw_file_status.fetched,
+            fetchFailed=raw_file_status.fetchFailed,
+            processPending=pending,
+            processProcessed=completed,
+            processFailed=failed,
+        ),
+        _latest_by_sort(collection, "processed_at"),
+        _processing_errors(
+            _recent_documents(collection, "error", "processed_at", PROCESSING_STATUS_PROJECTION)
+        ),
+    )
 
 
 def _status_counts_from_collection(collection, key: str) -> dict[str, int]:
@@ -268,6 +324,19 @@ def _raw_process_errors(documents) -> list[CrawlError]:
             player=str(document.get("player", "")),
             name=document.get("name"),
             message=str(document["process_error"]),
+            at=document.get("processed_at"),
+        )
+        for document in documents
+    ]
+
+
+def _processing_errors(documents) -> list[CrawlError]:
+    return [
+        CrawlError(
+            kind="process",
+            player=str(document.get("player", "")),
+            name=document.get("name"),
+            message=str(document["error"]),
             at=document.get("processed_at"),
         )
         for document in documents
