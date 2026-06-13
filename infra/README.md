@@ -6,7 +6,7 @@
 ## 모듈
 
 - [`dev/`](docs/ko/dev.md): 개발 MongoDB lifecycle script와 dev 기본 환경값
-- [`prod/`](docs/ko/prod.md): 운영 MongoDB lifecycle script와 prod 보호 정책
+- [`prod/`](docs/ko/prod.md): 운영 MongoDB lifecycle script, Gallery API/Prometheus Docker Compose, prod 보호 정책
 - [`mongo/`](docs/ko/mongo.md): 기존 명령 호환을 위한 dev wrapper
 - [`ensure_mongo_indexes.py`](docs/ko/ensure_mongo_indexes.md): MongoDB collection index DDL 적용 스크립트
 
@@ -41,6 +41,10 @@
 - prod lifecycle script는 명시적으로 `infra/prod` 경로를 사용해야 합니다.
 - prod 컨테이너 생성, 시작, 중지는 `CONFIRM_PROD=1`이 있어야 실행됩니다.
 - prod MongoDB index DDL은 `infra/prod/mongo_up.sh`가 `infra/ensure_mongo_indexes.py`를 통해 수행합니다.
+- `infra/prod/docker-compose.yml`은 Gallery API, Admin API, MongoDB, Prometheus, Grafana, reverse proxy를 묶는 운영 배포 예시입니다.
+- Prometheus는 host `127.0.0.1:9090`에만 bind하고, reverse proxy는 `/metrics`, `/docs`, `/redoc`, `/openapi.json`을 외부에 노출하지 않습니다.
+- Admin API는 Prometheus HTTP API를 내부 network에서 read-only로 query하며, 기본 host bind는 `127.0.0.1:8001`입니다.
+- Grafana는 host `127.0.0.1:3000`에만 bind하고, Prometheus datasource와 Gallery API dashboard를 provisioning합니다.
 - 개발 스크립트와 테스트 유틸에서 `infra/prod`를 호출하면 안 됩니다.
 - prod에 연결해야 하는 배포/운영 프로세스는 `MONGODB_URI`, `MONGODB_DATABASE`, collection 환경변수를
   명시적으로 주입해야 합니다.
@@ -61,4 +65,12 @@ infra/dev/mongo_down.sh
 eval "$(CONFIRM_PROD=1 infra/prod/mongo_up.sh)"
 infra/prod/mongo_status.sh
 CONFIRM_PROD=1 infra/prod/mongo_down.sh
+```
+
+Gallery API + Admin API + Prometheus compose:
+
+```sh
+ARTIFACT_API_CORS_ORIGINS=https://<frontend-host> PUBLIC_API_PORT=8000 docker compose -f infra/prod/docker-compose.yml up -d --build
+ssh -L 9090:127.0.0.1:9090 <server>
+ssh -L 3000:127.0.0.1:3000 <server>
 ```

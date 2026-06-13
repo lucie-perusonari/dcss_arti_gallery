@@ -74,13 +74,40 @@ def _ensure_indexes(database: Any) -> None:
     ]
 
     crawl_files.create_index([("player", 1), ("name", 1)], unique=True)
+    crawl_files.create_index("status")
+    crawl_files.create_index(
+        [("processed_at", -1)],
+        name="crawl_file_errors_processed_at_desc",
+        partialFilterExpression={"error": {"$type": "string"}},
+    )
 
     crawl_users.create_index("player", unique=True)
     crawl_users.create_index("observed_at")
+    crawl_users.create_index("status")
+    crawl_users.create_index("scanned_at")
+    crawl_users.create_index(
+        [("scanned_at", -1)],
+        name="crawl_user_errors_scanned_at_desc",
+        partialFilterExpression={"error": {"$type": "string"}},
+    )
 
     raw_files.create_index([("player", 1), ("name", 1)], unique=True)
     raw_files.create_index("content_hash")
     raw_files.create_index("fetch_status")
+    raw_files.create_index("process_status")
+    raw_files.create_index("fetched_at")
+    raw_files.create_index("processed_at")
+    raw_files.create_index([("fetch_status", 1), ("player", 1), ("name", 1)])
+    raw_files.create_index(
+        [("fetched_at", -1)],
+        name="raw_fetch_errors_fetched_at_desc",
+        partialFilterExpression={"fetch_error": {"$type": "string"}},
+    )
+    raw_files.create_index(
+        [("processed_at", -1)],
+        name="raw_process_errors_processed_at_desc",
+        partialFilterExpression={"process_error": {"$type": "string"}},
+    )
 
     artifacts.create_index("id", unique=True)
     artifacts.create_index("canonical_key", unique=True, sparse=True)
@@ -94,7 +121,6 @@ def _ensure_indexes(database: Any) -> None:
     processing.create_index([("player", 1), ("name", 1)], unique=True)
     processing.create_index("status")
     processing.create_index("content_hash")
-    processing.create_index([("parser_version", 1), ("scoring_version", 1)])
 
 
 if __name__ == "__main__":
