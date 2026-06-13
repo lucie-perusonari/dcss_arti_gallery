@@ -1077,6 +1077,13 @@ BASE_ITEM_ATTRIBUTES = {
 }
 
 UNRANDART_NAMES = set(DCSS_UNRANDART_NAMES)
+UNRANDART_NAME_ALIASES = {
+    "pair of gauntlets of War",
+    "pair of gloves of the gadgeteer",
+    "partisan of Prune",
+    "Screaming Sword",
+    "sword of the Dread Knight",
+}
 UNRANDART_NAME_KEYS = {
-    " ".join(name.casefold().split()) for name in UNRANDART_NAMES
+    " ".join(name.casefold().split()) for name in (*UNRANDART_NAMES, *UNRANDART_NAME_ALIASES)
 }
