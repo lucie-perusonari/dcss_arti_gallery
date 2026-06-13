@@ -1,0 +1,21 @@
+FROM node:22-alpine AS admin-frontend-build
+
+WORKDIR /app/admin-frontend
+
+COPY admin-frontend/package*.json ./
+RUN npm ci
+
+COPY admin-frontend/index.html admin-frontend/tsconfig*.json admin-frontend/vite.config.ts ./
+COPY admin-frontend/src ./src
+
+ARG VITE_ADMIN_API_URL=/admin-api
+ARG VITE_GRAFANA_URL=http://127.0.0.1:3000/d/dcss-gallery-api/dcss-gallery-api
+ENV VITE_ADMIN_API_URL=$VITE_ADMIN_API_URL
+ENV VITE_GRAFANA_URL=$VITE_GRAFANA_URL
+
+RUN npm run build
+
+FROM caddy:2.9
+
+COPY --from=admin-frontend-build /app/admin-frontend/dist /srv/admin-frontend
+COPY infra/prod/Caddyfile.admin_frontend /etc/caddy/Caddyfile

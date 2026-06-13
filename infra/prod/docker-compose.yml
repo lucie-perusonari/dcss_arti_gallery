@@ -74,6 +74,19 @@ services:
       prometheus:
         condition: service_started
 
+  admin-frontend:
+    build:
+      context: ../..
+      dockerfile: infra/prod/Dockerfile.admin_frontend
+      args:
+        VITE_ADMIN_API_URL: ${VITE_ADMIN_API_URL:-/admin-api}
+        VITE_GRAFANA_URL: ${VITE_GRAFANA_URL:-http://127.0.0.1:3000/d/dcss-gallery-api/dcss-gallery-api}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${ADMIN_FRONTEND_PORT:-5174}:5174"
+    depends_on:
+      - admin-api
+
   crawl-service:
     profiles: ["jobs"]
     build:
