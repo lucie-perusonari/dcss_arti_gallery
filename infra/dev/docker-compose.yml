@@ -86,6 +86,54 @@ services:
         condition: service_started
     restart: unless-stopped
 
+  crawl-service:
+    profiles: ["jobs"]
+    image: python:3.12-slim
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace
+      - python_cache:/root/.cache/pip
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_DATABASE: ${MONGODB_DATABASE:-dcss_arti_gallery}
+      MONGODB_RAW_FILES_COLLECTION: ${MONGODB_RAW_FILES_COLLECTION:-raw_morgue_files}
+      MONGODB_CRAWL_FILES_COLLECTION: ${MONGODB_CRAWL_FILES_COLLECTION:-crawl_files}
+      MONGODB_CRAWL_USERS_COLLECTION: ${MONGODB_CRAWL_USERS_COLLECTION:-crawl_users}
+      CRAWL_USER_SKIP_MODE: ${CRAWL_USER_SKIP_MODE:-modified_at}
+      CRAWL_LOG_LEVEL: ${CRAWL_LOG_LEVEL:-INFO}
+      MORGUE_REQUEST_DELAY_SECONDS: ${MORGUE_REQUEST_DELAY_SECONDS:-1}
+      MORGUE_REQUEST_TIMEOUT_SECONDS: ${MORGUE_REQUEST_TIMEOUT_SECONDS:-10}
+    command: >
+      sh -c "python -m pip install --no-cache-dir -r requirements.txt
+      && python -m crawl_service.worker --once"
+    depends_on:
+      mongo-indexes:
+        condition: service_completed_successfully
+
+  arti-parser:
+    profiles: ["jobs"]
+    image: python:3.12-slim
+    working_dir: /workspace
+    volumes:
+      - ../..:/workspace
+      - python_cache:/root/.cache/pip
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_DATABASE: ${MONGODB_DATABASE:-dcss_arti_gallery}
+      MONGODB_RAW_FILES_COLLECTION: ${MONGODB_RAW_FILES_COLLECTION:-raw_morgue_files}
+      MONGODB_COLLECTION: ${MONGODB_COLLECTION:-artifacts}
+      MONGODB_ARTIFACT_PROCESSING_COLLECTION: ${MONGODB_ARTIFACT_PROCESSING_COLLECTION:-artifact_processing_files}
+      ARTIFACT_PROCESS_LOG_LEVEL: ${ARTIFACT_PROCESS_LOG_LEVEL:-INFO}
+      BATCH_SIZE: ${BATCH_SIZE:-100}
+      SCAN_BATCH_SIZE: ${SCAN_BATCH_SIZE:-500}
+      PROCESS_LOOP_INTERVAL_SECONDS: ${PROCESS_LOOP_INTERVAL_SECONDS:-0}
+    command: >
+      sh -c "python -m pip install --no-cache-dir -r requirements.txt
+      && python -m arti_parser.batch"
+    depends_on:
+      mongo-indexes:
+        condition: service_completed_successfully
+
   frontend:
     image: node:22-alpine
     working_dir: /workspace/frontend

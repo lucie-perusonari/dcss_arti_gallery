@@ -113,6 +113,14 @@ MONGODB_ARTIFACT_PROCESSING_COLLECTION=artifact_processing_files
 python3 -m arti_parser.batch --once
 ```
 
+Docker Compose에서는 `arti-parser` job으로 실행합니다. 이 job은 pending raw file이 없어질 때까지
+batch를 반복한 뒤 종료합니다.
+
+```sh
+docker compose -f infra/dev/docker-compose.yml run --rm arti-parser
+docker compose -f infra/prod/docker-compose.yml run --rm arti-parser
+```
+
 반복 처리 모드에서는 처리할 raw file이 남아 있는 동안 batch를 반복하고, 남은 항목이
 없으면 종료합니다.
 

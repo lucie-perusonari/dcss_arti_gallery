@@ -11,6 +11,8 @@ HTTP API를 제공하지 않는 상주 worker 프로젝트이며, `api`, `fronte
 - [`repository.py`](docs/ko/repository.md): `raw_morgue_files`, `crawl_files`, `crawl_users`에 morgue ingest 상태 저장
 - [`worker.py`](docs/ko/worker.md): archive user list scan과 raw morgue file ingest orchestration
 - [`run_raw_crawler.sh`](docs/ko/run_raw_crawler.md): raw crawler 실행 wrapper
+- [`run_raw_crawler_dev.sh`](docs/ko/run_raw_crawler.md): dev MongoDB 기본값으로 raw crawler 실행
+- [`run_raw_crawler_prod.sh`](docs/ko/run_raw_crawler.md): prod MongoDB 값을 명시적으로 받아 raw crawler 실행
 - [`tests/`](docs/ko/tests.md): fetcher, repository, worker 동작 검증
 
 English version: [README.en.md](README.en.md)
@@ -53,9 +55,11 @@ worker:
 
 ```sh
 python3 -m crawl_service.worker
+python3 -m crawl_service.worker --once
 ```
 
-worker는 archive의 전체 user directory list를 주 1회 훑고, 대상 user directory를 열어 누락 raw file을 확인합니다.
+기본 worker는 archive의 전체 user directory list를 주 1회 훑고, 대상 user directory를 열어 누락 raw file을 확인합니다.
+`--once`를 지정하면 한 번의 crawl pass만 실행하고 종료합니다.
 `CRAWL_USER_SKIP_MODE=modified_at`이면 user directory Date가 이전 scan과 같은 player를 skip합니다.
 2026-01-01 이후 user/file 데이터만 처리하며 모든 HTTP 요청 사이에 기본 1초 delay를 둡니다.
 
@@ -65,8 +69,19 @@ wrapper script:
 crawl_service/run_raw_crawler.sh
 ```
 
-- `crawl_service/run_raw_crawler.sh`: worker를 실행해 fetched raw file만 저장합니다.
-- `DETACH=1 crawl_service/run_raw_crawler.sh`: raw crawler를 백그라운드로 실행하고 `.logs/crawl_raw_only.log`에 기록합니다.
+- `crawl_service/run_raw_crawler.sh`: 호환용 dev wrapper입니다. 내부적으로 `run_raw_crawler_dev.sh`를 실행합니다.
+- `crawl_service/run_raw_crawler_dev.sh`: dev MongoDB 기본값 `mongodb://localhost:27018`과 `dcss_arti_gallery`를 사용합니다.
+- `MONGODB_URI=<prod-uri> crawl_service/run_raw_crawler_prod.sh`: 운영 MongoDB URI를 명시적으로 받아 실행합니다.
+- `DETACH=1 crawl_service/run_raw_crawler_dev.sh`: dev raw crawler를 백그라운드로 실행하고 `.logs/crawl_raw_only_dev.log`에 기록합니다.
+- `DETACH=1 MONGODB_URI=<prod-uri> crawl_service/run_raw_crawler_prod.sh`: prod raw crawler를 백그라운드로 실행하고 `.logs/crawl_raw_only_prod.log`에 기록합니다.
+
+Docker Compose에서 crawler는 live morgue crawl을 수행하므로 기본 stack에는 포함되지 않고 `jobs` profile의
+one-shot job으로만 실행합니다.
+
+```sh
+docker compose -f infra/dev/docker-compose.yml run --rm crawl-service
+docker compose -f infra/prod/docker-compose.yml run --rm crawl-service
+```
 
 저장된 raw source를 artifact read model로 재생성하려면 `arti_parser/process_raw_morgue_files.sh`를 사용합니다.
 

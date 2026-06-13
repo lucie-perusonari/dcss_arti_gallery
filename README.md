@@ -29,7 +29,7 @@ English version: [README.en.md](README.en.md)
 - [admin_api](admin_api/README.md): crawl 운영 상태 읽기 API, admin API 소유 DTO, FastAPI 라우트
 - [frontend](frontend/README.md): React/Vite 기반 WebTiles 스타일 artifact 갤러리
 - [admin-frontend](admin-frontend/README.md): React/Vite 기반 crawl 운영 대시보드
-- [infra](infra/README.md): 개발/운영 MongoDB lifecycle scripts와 환경 정책
+- [infra](infra/README.md): 개발/운영 Docker Compose stack과 환경 정책
 
 ## 데이터 흐름
 
@@ -50,6 +50,11 @@ crawl status collections
 `crawl_service`는 원격 원본 수집과 raw 저장만 담당하고, artifact 파싱/평가/read model
 생성은 `arti_parser`가 담당합니다. 갤러리와 운영 대시보드는 각각 `api`와 `admin_api`를
 통해서만 데이터를 읽습니다.
+
+## 검증 기준
+
+여러 서비스 경계를 건드리는 변경은 dev compose stack 기준으로 검증합니다. 자동화할 상세 통과 조건은
+[infra dev 문서](infra/docs/ko/dev.md)의 `검증 기준`을 봅니다.
 
 ## 책임 경계
 

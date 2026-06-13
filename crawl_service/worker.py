@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import logging
 import os
 import re
@@ -158,12 +159,16 @@ class CrawlWorker:
     def request_stop(self, *_args) -> None:
         self._stop_requested = True
 
+    def run_once(self) -> CrawlServicePassSummary:
+        started_at = time.monotonic()
+        crawl_summary = self._crawl_once()
+        summary = _pass_summary(started_at, crawl_summary)
+        self.logger.info(crawl_pass_message(summary))
+        return summary
+
     def run_forever(self) -> None:
         while not self._stop_requested:
-            started_at = time.monotonic()
-            crawl_summary = self._crawl_once()
-            summary = _pass_summary(started_at, crawl_summary)
-            self.logger.info(crawl_pass_message(summary))
+            self.run_once()
             self._sleep_until_next_pass()
 
     def _crawl_once(self) -> CrawlWorkerRunSummary:
@@ -401,10 +406,24 @@ def config_from_env() -> CrawlWorkerConfig:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Ingest remote morgue files into MongoDB raw_morgue_files."
+    )
+    parser.add_argument(
+        "--once",
+        action="store_true",
+        default=_env_bool("CRAWL_ONCE", False),
+        help="run one crawl pass and exit",
+    )
+    args = parser.parse_args()
+
     configure_logging()
     worker = CrawlWorker(repository_from_env(), config=config_from_env())
     signal.signal(signal.SIGINT, worker.request_stop)
     signal.signal(signal.SIGTERM, worker.request_stop)
+    if args.once:
+        worker.run_once()
+        return
     worker.run_forever()
 
 
@@ -449,6 +468,13 @@ def _float_from_env(name: str, default: float) -> float:
     if not configured:
         return default
     return max(float(configured), 0.0)
+
+
+def _env_bool(name: str, default: bool) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.lower() in {"1", "true", "yes", "on"}
 
 
 def _user_skip_mode_from_env() -> str:

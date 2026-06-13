@@ -9,6 +9,8 @@
 - Admin frontend 정적 배포는 아직 prod compose에 포함하지 않습니다.
 - 운영 기본 포트 `27017`과 database `dcss_arti_gallery`를 기준으로 합니다.
 - Prometheus는 host loopback에만 bind하고, `/metrics`는 reverse proxy에서 외부 접근을 차단합니다.
+- raw crawler와 artifact parser는 기본 stack과 분리된 `jobs` profile의 one-shot service로만 실행합니다.
+- 운영 주기 실행은 compose가 아니라 cron 같은 외부 scheduler가 `run_pipeline_once.sh`를 호출해 담당합니다.
 
 ## Gallery API 메트릭 배포
 
@@ -20,6 +22,8 @@
 - `grafana`: Prometheus datasource와 Gallery API dashboard를 provisioning
 - `admin-api`: MongoDB와 `prometheus:9090`을 read-only로 조회해 admin frontend용 API 제공
 - `reverse-proxy`: Caddy로 HTTPS를 종료하고 frontend 정적 파일과 `/api/*` Gallery API proxy를 제공합니다.
+- `crawl-service`: one-shot job으로 raw morgue 원본을 운영 MongoDB에 저장합니다.
+- `arti-parser`: one-shot job으로 저장된 raw morgue 원본을 `artifacts` read model로 재생성합니다.
 
 외부에는 공유기 port forwarding으로 `80`과 `443`만 엽니다. Gallery API의 `8000`, MongoDB, Prometheus,
 Grafana, Admin API port는 공유기에서 직접 열지 않습니다.
@@ -28,6 +32,18 @@ Grafana, Admin API port는 공유기에서 직접 열지 않습니다.
 
 ```sh
 docker compose -f infra/prod/docker-compose.yml up -d --build
+```
+
+raw crawl과 artifact parser를 한 번 실행해야 할 때:
+
+```sh
+infra/prod/run_pipeline_once.sh
+```
+
+6시간마다 실행하는 cron 예시:
+
+```cron
+0 */6 * * * /home/koitsu/dcss_arti_gallery/infra/prod/run_pipeline_once.sh >> /home/koitsu/dcss_arti_gallery/.logs/pipeline_cron.log 2>&1
 ```
 
 `reverse-proxy`는 frontend를 `VITE_ARTIFACT_API_URL=/api`로 빌드합니다. 브라우저는

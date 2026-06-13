@@ -39,10 +39,12 @@ remote morgue
 - `MORGUE_USER_AGENT`: remote morgue 요청 user agent.
 - `CRAWL_USER_SKIP_MODE`: `conservative` 또는 `modified_at`. 기본값은 `conservative`.
 - `CRAWL_LOG_LEVEL`: worker logging level. 기본값은 `INFO`.
+- `CRAWL_ONCE`: `1`, `true`, `yes`, `on`이면 한 번의 crawl pass만 실행하고 종료한다.
 
 ## 운영 스크립트
 
 - `python3 -m crawl_service.worker`: remote morgue 원문을 fetch해 raw/cache 컬렉션에 저장한다.
+- `python3 -m crawl_service.worker --once`: 한 번의 crawl pass만 실행하고 종료한다.
 - `crawl_service/run_raw_crawler.sh`: raw ingest worker wrapper. `DETACH=1`이면 백그라운드로 실행한다.
 
 ## Related Docs
