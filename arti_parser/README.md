@@ -15,10 +15,10 @@ artifact read model을 재생성하는 배치 처리 모듈입니다.
 - [`parser.py`](docs/parser.md): artifact 이름, enchantment, base item, property token, randart 여부를 파싱합니다.
 - [`classifier.py`](docs/classifier.md): item class/subtype, armour/jewellery slot, brand, base/random attributes를 분류합니다.
 - [`evaluator.py`](docs/evaluator.md): random attributes와 item metadata를 점수/등급으로 평가합니다.
-- [`models.py`](docs/models.md): MongoDB에 저장되는 canonical `ArtifactDocument` Pydantic 모델입니다.
+- [`models.py`](docs/models.md): MongoDB에 저장되는 `ArtifactDocument` occurrence Pydantic 모델입니다.
 - [`repository.py`](docs/repository.md): `raw_morgue_files`, `artifacts`, `artifact_processing_files` 접근 계층입니다.
 - [`constants.py`](docs/constants.md): 파싱/분류/평가에 쓰는 정규식과 lookup table입니다.
-- [`dcss_data.py`](docs/dcss_data.md): 공식 DCSS source tree에서 생성한 item/unrandart 정적 데이터입니다.
+- [`dcss_data.py`](docs/dcss_data.md): 공식 DCSS source tree를 참고해 정리한 item/unrandart 정적 데이터입니다.
 - [`worker.py`](docs/worker.md): 기존 호출 호환을 위한 batch entrypoint alias입니다.
 - [`process_raw_morgue_files.sh`](docs/process_raw_morgue_files.md): batch 실행 shell wrapper입니다.
 
@@ -30,7 +30,7 @@ artifact read model을 재생성하는 배치 처리 모듈입니다.
 - unrandart와 일반 magic item을 제외하고 랜덤 아티팩트만 문서화합니다.
 - base item intrinsic 속성과 랜덤 속성을 분리합니다.
 - 랜덤 속성 기준으로 artifact 평가 점수와 등급을 계산합니다.
-- `artifacts` 컬렉션에 갤러리/API가 읽는 canonical document를 upsert합니다.
+- `artifacts` 컬렉션에 갤러리/API가 읽는 artifact occurrence document를 upsert합니다.
 - 같은 raw file에서 더 이상 나오지 않는 이전 artifact 문서는 삭제합니다.
 - `artifact_processing_files`에 처리 성공/실패, content hash, parser/scoring 버전을 기록합니다.
 
@@ -93,7 +93,7 @@ arti_parser/process_raw_morgue_files.sh --once
 
 ```text
 MONGODB_URI=mongodb://localhost:27018
-MONGODB_DATABASE=dcss_arti_gallery_dev
+MONGODB_DATABASE=dcss_arti_gallery
 MONGODB_RAW_FILES_COLLECTION=raw_morgue_files
 MONGODB_COLLECTION=artifacts
 MONGODB_ARTIFACT_PROCESSING_COLLECTION=artifact_processing_files
@@ -138,7 +138,10 @@ MongoDB 연결 환경 변수:
 
 ## 출력 문서
 
-`artifacts` 문서는 `ArtifactDocument` 형태로 저장됩니다. 주요 필드는 다음과 같습니다.
+`artifacts` 문서는 현재 raw source occurrence 단위의 `ArtifactDocument` 형태로 저장됩니다.
+같은 artifact가 여러 `.lst`/`.txt` snapshot에서 반복 관측되면 여러 문서가 생길 수 있으며,
+canonical dedupe 설계는 [ISSUE.md](ISSUE.md)에 별도 이슈로 정리합니다. 주요 필드는 다음과
+같습니다.
 
 - `id`: raw source, line, display name 기반 artifact 식별자입니다.
 - `name`, `base_item`, `base_subtype`: 표시 이름과 base item 정보입니다.

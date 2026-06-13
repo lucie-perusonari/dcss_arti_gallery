@@ -1,14 +1,15 @@
 # models.py
 
-`models.py`는 MongoDB `artifacts` 컬렉션에 저장되는 canonical artifact document shape를
-정의합니다.
+`models.py`는 MongoDB `artifacts` 컬렉션에 저장되는 artifact occurrence document shape를
+정의합니다. 현재 문서는 raw source에서 관측된 occurrence 단위이며, canonical dedupe 설계는
+상위 [ISSUE.md](../ISSUE.md)에 별도 이슈로 둡니다.
 
 ## 주요 모델
 
 - `ArtifactDocumentSource`: 원본 player, file, URL, line metadata입니다.
 - `ArtifactDocumentAttribute`: property token, normalized key/value, visible description입니다.
 - `ArtifactDocumentEvaluation`: 점수와 등급 결과입니다.
-- `ArtifactDocument`: 갤러리/API가 읽는 artifact read model 본문입니다.
+- `ArtifactDocument`: 갤러리/API가 읽는 artifact occurrence read model 본문입니다.
 
 ## `ArtifactDocument` 핵심 필드
 
