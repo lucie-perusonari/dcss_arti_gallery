@@ -106,6 +106,24 @@ If unrelated user changes are present, mention that they were left untouched.
 
 If the user explicitly asks for a single commit, follow that request while still excluding unrelated user-owned changes.
 
+## Push Workflow
+
+When the user asks Codex to push, prepare release notes before pushing:
+
+1. Inspect `git status --short --branch`.
+2. Identify the commit range that will be pushed. Prefer the upstream comparison from `git status --short --branch`; when needed, inspect `git log --oneline @{upstream}..HEAD`.
+3. Review the commits that are about to be pushed and update `CHANGELOG.md` for the current beta release.
+4. Write release notes in Korean by default. Keep code identifiers, command names, file paths, API fields, and quoted external text in their original form.
+5. Prefer an issue-and-resolution structure for beta releases:
+   - summarize the release scope,
+   - list resolved issues and user-visible fixes,
+   - list added or changed behavior,
+   - document operational impact such as migrations, reprocessing, crawl requirements, deployment notes, and asset path requirements,
+   - note known issues and verification status.
+6. If `CHANGELOG.md` already has an entry for the current release, update that entry instead of creating a duplicate.
+7. Do not stage, commit, or push the release note change unless the user asked for staging/committing/pushing as part of the same task.
+8. If the user asks to push immediately and `CHANGELOG.md` has uncommitted changes, report that the release notes need to be included or explicitly excluded before pushing.
+
 ## Reporting
 
 When reporting git state to the user:

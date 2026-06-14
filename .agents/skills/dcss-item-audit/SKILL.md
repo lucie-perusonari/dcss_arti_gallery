@@ -7,7 +7,7 @@ description: Audit DCSS item, artefact, property-token, equipment-stat, and morg
 
 ## Core Workflow
 
-1. Start from real evidence. Prefer local raw morgue records, checked-in fixtures, or publicly archived morgues before relying on source-code inference.
+1. Start from bounded evidence. Use local raw morgue records or checked-in fixtures when they are already relevant, but do not attempt exhaustive morgue-output review.
 2. Compare three surfaces:
    - raw morgue item line and following description block
    - parser/model output (`all_attributes`, `random_attributes`, `ignored_attributes`, base item, category, subtype)
@@ -22,6 +22,8 @@ description: Audit DCSS item, artefact, property-token, equipment-stat, and morg
 
 ## Evidence Gathering
 
+For source-of-truth priority and reference URLs, read `references/source-of-truth.md`.
+
 Use `rg` first:
 
 ```bash
@@ -29,14 +31,14 @@ rg -n "Ashenzari|cursed .*\\{|It has a curse which improves|Inventory:|Jewellery
 rg -n "INTERNAL_PROPERTY_TOKENS|ARTIFACT_PROPERTY_BLOCK_RE|artifact_ignored_attributes|parse_property_token" arti_parser
 ```
 
-If local real morgue records are not present, use a few public archived morgues and quote only short excerpts:
+If a concrete item-line shape is missing from local records, use a small number of public archived morgues and quote only short excerpts. Do not broaden this into a full morgue corpus audit:
 
 ```bash
 curl -fsSL "<morgue-url>" -o /tmp/morgue.txt
 rg -n "\\{[^}]+\\}|It has a curse which improves|^[[:space:]]+[A-Za-z ]+: " /tmp/morgue.txt -C 2
 ```
 
-When source behavior is needed, inspect upstream DCSS source after checking real morgues. Relevant source names include `artefact.cc`, `god-abil.cc`, `describe.cc`, `skills.cc`, `item-name.cc`, and item property tables.
+When source behavior is needed, inspect upstream DCSS source directly. Relevant source names include `artefact.cc`, `god-abil.cc`, `describe.cc`, `skills.cc`, `item-name.cc`, and item property tables.
 
 ## Ashenzari Cursed Equipment
 
