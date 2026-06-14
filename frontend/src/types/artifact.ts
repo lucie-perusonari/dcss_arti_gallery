@@ -13,6 +13,11 @@ export type ArtifactEvaluation = {
   luxury_grade?: string | null;
 };
 
+export type ArtifactDiscovery = {
+  version?: string | null;
+  datetime?: string | null;
+};
+
 export type Artifact = {
   id: string;
   name: string;
@@ -20,6 +25,7 @@ export type Artifact = {
   type: ArtifactType;
   subtype: string;
   weaponSubtype?: string | null;
+  armourSubtype?: string | null;
   armourSlot?: string | null;
   jewellerySlot?: string | null;
   tile: string;
@@ -27,7 +33,10 @@ export type Artifact = {
     player: string;
     url?: string | null;
   };
+  allAttributes: string[];
+  baseAttributes: string[];
   randomAttributes: string[];
+  discovery: ArtifactDiscovery;
   score: ArtifactEvaluation;
   dcssDescription: string;
 };

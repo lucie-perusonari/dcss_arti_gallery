@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import type { Artifact } from '../types/artifact';
+import { displayTileForArtifact } from '../tiles';
 
 type ArtifactCardProps = {
   artifact: Artifact;
@@ -8,6 +9,8 @@ type ArtifactCardProps = {
 };
 
 export const ArtifactCard = memo(function ArtifactCard({ artifact, selected, onSelect }: ArtifactCardProps) {
+  const tile = displayTileForArtifact(artifact);
+
   return (
     <button
       className={`artifact-card ${selected ? 'is-selected' : ''}`}
@@ -16,15 +19,15 @@ export const ArtifactCard = memo(function ArtifactCard({ artifact, selected, onS
       aria-pressed={selected}
     >
       <span className="tile-frame">
-        <img src={artifact.tile} alt="" />
+        <img src={tile} alt="" />
       </span>
       <span className="artifact-card__body">
         <span className="artifact-card__title">{artifact.name}</span>
         <span className="artifact-card__meta">
-          {artifact.type} / {artifact.subtype}
+          {artifact.type} / {artifact.armourSubtype ?? artifact.subtype}
         </span>
         <span className="token-row">
-          {artifact.randomAttributes.slice(0, 4).map((token) => (
+          {artifact.allAttributes.map((token) => (
             <span className="token" key={token}>
               {token}
             </span>

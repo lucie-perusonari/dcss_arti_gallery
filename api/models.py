@@ -27,6 +27,13 @@ class ArtifactEvaluation(BaseModel):
     luxury_grade: str | None = None
 
 
+class ArtifactDiscovery(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    version: str | None = None
+    datetime: str | None = None
+
+
 class ArtifactDocument(BaseModel):
     """Read model returned by the Gallery API."""
 
@@ -38,11 +45,15 @@ class ArtifactDocument(BaseModel):
     type: str
     subtype: str
     weaponSubtype: str | None = None
+    armourSubtype: str | None = None
     armourSlot: str | None = None
     jewellerySlot: str | None = None
     tile: str
     source: ArtifactSource
+    allAttributes: list[str]
+    baseAttributes: list[str]
     randomAttributes: list[str]
+    discovery: ArtifactDiscovery
     score: ArtifactEvaluation
     dcssDescription: str
 

@@ -25,190 +25,189 @@ BRAND_TOKENS = {
     "vampirism",
     "vorpal",
 }
-def _variant_paths(category: str, slug: str, count: int) -> tuple[str, ...]:
-    return tuple(f"/tiles/randart/{category}/{slug}-{index}.png" for index in range(1, count + 1))
+def _equipment_paths(category: str, *paths: str) -> tuple[str, ...]:
+    return tuple(f"/tiles/equipment/{category}/{path}.png" for path in paths)
 
 
-WEAPON_TILES = {
-    "arbalest": "/tiles/arbalest.png",
-    "athame": "/tiles/athame.png",
-    "bardiche": "/tiles/bardiche.png",
-    "battleaxe": "/tiles/battleaxe.png",
-    "broad axe": "/tiles/broad-axe.png",
-    "club": "/tiles/club.png",
-    "dagger": "/tiles/dagger.png",
-    "demon blade": "/tiles/demon-blade.png",
-    "demon trident": "/tiles/demon-trident.png",
-    "demon whip": "/tiles/demon-whip.png",
-    "dire flail": "/tiles/dire-flail.png",
-    "double sword": "/tiles/double-sword.png",
-    "eveningstar": "/tiles/eveningstar.png",
-    "eudemon blade": "/tiles/eudemon-blade.png",
-    "executioner's axe": "/tiles/executioners-axe.png",
-    "falchion": "/tiles/falchion.png",
-    "flail": "/tiles/flail.png",
-    "giant club": "/tiles/giant-club.png",
-    "giant spiked club": "/tiles/giant-spiked-club.png",
-    "glaive": "/tiles/glaive.png",
-    "great mace": "/tiles/great-mace.png",
-    "great sword": "/tiles/great-sword.png",
-    "halberd": "/tiles/halberd.png",
-    "hand axe": "/tiles/hand-axe.png",
-    "hand cannon": "/tiles/hand-cannon.png",
-    "lajatang": "/tiles/lajatang.png",
-    "long sword": "/tiles/long-sword.png",
-    "longbow": "/tiles/longbow.png",
-    "mace": "/tiles/mace.png",
-    "morningstar": "/tiles/morningstar.png",
-    "orcbow": "/tiles/orcbow.png",
-    "partisan": "/tiles/partisan.png",
-    "quarterstaff": "/tiles/quarterstaff.png",
-    "quick blade": "/tiles/quick-blade.png",
-    "rapier": "/tiles/rapier.png",
-    "sacred scourge": "/tiles/sacred-scourge.png",
-    "scimitar": "/tiles/scimitar.png",
-    "short sword": "/tiles/short-sword.png",
-    "shortbow": "/tiles/shortbow.png",
-    "sling": "/tiles/sling.png",
-    "spear": "/tiles/spear.png",
-    "staff": "/tiles/staff.png",
-    "trident": "/tiles/trident.png",
-    "trishula": "/tiles/trishula.png",
-    "triple crossbow": "/tiles/triple-crossbow.png",
-    "triple sword": "/tiles/triple-sword.png",
-    "war axe": "/tiles/war-axe.png",
-    "whip": "/tiles/whip.png",
-}
 RANDART_WEAPON_TILES = {
-    "arbalest": _variant_paths("weapon", "arbalest", 3),
-    "athame": _variant_paths("weapon", "athame", 3),
-    "bardiche": _variant_paths("weapon", "bardiche", 3),
-    "battleaxe": _variant_paths("weapon", "battleaxe", 3),
-    "broad axe": _variant_paths("weapon", "broad-axe", 3),
-    "club": _variant_paths("weapon", "club", 3),
-    "dagger": _variant_paths("weapon", "dagger", 3),
-    "demon blade": _variant_paths("weapon", "demon-blade", 3),
-    "demon trident": _variant_paths("weapon", "demon-trident", 3),
-    "demon whip": _variant_paths("weapon", "demon-whip", 3),
-    "dire flail": _variant_paths("weapon", "dire-flail", 3),
-    "double sword": _variant_paths("weapon", "double-sword", 3),
-    "eveningstar": _variant_paths("weapon", "eveningstar", 3),
-    "eudemon blade": _variant_paths("weapon", "eudemon-blade", 3),
-    "executioner's axe": _variant_paths("weapon", "executioners-axe", 3),
-    "falchion": _variant_paths("weapon", "falchion", 3),
-    "flail": _variant_paths("weapon", "flail", 3),
-    "giant club": _variant_paths("weapon", "giant-club", 3),
-    "giant spiked club": _variant_paths("weapon", "giant-spiked-club", 3),
-    "glaive": _variant_paths("weapon", "glaive", 3),
-    "great mace": _variant_paths("weapon", "great-mace", 3),
-    "great sword": _variant_paths("weapon", "great-sword", 3),
-    "halberd": _variant_paths("weapon", "halberd", 3),
-    "hand axe": _variant_paths("weapon", "hand-axe", 3),
-    "hand cannon": _variant_paths("weapon", "hand-cannon", 3),
-    "lajatang": _variant_paths("weapon", "lajatang", 3),
-    "long sword": _variant_paths("weapon", "long-sword", 3),
-    "longbow": _variant_paths("weapon", "longbow", 3),
-    "mace": _variant_paths("weapon", "mace", 3),
-    "morningstar": _variant_paths("weapon", "morningstar", 3),
-    "orcbow": _variant_paths("weapon", "orcbow", 3),
-    "partisan": _variant_paths("weapon", "partisan", 3),
-    "quarterstaff": _variant_paths("weapon", "quarterstaff", 3),
-    "quick blade": _variant_paths("weapon", "quick-blade", 3),
-    "rapier": _variant_paths("weapon", "rapier", 3),
-    "sacred scourge": _variant_paths("weapon", "sacred-scourge", 3),
-    "scimitar": _variant_paths("weapon", "scimitar", 3),
-    "short sword": _variant_paths("weapon", "short-sword", 3),
-    "shortbow": _variant_paths("weapon", "shortbow", 3),
-    "sling": _variant_paths("weapon", "sling", 3),
-    "spear": _variant_paths("weapon", "spear", 3),
-    "staff": _variant_paths("weapon", "staff", 3),
-    "trident": _variant_paths("weapon", "trident", 3),
-    "trishula": _variant_paths("weapon", "trishula", 3),
-    "triple crossbow": _variant_paths("weapon", "triple-crossbow", 2),
-    "triple sword": _variant_paths("weapon", "triple-sword", 3),
-    "war axe": _variant_paths("weapon", "war-axe", 3),
-    "whip": _variant_paths("weapon", "whip", 3),
-}
-ARMOUR_TILES = {
-    "acid dragon scales": "/tiles/acid-dragon-scales.png",
-    "animal skin": "/tiles/robe.png",
-    "boots": "/tiles/boots.png",
-    "buckler": "/tiles/buckler.png",
-    "chain mail": "/tiles/chain-mail.png",
-    "cloak": "/tiles/cloak.png",
-    "crystal plate armour": "/tiles/crystal-plate-armour.png",
-    "fire dragon scales": "/tiles/fire-dragon-scales.png",
-    "gold dragon scales": "/tiles/gold-dragon-scales.png",
-    "golden dragon scales": "/tiles/golden-dragon-scales.png",
-    "gloves": "/tiles/gloves.png",
-    "hat": "/tiles/hat.png",
-    "helmet": "/tiles/helmet.png",
-    "ice dragon scales": "/tiles/ice-dragon-scales.png",
-    "kite shield": "/tiles/kite-shield.png",
-    "leather armour": "/tiles/leather-armour.png",
-    "orb": "/tiles/orb.png",
-    "pair of boots": "/tiles/boots.png",
-    "pair of gloves": "/tiles/gloves.png",
-    "pearl dragon scales": "/tiles/pearl-dragon-scales.png",
-    "plate armour": "/tiles/plate-armour.png",
-    "quicksilver dragon scales": "/tiles/quicksilver-dragon-scales.png",
-    "ring mail": "/tiles/ring-mail.png",
-    "robe": "/tiles/robe-randart.png",
-    "scale mail": "/tiles/scale-mail.png",
-    "scarf": "/tiles/scarf.png",
-    "shadow dragon scales": "/tiles/shadow-dragon-scales.png",
-    "shield": "/tiles/kite-shield.png",
-    "steam dragon scales": "/tiles/steam-dragon-scales.png",
-    "storm dragon scales": "/tiles/storm-dragon-scales.png",
-    "swamp dragon scales": "/tiles/swamp-dragon-scales.png",
-    "tower shield": "/tiles/tower-shield.png",
-    "troll leather armour": "/tiles/troll-leather-armour.png",
-    "troll skin": "/tiles/troll-leather-armour.png",
+    "arbalest": _equipment_paths("artifact", "weapon/ranged/arbalest3"),
+    "athame": _equipment_paths("artifact", "weapon/athame3"),
+    "bardiche": _equipment_paths("artifact", "weapon/bardiche3"),
+    "battleaxe": _equipment_paths("artifact", "weapon/battle_axe3"),
+    "broad axe": _equipment_paths("artifact", "weapon/broad_axe3"),
+    "club": _equipment_paths("artifact", "weapon/club2"),
+    "dagger": _equipment_paths("artifact", "weapon/dagger3"),
+    "demon blade": _equipment_paths("artifact", "weapon/demon_blade3"),
+    "demon trident": _equipment_paths("artifact", "weapon/demon_trident3"),
+    "demon whip": _equipment_paths("artifact", "weapon/demon_whip3"),
+    "dire flail": _equipment_paths("artifact", "weapon/dire_flail3"),
+    "double sword": _equipment_paths("artifact", "weapon/double_sword3"),
+    "eveningstar": _equipment_paths("artifact", "weapon/eveningstar3"),
+    "eudemon blade": _equipment_paths("artifact", "weapon/demon_blade3"),
+    "executioner's axe": _equipment_paths("artifact", "weapon/executioner_axe3"),
+    "falchion": _equipment_paths("artifact", "weapon/falchion3"),
+    "flail": _equipment_paths("artifact", "weapon/flail3"),
+    "giant club": _equipment_paths("artifact", "weapon/giant_club3"),
+    "giant spiked club": _equipment_paths("artifact", "weapon/giant_spiked_club3"),
+    "glaive": _equipment_paths("artifact", "weapon/glaive3"),
+    "great mace": _equipment_paths("artifact", "weapon/mace_large3"),
+    "great sword": _equipment_paths("artifact", "weapon/greatsword3"),
+    "halberd": _equipment_paths("artifact", "weapon/halberd3"),
+    "hammer": _equipment_paths("artifact", "weapon/hammer3"),
+    "hand axe": _equipment_paths("artifact", "weapon/hand_axe3"),
+    "hand cannon": _equipment_paths("artifact", "weapon/ranged/hand_cannon3"),
+    "lajatang": _equipment_paths("artifact", "weapon/lajatang3"),
+    "long sword": _equipment_paths("artifact", "weapon/long_sword3"),
+    "longbow": _equipment_paths("artifact", "weapon/ranged/longbow3"),
+    "mace": _equipment_paths("artifact", "weapon/mace3"),
+    "morningstar": _equipment_paths("artifact", "weapon/morningstar3"),
+    "orcbow": _equipment_paths("artifact", "weapon/ranged/orcbow3"),
+    "partisan": _equipment_paths("artifact", "weapon/partisan3"),
+    "quarterstaff": _equipment_paths("artifact", "weapon/quarterstaff3"),
+    "quick blade": _equipment_paths("artifact", "weapon/quickblade3"),
+    "rapier": _equipment_paths("artifact", "weapon/rapier3"),
+    "sacred scourge": _equipment_paths("artifact", "weapon/demon_whip3"),
+    "scimitar": _equipment_paths("artifact", "weapon/scimitar3"),
+    "short sword": _equipment_paths("artifact", "weapon/short_sword3"),
+    "shortbow": _equipment_paths("artifact", "weapon/ranged/shortbow3"),
+    "sling": _equipment_paths("artifact", "weapon/ranged/sling3"),
+    "spear": _equipment_paths("artifact", "weapon/spear3"),
+    "staff": _equipment_paths("artifact", "weapon/quarterstaff3"),
+    "trident": _equipment_paths("artifact", "weapon/trident3"),
+    "trishula": _equipment_paths("artifact", "weapon/demon_trident3"),
+    "triple crossbow": _equipment_paths("artifact", "weapon/ranged/triple_crossbow2"),
+    "triple sword": _equipment_paths("artifact", "weapon/triple_sword3"),
+    "war axe": _equipment_paths("artifact", "weapon/war_axe3"),
+    "whip": _equipment_paths("artifact", "weapon/bullwhip3"),
 }
 RANDART_ARMOUR_TILES = {
-    "boots": _variant_paths("armour", "boots", 2),
-    "pair of boots": _variant_paths("armour", "boots", 2),
-    "gloves": _variant_paths("armour", "gloves", 5),
-    "pair of gloves": _variant_paths("armour", "gloves", 5),
-    "helmet": _variant_paths("armour", "helmet", 3),
-    "orb": _variant_paths("armour", "orb", 4),
-    "robe": _variant_paths("armour", "robe", 2),
+    "acid dragon scales": _equipment_paths("artifact", "armour/acid_dragon_armour_art"),
+    "animal skin": _equipment_paths("artifact", "armour/animal_skin3"),
+    "barding": _equipment_paths("artifact", "armour/barding3"),
+    "boots": _equipment_paths("artifact", "armour/boots_art1"),
+    "pair of boots": _equipment_paths("artifact", "armour/boots_art1"),
+    "buckler": _equipment_paths("artifact", "armour/shields/buckler3"),
+    "cap": _equipment_paths("artifact", "armour/headgear/hat3"),
+    "centaur barding": _equipment_paths("artifact", "armour/barding3"),
+    "chain mail": _equipment_paths("artifact", "armour/chain_mail3"),
+    "cloak": _equipment_paths("artifact", "armour/cloak4"),
+    "crystal plate armour": _equipment_paths("artifact", "armour/crystal_plate3"),
+    "fire dragon scales": _equipment_paths("artifact", "armour/fire_dragon_armour_art"),
+    "gold dragon scales": _equipment_paths("artifact", "armour/golden_dragon_armour_art"),
+    "golden dragon scales": _equipment_paths("artifact", "armour/golden_dragon_armour_art"),
+    "gloves": _equipment_paths("artifact", "armour/glove5"),
+    "hat": _equipment_paths("artifact", "armour/headgear/hat3"),
+    "pair of gloves": _equipment_paths("artifact", "armour/glove5"),
+    "helmet": _equipment_paths("artifact", "armour/headgear/helmet_art1"),
+    "ice dragon scales": _equipment_paths("artifact", "armour/ice_dragon_armour_art"),
+    "kite shield": _equipment_paths("artifact", "armour/shields/kite_shield3"),
+    "leather armour": _equipment_paths("artifact", "armour/leather_armour3"),
+    "orb": _equipment_paths("artifact", "armour/shields/orb_randart1"),
+    "pearl dragon scales": _equipment_paths("artifact", "armour/pearl_dragon_armour_art"),
+    "plate armour": _equipment_paths("artifact", "armour/plate3"),
+    "quicksilver dragon scales": _equipment_paths("artifact", "armour/quicksilver_dragon_armour_art"),
+    "ring mail": _equipment_paths("artifact", "armour/ring_mail3"),
+    "robe": _equipment_paths("artifact", "armour/robe_art1"),
+    "scale mail": _equipment_paths("artifact", "armour/scale_mail3"),
+    "scarf": _equipment_paths("artifact", "armour/scarf3"),
+    "shadow dragon scales": _equipment_paths("artifact", "armour/shadow_dragon_armour_art"),
+    "shield": _equipment_paths("artifact", "armour/shields/kite_shield3"),
+    "steam dragon scales": _equipment_paths("artifact", "armour/steam_dragon_armour_art"),
+    "storm dragon scales": _equipment_paths("artifact", "armour/storm_dragon_armour_art"),
+    "swamp dragon scales": _equipment_paths("artifact", "armour/swamp_dragon_armour_art"),
+    "tower shield": _equipment_paths("artifact", "armour/shields/tower_shield3"),
+    "troll leather armour": _equipment_paths("artifact", "armour/troll_leather_armour_art"),
+    "troll skin": _equipment_paths("artifact", "armour/troll_leather_armour_art"),
 }
-RANDART_RING_TILES = _variant_paths("ring", "ring", 15)
-RANDART_AMULET_TILES = _variant_paths("amulet", "amulet", 8)
-RANDART_STAFF_TILES = _variant_paths("staff", "staff", 7)
+RANDART_RING_TILES = _equipment_paths(
+    "artifact",
+    "ring/randarts/anvil",
+    "ring/randarts/blood",
+    "ring/randarts/bronze-flower",
+    "ring/randarts/dark",
+    "ring/randarts/double",
+    "ring/randarts/eye",
+    "ring/randarts/fire",
+    "ring/randarts/flower",
+    "ring/randarts/four-colour",
+    "ring/randarts/green",
+    "ring/randarts/ice",
+    "ring/randarts/pink",
+    "ring/randarts/red-blue",
+    "ring/randarts/snake",
+    "ring/randarts/zircon",
+)
+RANDART_AMULET_TILES = _equipment_paths(
+    "artifact",
+    "amulet/randarts/azure",
+    "amulet/randarts/cluster",
+    "amulet/randarts/drop",
+    "amulet/randarts/knot",
+    "amulet/randarts/scarab",
+    "amulet/randarts/skull",
+    "amulet/randarts/spider",
+    "amulet/randarts/sun",
+)
+RANDART_STAFF_TILES = _equipment_paths(
+    "artifact",
+    "staff/staff-artefact1",
+    "staff/staff-artefact2",
+    "staff/staff-artefact3",
+    "staff/staff-artefact4",
+    "staff/staff-artefact5",
+    "staff/staff-artefact6",
+    "staff/staff-artefact7",
+)
+FALLBACK_RANDART_WEAPON_TILES = _equipment_paths(
+    "artifact",
+    "weapon/dagger3",
+    "weapon/mace3",
+    "weapon/long_sword3",
+    "weapon/hand_axe3",
+    "weapon/spear3",
+    "weapon/ranged/shortbow3",
+)
+FALLBACK_RANDART_ARMOUR_TILES = _equipment_paths(
+    "artifact",
+    "armour/robe_art1",
+    "armour/leather_armour3",
+    "armour/plate3",
+    "armour/cloak4",
+    "armour/glove5",
+    "armour/shields/kite_shield3",
+)
 TALISMAN_TILES = {
-    "blade talisman": "/tiles/talisman-blade.png",
-    "dragon-coil talisman": "/tiles/talisman-dragon-coil.png",
-    "dragon-blood talisman": "/tiles/talisman-dragon.png",
-    "eel talisman": "/tiles/talisman-eel.png",
-    "fortress talisman": "/tiles/talisman-fortress.png",
-    "granite talisman": "/tiles/talisman-granite.png",
-    "hive talisman": "/tiles/talisman-hive.png",
-    "inkwell talisman": "/tiles/talisman-inkwell.png",
-    "lupine talisman": "/tiles/talisman-lupine.png",
-    "maw talisman": "/tiles/talisman-maw.png",
-    "medusa talisman": "/tiles/talisman-medusa.png",
-    "protean talisman": "/tiles/talisman-protean.png",
-    "quill talisman": "/tiles/talisman-quill.png",
-    "riddle talisman": "/tiles/talisman-riddle.png",
-    "rimehorn talisman": "/tiles/talisman-rimehorn.png",
-    "sanguine talisman": "/tiles/talisman-sanguine.png",
-    "scarab talisman": "/tiles/talisman-scarab.png",
-    "serpent talisman": "/tiles/talisman-serpent.png",
-    "sphinx talisman": "/tiles/talisman-sphinx.png",
-    "spider talisman": "/tiles/talisman-spider.png",
-    "spore talisman": "/tiles/talisman-spore.png",
-    "statue talisman": "/tiles/talisman-statue.png",
-    "storm talisman": "/tiles/talisman-storm.png",
-    "talisman of death": "/tiles/talisman-death.png",
-    "vampire talisman": "/tiles/talisman-vampire.png",
-    "wellspring talisman": "/tiles/talisman-water.png",
+    "blade talisman": "/tiles/equipment/artifact/talisman/blade.png",
+    "dragon-coil talisman": "/tiles/equipment/artifact/talisman/dragon.png",
+    "dragon-blood talisman": "/tiles/equipment/artifact/talisman/dragon.png",
+    "eel talisman": "/tiles/equipment/artifact/talisman/eel.png",
+    "fortress talisman": "/tiles/equipment/artifact/talisman/fortress.png",
+    "granite talisman": "/tiles/equipment/artifact/talisman/statue.png",
+    "hive talisman": "/tiles/equipment/artifact/talisman/hive.png",
+    "inkwell talisman": "/tiles/equipment/artifact/talisman/inkwell.png",
+    "lupine talisman": "/tiles/equipment/artifact/talisman/lupine.png",
+    "maw talisman": "/tiles/equipment/artifact/talisman/maw.png",
+    "medusa talisman": "/tiles/equipment/artifact/talisman/medusa.png",
+    "protean talisman": "/tiles/equipment/artifact/talisman/protean.png",
+    "quill talisman": "/tiles/equipment/artifact/talisman/quill.png",
+    "riddle talisman": "/tiles/equipment/artifact/talisman/protean.png",
+    "rimehorn talisman": "/tiles/equipment/artifact/talisman/rimehorn.png",
+    "sanguine talisman": "/tiles/equipment/artifact/talisman/vampire.png",
+    "scarab talisman": "/tiles/equipment/artifact/talisman/scarab.png",
+    "serpent talisman": "/tiles/equipment/artifact/talisman/snake.png",
+    "sphinx talisman": "/tiles/equipment/artifact/talisman/sphinx.png",
+    "spider talisman": "/tiles/equipment/artifact/talisman/spider.png",
+    "spore talisman": "/tiles/equipment/artifact/talisman/spore.png",
+    "statue talisman": "/tiles/equipment/artifact/talisman/statue.png",
+    "storm talisman": "/tiles/equipment/artifact/talisman/storm.png",
+    "talisman of death": "/tiles/equipment/artifact/talisman/death.png",
+    "vampire talisman": "/tiles/equipment/artifact/talisman/vampire.png",
+    "wellspring talisman": "/tiles/equipment/artifact/talisman/water.png",
 }
 MISC_TILES = {
-    "charlatan's orb": "/tiles/charlatans-orb.png",
-    "crystal ball": "/tiles/crystal-ball-wucad-mu.png",
-    "skull": "/tiles/skull-of-zonguldrok.png",
+    "charlatan's orb": "/tiles/equipment/artifact/armour/artefact/urand_charlatan.png",
+    "crystal ball": "/tiles/equipment/artifact/armour/artefact/urand_wucad_mu.png",
+    "skull": "/tiles/equipment/artifact/armour/artefact/urand_skull_of_zonguldrok.png",
 }
 
 SIGNED_PROPERTY_RE = re.compile(r"^(?P<key>[A-Za-z][A-Za-z0-9]*)(?P<value>[+-]\d+)$")
@@ -224,7 +223,7 @@ def present_artifact_document(document: dict[str, Any]) -> ArtifactDocument:
     data.pop("_id", None)
     evaluation = data["evaluation"]
     attributes = _display_attributes(data)
-    description = _display_description(attributes)
+    description = _display_description(data, attributes)
     response = {
         "id": data["id"],
         "name": data["name"],
@@ -232,6 +231,7 @@ def present_artifact_document(document: dict[str, Any]) -> ArtifactDocument:
         "type": data["item_class"],
         "subtype": data["item_subtype"],
         "weaponSubtype": data.get("weapon_subtype"),
+        "armourSubtype": _armour_subtype(data),
         "armourSlot": data.get("armour_slot"),
         "jewellerySlot": data.get("jewellery_slot"),
         "tile": _tile_for(data),
@@ -239,7 +239,10 @@ def present_artifact_document(document: dict[str, Any]) -> ArtifactDocument:
             "player": data["source"].get("player", ""),
             "url": data["source"].get("url"),
         },
+        "allAttributes": data.get("all_attributes", []),
+        "baseAttributes": data.get("base_attributes", []),
         "randomAttributes": data.get("random_attributes", []),
+        "discovery": _discovery(data),
         "score": evaluation,
         "dcssDescription": description,
     }
@@ -269,6 +272,17 @@ def _display_attributes(document: dict[str, Any]) -> list[dict[str, str | bool]]
     return display_attributes
 
 
+def _armour_subtype(document: dict[str, Any]) -> str | None:
+    if document.get("item_class") != "armour":
+        return None
+    name = str(document.get("name") or "").lower()
+    if _looks_like_boots(name):
+        return "pair of boots"
+    if _looks_like_gloves(name):
+        return "pair of gloves"
+    return document.get("armour_subtype") or document.get("base_item")
+
+
 def _has_visible_attribute_with_key(
     by_token: dict[str, dict[str, Any]],
     key: str,
@@ -282,8 +296,14 @@ def _has_visible_attribute_with_key(
     return False
 
 
-def _display_description(attributes: list[dict[str, str | bool]]) -> str:
+def _display_description(
+    document: dict[str, Any],
+    attributes: list[dict[str, str | bool]],
+) -> str:
     lines: list[str] = []
+    base_subtype = str(document.get("base_subtype") or "").strip()
+    if document.get("item_class") == "jewellery" and base_subtype:
+        lines.append(f"[{base_subtype}]")
     for attribute in attributes:
         if attribute["isBrand"]:
             continue
@@ -293,6 +313,16 @@ def _display_description(attributes: list[dict[str, str | bool]]) -> str:
         else:
             lines.append(attribute["token"])
     return "\n".join(lines)
+
+
+def _discovery(document: dict[str, Any]) -> dict[str, str | None]:
+    first_source = document.get("first_source")
+    if not isinstance(first_source, dict):
+        first_source = {}
+    return {
+        "version": first_source.get("version") or document.get("source_version"),
+        "datetime": first_source.get("game_ended_at"),
+    }
 
 
 def _key_value(token: str) -> tuple[str, int | bool | None]:
@@ -354,7 +384,7 @@ def _tile_for(document: dict[str, Any]) -> str:
     if item_class == "weapon":
         if base_item in RANDART_WEAPON_TILES:
             return _pick_variant(RANDART_WEAPON_TILES[base_item], document)
-        return WEAPON_TILES.get(base_item, _tile_path(base_item))
+        return _pick_variant(FALLBACK_RANDART_WEAPON_TILES, document)
     if item_class == "jewellery":
         if document.get("jewellery_slot") == "amulet" or subtype.startswith("amulet of "):
             return _pick_variant(RANDART_AMULET_TILES, document)
@@ -363,28 +393,32 @@ def _tile_for(document: dict[str, Any]) -> str:
         talisman = subtype or base_item
         if talisman in TALISMAN_TILES:
             return TALISMAN_TILES[talisman]
-        prefix = talisman.removesuffix(" talisman").strip()
-        return f"/tiles/talisman-{prefix.replace(' ', '-')}.png" if prefix else "/tiles/talisman-statue.png"
+        return "/tiles/equipment/artifact/talisman/statue.png"
     if item_class == "staff":
         return _pick_variant(RANDART_STAFF_TILES, document)
     if item_class == "armour":
+        armour_subtype = str(document.get("armour_subtype") or "").lower()
         if base_item == "pair":
             if "pair of boots" in name:
                 return _pick_variant(RANDART_ARMOUR_TILES["boots"], document)
             if "pair of gloves" in name:
                 return _pick_variant(RANDART_ARMOUR_TILES["gloves"], document)
-        variant_key = base_item if base_item in RANDART_ARMOUR_TILES else subtype
+        variant_key = (
+            armour_subtype
+            if armour_subtype in RANDART_ARMOUR_TILES
+            else base_item if base_item in RANDART_ARMOUR_TILES else subtype
+        )
         if variant_key in RANDART_ARMOUR_TILES:
             return _pick_variant(RANDART_ARMOUR_TILES[variant_key], document)
-        return ARMOUR_TILES.get(base_item) or ARMOUR_TILES.get(subtype) or _tile_path(base_item or subtype or "robe")
+        return _pick_variant(FALLBACK_RANDART_ARMOUR_TILES, document)
     if item_class == "misc":
         if "charlatan" in name:
-            return "/tiles/charlatans-orb.png"
+            return MISC_TILES["charlatan's orb"]
         if "wucad mu" in name:
-            return "/tiles/crystal-ball-wucad-mu.png"
+            return MISC_TILES["crystal ball"]
         if base_item in MISC_TILES:
             return MISC_TILES[base_item]
-        return _tile_path(base_item)
+        return _pick_variant(RANDART_RING_TILES, document)
     return _pick_variant(RANDART_RING_TILES, document)
 
 
@@ -393,11 +427,6 @@ def _pick_variant(paths: tuple[str, ...], document: dict[str, Any]) -> str:
     digest = hashlib.sha256(str(seed).encode("utf-8")).digest()
     index = int.from_bytes(digest[:4], "big") % len(paths)
     return paths[index]
-
-
-def _tile_path(item_name: str) -> str:
-    safe_name = item_name.replace("'", "").replace(" ", "-")
-    return f"/tiles/{safe_name}.png"
 
 
 def _looks_like_boots(name: str) -> bool:

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { Artifact } from '../types/artifact';
+import { displayTileForArtifact } from '../tiles';
 
 type DcssItemDescriptionProps = {
   artifact: Artifact;
@@ -10,11 +11,12 @@ export function DcssItemDescription({ artifact }: DcssItemDescriptionProps) {
   const description = itemDescriptionBody(artifact);
   const stashPrefixes = stashSearchPrefixes(artifact);
   const menuPrefixes = menuColouringPrefixes(artifact);
+  const tile = displayTileForArtifact(artifact);
 
   return (
     <div className="describe-item" role="dialog" aria-label={`${artifact.name} description`}>
       <div className="header">
-        <TileCanvas src={artifact.tile} />
+        <TileCanvas src={tile} />
         <span className="describe-item__title">{title}</span>
       </div>
 
@@ -46,6 +48,9 @@ export function DcssItemDescription({ artifact }: DcssItemDescriptionProps) {
           .
         </div>
       ) : null}
+      <div className="describe-item__discovery fg7">
+        {discoveryText(artifact)}
+      </div>
     </div>
   );
 }
@@ -69,6 +74,7 @@ function stashSearchPrefixes(artifact: Artifact) {
   const prefixes = ['{inventory}', '{artefact}', '{artifact}'];
   if (artifact.type === 'armour') {
     prefixes.push('{armour}');
+    if (artifact.armourSubtype) prefixes.push(`{${artifact.armourSubtype}}`);
     if (artifact.subtype) prefixes.push(`{${artifact.subtype}}`);
   } else if (artifact.type === 'weapon') {
     prefixes.push('{weapon}');
@@ -85,6 +91,25 @@ function stashSearchPrefixes(artifact: Artifact) {
 function menuColouringPrefixes(artifact: Artifact) {
   const typeName = artifact.type === 'jewellery' ? 'jewellery' : artifact.type;
   return `identified artefact ${typeName}`;
+}
+
+function discoveryText(artifact: Artifact) {
+  const parts = [];
+  if (artifact.discovery.version) {
+    parts.push(`Version ${artifact.discovery.version}`);
+  }
+  const datetime = formattedDiscoveryDatetime(artifact.discovery.datetime);
+  if (datetime) {
+    parts.push(`Found ${datetime}`);
+  }
+  return parts.join(' / ');
+}
+
+function formattedDiscoveryDatetime(value?: string | null) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toISOString().replace('.000Z', 'Z');
 }
 
 function TileCanvas({ src }: { src: string }) {
