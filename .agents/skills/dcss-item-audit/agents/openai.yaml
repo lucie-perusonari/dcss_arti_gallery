@@ -1,0 +1,4 @@
+interface:
+  display_name: "DCSS Item Audit"
+  short_description: "Audit DCSS item parsing against morgues"
+  default_prompt: "Use $dcss-item-audit to verify item property parsing against real DCSS morgue examples."

@@ -928,6 +928,7 @@ INTERNAL_PROPERTY_TOKENS = {
     "Range",
     "vamp",
     "Dev",
+    "Evo",
     "Cun",
     "Bglg",
     "Elem",

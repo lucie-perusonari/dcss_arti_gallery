@@ -10,6 +10,8 @@
 - `artifact_enchantment_and_base_text`: `+6 broad axe` 같은 강화 수치와 base text를 분리합니다.
 - `artifact_base_item`: bracket subtype과 display name에서 base item을 추론합니다.
 - `artifact_attributes`: property block을 token 목록으로 쪼개고 visible description을 연결합니다.
+- `artifact_ignored_attributes`: Ashenzari curse group과 내부용 token처럼 원문 근거만 보존할
+  token을 분리합니다.
 - `is_random_artifact`: unrandart와 plain magic item을 제외합니다.
 - `parse_property_token`: `Slay+3`, `rF++`, `Regen+` 같은 token을 `(key, value)`로 정규화합니다.
 
@@ -27,6 +29,9 @@ artifact별 반복 regex/parse 비용을 줄입니다.
 ## 변경 시 주의점
 
 - `INTERNAL_PROPERTY_TOKEN_KEYS`에 속한 token은 저장 attribute에서 제외됩니다.
+- Ashenzari curse group token(`Self`, `Comp`, `Cun`, `Elem`, `Sorc`, `Dev`, 구버전 `Evo` 등)은
+  `ignored_attributes`로 분리하고, `all_attributes`, `random_attributes`, 평가, Gallery API 표시에는
+  포함하지 않습니다.
 - multi-word property는 `MULTI_WORD_PROPERTY_TOKENS`에 등록해야 단일 token으로 유지됩니다.
 - `cursed`와 `chaotic` prefix는 randart 정체성이 아니라 item status flag로 취급합니다.
   원문은 extractor의 `raw_text_block`에 남기고, randart 판정과 출력 이름에는 prefix를 제거한
