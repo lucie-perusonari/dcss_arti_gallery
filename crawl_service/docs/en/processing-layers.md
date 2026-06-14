@@ -43,7 +43,8 @@ remote morgue
 ## Operation Scripts
 
 - `python3 -m crawl_service.worker`: fetches remote morgue source and stores it in raw/cache collections.
-- `crawl_service/run_raw_crawler.sh`: raw ingest worker wrapper. With `DETACH=1`, it runs in the background.
+- `python3 -m crawl_service.worker --once`: runs one crawl pass and exits.
+- `docker compose -f infra/dev/docker-compose.yml run --rm crawl-service`: runs the one-shot crawl job against the dev compose MongoDB.
 
 ## Related Docs
 

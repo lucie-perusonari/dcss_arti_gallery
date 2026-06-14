@@ -39,8 +39,6 @@ docker compose -f infra/dev/docker-compose.yml run --rm crawl-service
 docker compose -f infra/dev/docker-compose.yml run --rm arti-parser
 ```
 
-host에서 직접 실행할 때는 `crawl_service/run_raw_crawler_dev.sh`를 사용합니다.
-
 ## MongoDB만 실행
 
 host에서 개별 서비스를 직접 실행해야 할 때는 compose stack 중 MongoDB와 index service만 올립니다.

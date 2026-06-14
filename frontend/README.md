@@ -10,7 +10,6 @@ persisted artifact data는 Gallery API에서 읽습니다.
 - [`src/components`](docs/ko/components.md): WebTiles 스타일 패널, 필터, 카드, 아이템 상세, 닉네임 크롤 UI
 - [`public/tiles`](docs/ko/public-tiles.md): 로컬 DCSS 타일 PNG 자산
 - [`reference/`](docs/ko/reference.md): DCSS/WebTiles UI 레퍼런스와 회귀 비교용 스냅샷
-- [`run_frontend.sh`](docs/ko/run_frontend.md): frontend dev server 실행 wrapper
 
 English version: [README.en.md](README.en.md)
 
@@ -34,13 +33,11 @@ Gallery API에 연결:
 VITE_ARTIFACT_API_URL=http://127.0.0.1:8000 npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-서비스 스크립트로 실행:
+전체 개발 스택에서는 compose가 frontend와 Gallery API URL을 함께 관리합니다.
 
 ```sh
-./frontend/run_frontend.sh
+docker compose -f infra/dev/docker-compose.yml up frontend
 ```
-
-`run_frontend.sh`는 `VITE_ARTIFACT_API_URL`이 없으면 `http://127.0.0.1:8000`을 사용합니다.
 
 ## 빌드
 

@@ -10,7 +10,6 @@
 - [`models.py`](docs/ko/models.md): admin 상태 응답 DTO
 - [`repository.py`](docs/ko/repository.md): crawl 파일/user/raw file 상태 read repository
 - [`prometheus.py`](docs/ko/prometheus.md): Prometheus HTTP API를 읽는 Gallery API metrics read repository
-- [`run_admin_api.sh`](docs/ko/run_admin_api.md): dev MongoDB 환경을 적용한 Admin API 실행 wrapper
 - [`tests/`](docs/ko/tests.md): Admin API 응답 계약과 MongoDB 읽기 검증
 
 English version: [README.en.md](README.en.md)
@@ -48,10 +47,10 @@ Admin API 서버:
 python3 -m uvicorn admin_api.app:app --host 0.0.0.0 --port 8001
 ```
 
-서비스 스크립트로 실행:
+전체 개발 스택에서는 compose가 Admin API 실행과 MongoDB 연결 환경을 함께 관리합니다.
 
 ```sh
-./admin_api/run_admin_api.sh
+docker compose -f infra/dev/docker-compose.yml up admin-api
 ```
 
 Admin API 기본 CORS origin은 `http://localhost:5174`와 `http://127.0.0.1:5174`입니다.

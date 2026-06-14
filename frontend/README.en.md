@@ -10,7 +10,6 @@ It reads persisted artifact data from the Gallery API.
 - [`src/components`](src/components): WebTiles-style panels, filters, cards, item details, and nickname crawl UI
 - [`public/tiles`](public/tiles): local DCSS tile PNG assets
 - [`reference/`](reference/): DCSS/WebTiles UI references and regression comparison screenshots
-- [`run_frontend.sh`](run_frontend.sh): frontend dev server wrapper
 - [docs/en/style-sources.md](docs/en/style-sources.md): source notes for the WebTiles CSS/font recreation
 - [UI Reference](docs/en/ui-reference.md): DCSS item UI reference material based on the DCInside roguelike gallery
 - [Current UI Screenshots](docs/en/current-ui-screenshots.md): current UI screenshots for regression comparison
@@ -29,13 +28,11 @@ Connect to the Gallery API:
 VITE_ARTIFACT_API_URL=http://127.0.0.1:8000 npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-From the repository root, you can use the service script:
+In the full development stack, compose manages the frontend and Gallery API URL together:
 
 ```sh
-./frontend/run_frontend.sh
+docker compose -f infra/dev/docker-compose.yml up frontend
 ```
-
-`run_frontend.sh` uses `http://127.0.0.1:8000` when `VITE_ARTIFACT_API_URL` is not set.
 
 ## Build
 

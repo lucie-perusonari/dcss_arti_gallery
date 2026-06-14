@@ -10,7 +10,6 @@ Admin API endpoint에서 crawl file/user/raw file 상태와 Gallery API metrics�
 - [`src/types/status.ts`](docs/ko/types-status.md): Admin API 응답 TypeScript 타입
 - [`src/styles.css`](docs/ko/styles.md): dashboard layout과 상태 표시 스타일
 - [`vite.config.ts`](docs/ko/vite-config.md): Vite build/dev 설정
-- [`run_admin.sh`](docs/ko/run_admin.md): admin frontend dev server 실행 wrapper
 - [`tests/test_mock_smoke.py`](docs/ko/mock-smoke-test.md): 목업 admin API smoke test
 
 English version: [README.en.md](README.en.md)
@@ -36,11 +35,10 @@ API URL을 지정해 dev server를 실행합니다.
 VITE_ADMIN_API_URL=http://127.0.0.1:8001 npm run dev -- --host 127.0.0.1 --port 5174
 ```
 
-서비스 스크립트로 실행:
+전체 개발 스택에서는 compose가 Admin API와 admin frontend API URL을 함께 관리합니다.
 
 ```sh
-./admin_api/run_admin_api.sh
-./admin-frontend/run_admin.sh
+docker compose -f infra/dev/docker-compose.yml up admin-api admin-frontend
 ```
 
 기본 Admin URL은 `http://127.0.0.1:5174`입니다.

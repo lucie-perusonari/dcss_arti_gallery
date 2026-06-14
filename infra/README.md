@@ -28,9 +28,8 @@
 - dev raw crawler와 artifact parser는 `jobs` profile의 one-shot service로 분리되어 명시적으로 실행할 때만 동작합니다.
 - MongoDB collection index 같은 DDL 작업은 application repository가 아니라 `infra/ensure_mongo_indexes.py`가
   수행하며, compose의 `mongo-indexes` service에서 자동 실행됩니다.
-- `crawl_service/run_raw_crawler.sh`, `crawl_service/run_raw_crawler_dev.sh`,
-  `arti_parser/process_raw_morgue_files.sh`는 명시적인
-  `MONGODB_*` override가 없으면 compose dev MongoDB host bind 값을 사용합니다.
+- 서비스별 실행 wrapper는 두지 않습니다. 개발 실행은 `infra/dev/docker-compose.yml`을 기준으로 하고,
+  raw crawler와 artifact parser는 compose `jobs` profile의 one-shot service로만 실행합니다.
 - Admin API 테스트 유틸은 MongoDB lifecycle을 직접 관리하지 않습니다. 테스트 전에 compose dev MongoDB를
   올리거나 `MONGODB_URI`, `MONGODB_DATABASE`를 명시합니다.
 

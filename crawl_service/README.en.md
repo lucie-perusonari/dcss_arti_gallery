@@ -11,9 +11,6 @@ It is a long-running worker project that does not expose an HTTP API and should 
 - [`fetcher.py`](fetcher.py): query remote morgue root/user directories, extract txt/lst file entries, and fetch file text
 - [`repository.py`](repository.py): store morgue ingest state in `raw_morgue_files`, `crawl_files`, and `crawl_users`
 - [`worker.py`](worker.py): orchestrate archive user list scans and raw morgue file ingest
-- [`run_raw_crawler.sh`](run_raw_crawler.sh): raw crawler compatibility wrapper
-- [`run_raw_crawler_dev.sh`](run_raw_crawler_dev.sh): raw crawler wrapper with dev MongoDB defaults
-- [`run_raw_crawler_prod.sh`](run_raw_crawler_prod.sh): raw crawler wrapper requiring production MongoDB values
 - [`tests/`](tests/): fetcher, repository, and worker behavior checks
 
 ## Data Flow
@@ -54,20 +51,6 @@ for missing raw files. With `--once`, it runs one crawl pass and exits. With `CR
 skips players whose user directory `Date` matches the previous scan. It processes only user/file data from
 `2026-01-01` onward and keeps a default 1-second delay between HTTP requests.
 
-Wrapper script:
-
-```sh
-crawl_service/run_raw_crawler.sh
-```
-
-- `crawl_service/run_raw_crawler.sh`: compatibility dev wrapper. It delegates to `run_raw_crawler_dev.sh`.
-- `crawl_service/run_raw_crawler_dev.sh`: uses dev MongoDB defaults `mongodb://localhost:27018` and `dcss_arti_gallery`.
-- `MONGODB_URI=<prod-uri> crawl_service/run_raw_crawler_prod.sh`: runs with an explicit production MongoDB URI.
-- `DETACH=1 crawl_service/run_raw_crawler_dev.sh`: runs the dev raw crawler in the background and writes
-  `.logs/crawl_raw_only_dev.log`.
-- `DETACH=1 MONGODB_URI=<prod-uri> crawl_service/run_raw_crawler_prod.sh`: runs the prod raw crawler in the background
-  and writes `.logs/crawl_raw_only_prod.log`.
-
 In Docker Compose, the crawler performs live morgue crawl work, so it is not part of the default stack. It runs only as
 a `jobs` profile one-shot service.
 
@@ -76,7 +59,7 @@ docker compose -f infra/dev/docker-compose.yml run --rm crawl-service
 docker compose -f infra/prod/docker-compose.yml run --rm crawl-service
 ```
 
-Use `arti_parser/process_raw_morgue_files.sh` to regenerate the artifact read model from stored raw source.
+Use the compose `arti-parser` job to regenerate the artifact read model from stored raw source.
 
 ## Tests
 

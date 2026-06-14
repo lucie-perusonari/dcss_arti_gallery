@@ -10,7 +10,6 @@ It reads crawl file/user/raw file status and Gallery API metrics from the Admin 
 - [`src/types/status.ts`](src/types/status.ts): TypeScript types for Admin API responses
 - [`src/styles.css`](src/styles.css): dashboard layout and status styling
 - [`vite.config.ts`](vite.config.ts): Vite build/dev configuration
-- [`run_admin.sh`](run_admin.sh): admin frontend dev server wrapper
 - [`tests/test_mock_smoke.py`](tests/test_mock_smoke.py): mock admin API smoke test
 
 ## Runtime
@@ -27,11 +26,10 @@ Run the dev server with an explicit API URL:
 VITE_ADMIN_API_URL=http://127.0.0.1:8001 npm run dev -- --host 127.0.0.1 --port 5174
 ```
 
-From the repository root, you can use the service scripts:
+In the full development stack, compose manages the Admin API and admin frontend API URL together:
 
 ```sh
-./admin_api/run_admin_api.sh
-./admin-frontend/run_admin.sh
+docker compose -f infra/dev/docker-compose.yml up admin-api admin-frontend
 ```
 
 The default Admin URL is `http://127.0.0.1:5174`.

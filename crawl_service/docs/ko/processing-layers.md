@@ -45,7 +45,7 @@ remote morgue
 
 - `python3 -m crawl_service.worker`: remote morgue 원문을 fetch해 raw/cache 컬렉션에 저장한다.
 - `python3 -m crawl_service.worker --once`: 한 번의 crawl pass만 실행하고 종료한다.
-- `crawl_service/run_raw_crawler.sh`: raw ingest worker wrapper. `DETACH=1`이면 백그라운드로 실행한다.
+- `docker compose -f infra/dev/docker-compose.yml run --rm crawl-service`: dev compose MongoDB에 대해 one-shot crawl job을 실행한다.
 
 ## Related Docs
 

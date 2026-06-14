@@ -11,7 +11,6 @@ import `crawl_service`.
 - [`models.py`](models.py): admin status response DTOs
 - [`repository.py`](repository.py): read repository for crawl file/user/raw file status
 - [`prometheus.py`](prometheus.py): Gallery API metrics read repository backed by the Prometheus HTTP API
-- [`run_admin_api.sh`](run_admin_api.sh): Admin API dev server wrapper with the dev MongoDB environment
 - [`tests/`](tests/): Admin API response contract and MongoDB read checks
 
 ## Endpoints
@@ -39,10 +38,10 @@ Admin API server:
 python3 -m uvicorn admin_api.app:app --host 0.0.0.0 --port 8001
 ```
 
-From the repository root, you can use the service script:
+In the full development stack, compose manages the Admin API runtime and MongoDB connection environment together:
 
 ```sh
-./admin_api/run_admin_api.sh
+docker compose -f infra/dev/docker-compose.yml up admin-api
 ```
 
 The admin API default CORS origins are `http://localhost:5174` and `http://127.0.0.1:5174`.

@@ -19,7 +19,6 @@ artifact read model을 재생성하는 배치 처리 모듈입니다.
 - [`repository.py`](docs/repository.md): `raw_morgue_files`, `artifacts`, `artifact_processing_files` 접근 계층입니다.
 - [`constants.py`](docs/constants.md): 파싱/분류 정규식, lookup table, 공식 DCSS item/unrandart 정적 상수입니다.
 - [`worker.py`](docs/worker.md): 기존 호출 호환을 위한 batch entrypoint alias입니다.
-- [`process_raw_morgue_files.sh`](docs/process_raw_morgue_files.md): batch 실행 shell wrapper입니다.
 
 ## 책임 범위
 
@@ -91,20 +90,10 @@ Stale 후보는 반드시 현재 raw file의 source metadata로 제한합니다.
 
 ## 실행
 
-개발 MongoDB 환경에서는 루트에서 다음 스크립트를 사용합니다.
+개발 MongoDB 환경에서는 compose job을 사용합니다.
 
 ```sh
-arti_parser/process_raw_morgue_files.sh --once
-```
-
-이 스크립트는 기본값으로 compose dev MongoDB host bind 연결 정보를 사용합니다.
-
-```text
-MONGODB_URI=mongodb://localhost:27018
-MONGODB_DATABASE=dcss_arti_gallery
-MONGODB_RAW_FILES_COLLECTION=raw_morgue_files
-MONGODB_COLLECTION=artifacts
-MONGODB_ARTIFACT_PROCESSING_COLLECTION=artifact_processing_files
+docker compose -f infra/dev/docker-compose.yml run --rm arti-parser
 ```
 
 직접 모듈을 실행할 수도 있습니다.
@@ -146,7 +135,7 @@ Compose job의 MongoDB 연결 환경 변수:
 
 | 환경 변수 | 기본값 | 설명 |
 | --- | --- | --- |
-| `MONGODB_URI` | `mongodb://mongo:27017` | MongoDB 연결 문자열입니다. host에서 `process_raw_morgue_files.sh`로 직접 실행할 때는 dev MongoDB host bind인 `mongodb://localhost:27018`을 기본으로 사용합니다. |
+| `MONGODB_URI` | `mongodb://mongo:27017` | MongoDB 연결 문자열입니다. compose job에서는 내부 service host인 `mongo`를 사용합니다. host에서 직접 실행할 때는 직접 값을 지정합니다. |
 | `MONGODB_DATABASE` | `dcss_arti_gallery` | 사용할 database 이름입니다. |
 | `MONGODB_RAW_FILES_COLLECTION` | `raw_morgue_files` | raw source 입력 컬렉션입니다. |
 | `MONGODB_COLLECTION` | `artifacts` | artifact read model 출력 컬렉션입니다. |
