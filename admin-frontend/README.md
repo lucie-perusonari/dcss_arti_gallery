@@ -20,6 +20,7 @@ English version: [README.en.md](README.en.md)
 - crawl 운영 대시보드 화면과 상태 표시 스타일을 소유합니다.
 - Admin API 응답 타입과 frontend 사용 경계를 소유합니다.
 - `VITE_GRAFANA_URL`이 있으면 상세 time-series dashboard로 이동하는 Grafana 링크를 표시합니다.
+- crawl 운영 상태와 Gallery API metrics는 Admin API 외 경로로 직접 읽지 않습니다.
 
 ## 실행 방법
 

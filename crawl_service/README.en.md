@@ -8,10 +8,10 @@ It is a long-running worker project that does not expose an HTTP API and should 
 
 ## Modules
 
-- [`fetcher.py`](fetcher.py): query remote morgue root/user directories, extract txt/lst file entries, and fetch file text
-- [`repository.py`](repository.py): store morgue ingest state in `raw_morgue_files`, `crawl_files`, and `crawl_users`
-- [`worker.py`](worker.py): orchestrate archive user list scans and raw morgue file ingest
-- [`tests/`](tests/): fetcher, repository, and worker behavior checks
+- [`fetcher.py`](docs/ko/fetcher.md): query remote morgue root/user directories, extract txt/lst file entries, and fetch file text
+- [`repository.py`](docs/ko/repository.md): store morgue ingest state in `raw_morgue_files`, `crawl_files`, and `crawl_users`
+- [`worker.py`](docs/ko/worker.md): orchestrate archive user list scans and raw morgue file ingest
+- [`tests/`](docs/ko/tests.md): fetcher, repository, and worker behavior checks
 
 ## Data Flow
 
@@ -60,6 +60,25 @@ docker compose -f infra/prod/docker-compose.yml run --rm crawl-service
 ```
 
 Use the compose `arti-parser` job to regenerate the artifact read model from stored raw source.
+
+Key environment variables:
+
+| Environment variable | Default | Description |
+| --- | --- | --- |
+| `MONGODB_URI` | `mongodb://localhost:27018` | MongoDB connection string. Compose injects `mongodb://mongo:27017` internally. |
+| `MONGODB_DATABASE` | `dcss_arti_gallery` | Database name. |
+| `MONGODB_RAW_FILES_COLLECTION` | `raw_morgue_files` | Collection storing raw morgue source. |
+| `MONGODB_CRAWL_FILES_COLLECTION` | `crawl_files` | File-level crawl status collection. |
+| `MONGODB_CRAWL_USERS_COLLECTION` | `crawl_users` | User-directory scan status collection. |
+| `MORGUE_BASE_URL` | `https://archive.nemelex.cards/morgue` | Remote morgue root URL. |
+| `MORGUE_REQUEST_DELAY_SECONDS` | `1.0` | Minimum delay between HTTP requests. |
+| `MORGUE_REQUEST_TIMEOUT_SECONDS` | `20.0` | HTTP request timeout. |
+| `MORGUE_USER_AGENT` | `dcss-arti-gallery-crawler/0.1` | User agent for remote morgue requests. |
+| `CRAWL_START_DATE` | `2026-01-01` | Start date for eligible user/file data. |
+| `CRAWL_LOOP_INTERVAL_SECONDS` | `604800` | Delay between worker passes. |
+| `CRAWL_USER_SKIP_MODE` | `conservative` | Either `conservative` or `modified_at`. |
+| `CRAWL_LOG_LEVEL` | `INFO` | Worker logging level. |
+| `CRAWL_ONCE` | `false` | If `1`, `true`, `yes`, or `on`, run one crawl pass and exit. |
 
 ## Tests
 

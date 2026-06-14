@@ -5,6 +5,8 @@
 ## 책임
 
 - `PROMETHEUS_URL`을 기준으로 Prometheus `/api/v1/query`를 호출합니다.
+- `PROMETHEUS_TIMEOUT_SECONDS`로 Prometheus HTTP 요청 timeout을 설정합니다. 기본값은 `3.0`초입니다.
+- `PROMETHEUS_METRICS_WINDOW_SECONDS`로 rate/latency query window를 설정합니다. 기본값은 `300`초입니다.
 - Gallery API의 request rate, 5xx rate, p95 latency, in-flight 요청 수를 `GalleryApiMetrics` DTO로 변환합니다.
 - Prometheus 연결이나 query 실패 시 HTTP 예외를 전파하지 않고 `status="unavailable"` 응답으로 변환합니다.
 

@@ -1,7 +1,7 @@
 # API 데이터 타입
 
 이 문서는 `api`가 소유하는 공개 응답 DTO를 정의합니다.
-`api` 모델은 MongoDB에 저장된 crawl artifact 문서와 모양이 비슷해도 API 공개 계약으로 별도로 관리합니다.
+`api` 모델은 MongoDB에 저장된 artifact read model과 모양이 비슷해도 API 공개 계약으로 별도로 관리합니다.
 
 `api`는 `crawl_service`를 import하지 않습니다.
 

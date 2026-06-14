@@ -35,10 +35,11 @@ remote morgue
 - `CRAWL_START_DATE`: start date for eligible user/file data. Default: `2026-01-01`.
 - `MORGUE_REQUEST_DELAY_SECONDS`: minimum delay between HTTP requests. Default: `1.0`.
 - `CRAWL_LOOP_INTERVAL_SECONDS`: delay between worker passes. Default: `604800` seconds (7 days).
-- `MORGUE_REQUEST_TIMEOUT_SECONDS`: HTTP request timeout. Default: the fetcher default.
-- `MORGUE_USER_AGENT`: user agent for remote morgue requests.
+- `MORGUE_REQUEST_TIMEOUT_SECONDS`: HTTP request timeout. Default: `20.0`.
+- `MORGUE_USER_AGENT`: user agent for remote morgue requests. Default: `dcss-arti-gallery-crawler/0.1`.
 - `CRAWL_USER_SKIP_MODE`: `conservative` or `modified_at`. Default: `conservative`.
 - `CRAWL_LOG_LEVEL`: worker logging level. Default: `INFO`.
+- `CRAWL_ONCE`: if `1`, `true`, `yes`, or `on`, run one crawl pass and exit.
 
 ## Operation Scripts
 

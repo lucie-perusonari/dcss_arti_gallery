@@ -8,7 +8,7 @@
 - `ArtifactCard`의 `token-row`는 Gallery API의 `allAttributes` 전체를 한 줄 압축/ellipsis로 표시합니다.
 - `DcssItemDescription`에서 DCSS/WebTiles 아이템 설명창 표현을 유지합니다.
 - `DcssItemDescription`은 상세 팝업 하단에 최초 발견 version/datetime을 표시합니다.
-- 닉네임 입력 UI는 `player` 필터를 갱신해 Gallery API에서 해당 플레이어의 저장된 랜다트를 불러옵니다.
+- 플레이어 입력 UI는 `player` 필터를 갱신해 Gallery API에서 해당 플레이어의 저장된 랜다트를 불러옵니다.
 - `FilterBar`는 type segmented control과 type별 하위 slot/subtype segmented control을 렌더링합니다.
 - `FilterBar`는 기본 최근 30일과 전체 기간을 전환하는 `timeRange` control도 렌더링합니다.
 - 하위 slot/subtype 옵션은 현재 type/search 원본 목록에서 계산하고, 실제 표시 목록만 slot으로

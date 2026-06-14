@@ -5,11 +5,11 @@ It reads persisted artifact data from the Gallery API.
 
 ## Modules
 
-- [`src/api`](src/api): frontend API boundary. Calls the artifact repository read path through `VITE_ARTIFACT_API_URL`
-- [`src/types`](src/types): TypeScript artifact types used for the API response and gallery rendering
-- [`src/components`](src/components): WebTiles-style panels, filters, cards, item details, and nickname crawl UI
-- [`public/tiles`](public/tiles): local DCSS tile PNG assets
-- [`reference/`](reference/): DCSS/WebTiles UI references and regression comparison screenshots
+- [`src/api`](docs/ko/api.md): frontend API boundary. Calls the artifact repository read path through `VITE_ARTIFACT_API_URL`
+- [`src/types`](docs/ko/types.md): TypeScript artifact types used for the API response and gallery rendering
+- [`src/components`](docs/ko/components.md): WebTiles-style panels, filters, cards, item details, and player filter UI
+- [`public/tiles`](docs/ko/public-tiles.md): local DCSS tile PNG assets
+- [`reference/`](docs/ko/reference.md): DCSS/WebTiles UI references and regression comparison screenshots
 - [docs/en/style-sources.md](docs/en/style-sources.md): source notes for the WebTiles CSS/font recreation
 - [UI Reference](docs/en/ui-reference.md): DCSS item UI reference material based on the DCInside roguelike gallery
 - [Current UI Screenshots](docs/en/current-ui-screenshots.md): current UI screenshots for regression comparison

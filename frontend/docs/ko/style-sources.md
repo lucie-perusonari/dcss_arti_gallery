@@ -18,7 +18,7 @@
 - `.describe-item`
 - `.fg0` through `.fg15`
 
-- `.describe-item > .header` 내 아이템 타일은 32x32 `canvas`로 렌더링되며, WebTiles의 describe 패널 구조를 따릅니다.
+- `.describe-item > .header` 내 아이템 타일은 64x64 `canvas`에 그린 뒤 CSS에서 데스크톱 48px, 모바일 40px로 표시하며, WebTiles의 describe 패널 구조를 따릅니다.
 - 갤러리 frontend는 DCSS 게임 클라이언트를 실행하지 않지만, 아이템 설명 창은 WebTiles와 동일한 팝업 레이아웃, 폰트, 색상 팔레트, 캔버스 타일 슬롯, `pre-wrap` 동작으로 렌더링합니다.
 
 실제 DCSS 아이템 설명창의 패널 밀도, 짙은 배경, 픽셀 타일 처리, monospace 설명 텍스트의 시각 기준은

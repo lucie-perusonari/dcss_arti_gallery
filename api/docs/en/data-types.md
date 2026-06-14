@@ -1,7 +1,7 @@
 # API Data Types
 
 This document defines the public response DTOs owned by `api`.
-Even when the API models resemble the MongoDB-stored crawl artifact documents, they are maintained separately as the
+Even when the API models resemble the MongoDB-stored artifact read model, they are maintained separately as the
 public API contract.
 
 `api` does not import `crawl_service`.

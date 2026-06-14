@@ -8,7 +8,7 @@
 - 운영 Gallery frontend 정적 파일은 prod compose의 `reverse-proxy` 이미지가 빌드해 Caddy에서 제공합니다.
 - 운영 Admin frontend 정적 파일은 prod compose의 `admin-frontend` 이미지가 빌드해 host loopback에만 제공합니다.
 - 운영 기본 포트 `27017`과 database `dcss_arti_gallery`를 기준으로 합니다.
-- Prometheus는 host loopback에만 bind하고, `/metrics`는 reverse proxy에서 외부 접근을 차단합니다.
+- Prometheus는 host loopback에만 bind하고, Gallery API의 `/api/metrics`는 reverse proxy에서 외부 접근을 차단합니다.
 - raw crawler와 artifact parser는 기본 stack과 분리된 `jobs` profile의 one-shot service로만 실행합니다.
 - 운영 주기 실행은 compose가 아니라 cron 같은 외부 scheduler가 `run_pipeline_once.sh`를 호출해 담당합니다.
 

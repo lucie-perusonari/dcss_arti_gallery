@@ -18,7 +18,7 @@ The item detail panel uses the same class naming as WebTiles.
 - `.describe-item`
 - `.fg0` through `.fg15`
 
-- The item tile in `.describe-item > .header` is rendered as a 32x32 `canvas`, following the WebTiles describe panel structure.
+- The item tile in `.describe-item > .header` is drawn into a 64x64 `canvas` and displayed at 48px on desktop or 40px on mobile, following the WebTiles describe panel structure.
 - The gallery frontend does not run the DCSS game client, but the item description window is rendered with the same popup layout, font, color palette, canvas tile slot, and `pre-wrap` behavior used by WebTiles.
 
 For the actual DCSS item description panel density, dark background, pixel tile treatment, and monospace description text, use `frontend/reference/dcinside-log-gallery/`.

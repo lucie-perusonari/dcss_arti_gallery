@@ -57,6 +57,7 @@ Prometheus Gallery API metrics
 
 여러 서비스 경계를 건드리는 변경은 dev compose stack 기준으로 검증합니다. 자동화할 상세 통과 조건은
 [infra dev 문서](infra/docs/ko/dev.md)의 `검증 기준`을 봅니다.
+중앙 검증 매트릭스는 따로 유지하지 않고, 서비스별 실행/테스트/빌드 명령은 각 서비스 README를 기준으로 합니다.
 
 ## 책임 경계
 
@@ -68,3 +69,4 @@ Prometheus Gallery API metrics
 - `admin-frontend`는 운영 대시보드를 소유하고, crawl 상태 데이터는 Admin API를 통해서만 읽습니다.
 - `infra`는 개발/운영 Docker Compose stack과 MongoDB index 같은 인프라 작업을 소유합니다. application repository가 infra DDL을 대신 수행하지 않습니다.
 - 루트 `scripts/`는 장기적으로 제거 대상입니다. 실행용 스크립트는 해당 서비스 아래에 두고, mock 검증 로직과 테스트 fixture 생성기는 테스트 파일 또는 테스트 패키지 안에 둡니다. 운영 로직에 빠지면 안 되는 필수 생성기만 예외적으로 서비스 아래에 유지합니다.
+- 옛 루트 패키지 `morgue`, `application`, `artifacts`, `evaluation`, `documents`, `repositories`, `cli`는 새 기능의 소유 위치로 다시 도입하지 않습니다.

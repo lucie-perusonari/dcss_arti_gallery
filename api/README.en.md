@@ -8,13 +8,13 @@ and the API-owned Pydantic DTOs.
 
 ## Modules
 
-- [`app.py`](app.py): gallery FastAPI app factory, CORS setup, and gallery router wiring
-- [`metrics.py`](metrics.py): Gallery API Prometheus metrics registry, HTTP middleware, and `/metrics` endpoint
-- [`routes.py`](routes.py): gallery read endpoints
-- [`models.py`](models.py): artifact API response DTOs
-- [`presenter.py`](presenter.py): converts persisted artifact documents into public response shapes
-- [`repository.py`](repository.py): MongoDB artifact read repository. DDL such as index creation is owned by `infra/`.
-- [`tests/`](tests/): Gallery API response contract and read-only repository checks
+- [`app.py`](docs/ko/app.md): gallery FastAPI app factory, CORS setup, and gallery router wiring
+- [`metrics.py`](docs/ko/metrics.md): Gallery API Prometheus metrics registry, HTTP middleware, and `/metrics` endpoint
+- [`routes.py`](docs/ko/routes.md): gallery read endpoints
+- [`models.py`](docs/ko/models.md): artifact API response DTOs
+- [`presenter.py`](docs/ko/presenter.md): converts persisted artifact documents into public response shapes
+- [`repository.py`](docs/ko/repository.md): MongoDB artifact read repository. DDL such as index creation is owned by `infra/`.
+- [`tests/`](docs/ko/tests.md): Gallery API response contract and read-only repository checks
 
 ## Endpoints
 
@@ -48,6 +48,14 @@ The gallery API default CORS origins are `http://localhost:5173` and `http://127
 Adjust them with `ARTIFACT_API_CORS_ORIGINS` or `ARTIFACT_API_CORS_ORIGIN_REGEX` if needed.
 Prometheus metrics are enabled by default. Production reverse proxy config keeps `/metrics` private; set
 `ARTIFACT_API_METRICS_ENABLED=0` to disable the endpoint and middleware.
+
+Key MongoDB environment variables:
+
+| Environment variable | Default | Description |
+| --- | --- | --- |
+| `MONGODB_URI` | `mongodb://localhost:27018` | MongoDB connection string. Compose injects `mongodb://mongo:27017` internally. |
+| `MONGODB_DATABASE` | `dcss_arti_gallery` | Database name. |
+| `MONGODB_COLLECTION` | `artifacts` | Artifact read model collection read by the Gallery API. |
 
 ## Tests
 

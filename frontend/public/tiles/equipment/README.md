@@ -36,7 +36,7 @@ variation에서도 같은 이미지로 쓰일 수 있습니다.
 - `ego`: 84
 - `artifact`: 294
 
-원본 PNG 기준 고유 파일 수는 711개입니다. 여러 분류에 중복 복사된 원본 PNG는 17개입니다.
+원본 PNG 기준 고유 파일 수는 711개입니다. 여러 분류에 중복 복사된 원본 PNG는 69개입니다.
 API가 모든 gallery item을 randart로 표시하기 위해 ring/amulet/staff randart 후보와 talisman 타일은
 `artifact` 아래에도 복사해 둡니다.
 

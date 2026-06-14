@@ -62,6 +62,8 @@ python3 -m crawl_service.worker --once
 
 Docker Compose에서 crawler는 live morgue crawl을 수행하므로 기본 stack에는 포함되지 않고 `jobs` profile의
 one-shot job으로만 실행합니다.
+네트워크 동작 확인이 필요하거나 사용자가 명시적으로 요청한 경우가 아니라면, 검증 목적으로 live morgue
+crawl을 실행하지 않습니다.
 
 ```sh
 docker compose -f infra/dev/docker-compose.yml run --rm crawl-service
@@ -69,6 +71,25 @@ docker compose -f infra/prod/docker-compose.yml run --rm crawl-service
 ```
 
 저장된 raw source를 artifact read model로 재생성하려면 compose의 `arti-parser` job을 실행합니다.
+
+주요 환경 변수:
+
+| 환경 변수 | 기본값 | 설명 |
+| --- | --- | --- |
+| `MONGODB_URI` | `mongodb://localhost:27018` | MongoDB 연결 문자열입니다. compose 내부에서는 `mongodb://mongo:27017`을 주입합니다. |
+| `MONGODB_DATABASE` | `dcss_arti_gallery` | 사용할 database 이름입니다. |
+| `MONGODB_RAW_FILES_COLLECTION` | `raw_morgue_files` | raw morgue 원본 저장 컬렉션입니다. |
+| `MONGODB_CRAWL_FILES_COLLECTION` | `crawl_files` | 파일별 crawl 상태 컬렉션입니다. |
+| `MONGODB_CRAWL_USERS_COLLECTION` | `crawl_users` | user directory scan 상태 컬렉션입니다. |
+| `MORGUE_BASE_URL` | `https://archive.nemelex.cards/morgue` | 원격 morgue root URL입니다. |
+| `MORGUE_REQUEST_DELAY_SECONDS` | `1.0` | HTTP 요청 사이 최소 delay입니다. |
+| `MORGUE_REQUEST_TIMEOUT_SECONDS` | `20.0` | HTTP 요청 timeout입니다. |
+| `MORGUE_USER_AGENT` | `dcss-arti-gallery-crawler/0.1` | remote morgue 요청 user agent입니다. |
+| `CRAWL_START_DATE` | `2026-01-01` | 대상 user/file 시작일입니다. |
+| `CRAWL_LOOP_INTERVAL_SECONDS` | `604800` | worker pass 사이 대기 시간입니다. |
+| `CRAWL_USER_SKIP_MODE` | `conservative` | `conservative` 또는 `modified_at`입니다. |
+| `CRAWL_LOG_LEVEL` | `INFO` | worker logging level입니다. |
+| `CRAWL_ONCE` | `false` | `1`, `true`, `yes`, `on`이면 한 번의 crawl pass만 실행하고 종료합니다. |
 
 ## 테스트
 

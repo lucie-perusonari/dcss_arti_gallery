@@ -58,6 +58,14 @@ python3 -m uvicorn api.app:app --host 0.0.0.0 --port 8000
 Prometheus 메트릭은 기본 활성화되어 있으며, 운영 reverse proxy에서는 `/metrics`를 외부에 공개하지 않는 구성을 사용합니다.
 필요하면 `ARTIFACT_API_METRICS_ENABLED=0`으로 endpoint와 middleware를 끌 수 있습니다.
 
+주요 MongoDB 환경 변수:
+
+| 환경 변수 | 기본값 | 설명 |
+| --- | --- | --- |
+| `MONGODB_URI` | `mongodb://localhost:27018` | MongoDB 연결 문자열입니다. compose 내부에서는 `mongodb://mongo:27017`을 주입합니다. |
+| `MONGODB_DATABASE` | `dcss_arti_gallery` | 사용할 database 이름입니다. |
+| `MONGODB_COLLECTION` | `artifacts` | Gallery API가 읽는 artifact read model 컬렉션입니다. |
+
 ## 테스트
 
 ```sh

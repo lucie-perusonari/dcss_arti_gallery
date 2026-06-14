@@ -13,7 +13,7 @@
 
 - `src/api`: `VITE_ARTIFACT_API_URL` 기반 Gallery API client
 - `src/types`: API 응답과 갤러리 렌더링에 쓰는 TypeScript artifact 타입
-- `src/components`: WebTiles 스타일 패널, 필터, 카드, 아이템 상세, 닉네임 크롤 UI
+- `src/components`: WebTiles 스타일 패널, 필터, 카드, 아이템 상세, 플레이어 필터 UI
 - `public/tiles`: 로컬 DCSS 타일 PNG 자산
 - `docs/ko/style-sources.md`: WebTiles CSS/font 출처 기록
 - `reference`: DCInside 로그라이크 갤러리를 기준으로 한 DCSS 아이템 UI 참고 자료

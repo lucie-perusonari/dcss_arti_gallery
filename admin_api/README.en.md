@@ -6,12 +6,12 @@ import `crawl_service`.
 
 ## Modules
 
-- [`app.py`](app.py): admin FastAPI app factory, CORS setup, and admin router wiring
-- [`routes.py`](routes.py): crawl operations dashboard status endpoints
-- [`models.py`](models.py): admin status response DTOs
-- [`repository.py`](repository.py): read repository for crawl file/user/raw file status
-- [`prometheus.py`](prometheus.py): Gallery API metrics read repository backed by the Prometheus HTTP API
-- [`tests/`](tests/): Admin API response contract and MongoDB read checks
+- [`app.py`](docs/ko/app.md): admin FastAPI app factory, CORS setup, and admin router wiring
+- [`routes.py`](docs/ko/routes.md): crawl operations dashboard status endpoints
+- [`models.py`](docs/ko/models.md): admin status response DTOs
+- [`repository.py`](docs/ko/repository.md): read repository for crawl file/user/raw file status
+- [`prometheus.py`](docs/ko/prometheus.md): Gallery API metrics read repository backed by the Prometheus HTTP API
+- [`tests/`](docs/ko/tests.md): Admin API response contract and MongoDB read checks
 
 ## Endpoints
 
@@ -48,7 +48,20 @@ The admin API default CORS origins are `http://localhost:5174` and `http://127.0
 `ADMIN_CRAWL_STATUS_CACHE_SECONDS` controls the in-process `/admin/crawl-status` cache TTL and defaults to `5` seconds.
 Adjust them with `ADMIN_API_CORS_ORIGINS` or `ADMIN_API_CORS_ORIGIN_REGEX` if needed.
 Gallery API metrics use `PROMETHEUS_URL`, defaulting to `http://localhost:9090`.
+`PROMETHEUS_TIMEOUT_SECONDS` defaults to `3`, and `PROMETHEUS_METRICS_WINDOW_SECONDS` defaults to `300`.
 Artifact processing status is read from `MONGODB_ARTIFACT_PROCESSING_COLLECTION`, defaulting to `artifact_processing_files`.
+
+Key MongoDB environment variables:
+
+| Environment variable | Default | Description |
+| --- | --- | --- |
+| `MONGODB_URI` | `mongodb://localhost:27018` | MongoDB connection string. Compose injects `mongodb://mongo:27017` internally. |
+| `MONGODB_DATABASE` | `dcss_arti_gallery` | Database name. |
+| `MONGODB_COLLECTION` | `artifacts` | Collection used for artifact counts. |
+| `MONGODB_RAW_FILES_COLLECTION` | `raw_morgue_files` | Collection read for raw fetch/process status. |
+| `MONGODB_CRAWL_FILES_COLLECTION` | `crawl_files` | File-level crawl status collection. |
+| `MONGODB_CRAWL_USERS_COLLECTION` | `crawl_users` | User scan status collection. |
+| `MONGODB_ARTIFACT_PROCESSING_COLLECTION` | `artifact_processing_files` | Artifact processing status collection. |
 
 ## Tests
 

@@ -7,7 +7,7 @@ persisted artifact data는 Gallery API에서 읽습니다.
 
 - [`src/api`](docs/ko/api.md): frontend API 경계와 `VITE_ARTIFACT_API_URL` 기반 Gallery API client
 - [`src/types`](docs/ko/types.md): API 응답과 갤러리 렌더링에 쓰는 TypeScript artifact 타입
-- [`src/components`](docs/ko/components.md): WebTiles 스타일 패널, 필터, 카드, 아이템 상세, 닉네임 크롤 UI
+- [`src/components`](docs/ko/components.md): WebTiles 스타일 패널, 필터, 카드, 아이템 상세, 플레이어 필터 UI
 - [`public/tiles`](docs/ko/public-tiles.md): 로컬 DCSS 타일 PNG 자산
 - [`reference/`](docs/ko/reference.md): DCSS/WebTiles UI 레퍼런스와 회귀 비교용 스냅샷
 
@@ -18,6 +18,7 @@ English version: [README.en.md](README.en.md)
 - Gallery API 응답을 사용해 artifact 갤러리 화면을 렌더링합니다.
 - frontend TypeScript 타입과 API 응답 사용 경계를 소유합니다.
 - DCSS/WebTiles 스타일의 갤러리 UI, 타일 사용, 상세 패널 표현을 소유합니다.
+- persisted artifact data는 Gallery API 외 경로로 직접 읽지 않습니다.
 
 ## 실행
 

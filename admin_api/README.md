@@ -56,8 +56,21 @@ docker compose -f infra/dev/docker-compose.yml up admin-api
 Admin API 기본 CORS origin은 `http://localhost:5174`와 `http://127.0.0.1:5174`입니다.
 필요하면 `ADMIN_API_CORS_ORIGINS` 또는 `ADMIN_API_CORS_ORIGIN_REGEX`로 조정합니다.
 Gallery API 메트릭 조회는 `PROMETHEUS_URL`을 사용하며 기본값은 `http://localhost:9090`입니다.
+`PROMETHEUS_TIMEOUT_SECONDS` 기본값은 `3`, `PROMETHEUS_METRICS_WINDOW_SECONDS` 기본값은 `300`입니다.
 Artifact 처리 상태는 `MONGODB_ARTIFACT_PROCESSING_COLLECTION`에서 읽고, 기본값은 `artifact_processing_files`입니다.
 `ADMIN_CRAWL_STATUS_CACHE_SECONDS`는 `/admin/crawl-status`의 in-process cache TTL이며 기본값은 `5`초입니다.
+
+주요 MongoDB 환경 변수:
+
+| 환경 변수 | 기본값 | 설명 |
+| --- | --- | --- |
+| `MONGODB_URI` | `mongodb://localhost:27018` | MongoDB 연결 문자열입니다. compose 내부에서는 `mongodb://mongo:27017`을 주입합니다. |
+| `MONGODB_DATABASE` | `dcss_arti_gallery` | 사용할 database 이름입니다. |
+| `MONGODB_COLLECTION` | `artifacts` | artifact count를 읽는 컬렉션입니다. |
+| `MONGODB_RAW_FILES_COLLECTION` | `raw_morgue_files` | raw fetch/process 상태를 읽는 컬렉션입니다. |
+| `MONGODB_CRAWL_FILES_COLLECTION` | `crawl_files` | 파일별 crawl 상태 컬렉션입니다. |
+| `MONGODB_CRAWL_USERS_COLLECTION` | `crawl_users` | user scan 상태 컬렉션입니다. |
+| `MONGODB_ARTIFACT_PROCESSING_COLLECTION` | `artifact_processing_files` | artifact 처리 상태 컬렉션입니다. |
 
 ## 테스트
 

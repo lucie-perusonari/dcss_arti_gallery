@@ -5,12 +5,12 @@ It reads crawl file/user/raw file status and Gallery API metrics from the Admin 
 
 ## Modules
 
-- [`src/App.tsx`](src/App.tsx): crawl status dashboard UI
-- [`src/api/status.ts`](src/api/status.ts): admin API client backed by `VITE_ADMIN_API_URL`
-- [`src/types/status.ts`](src/types/status.ts): TypeScript types for Admin API responses
-- [`src/styles.css`](src/styles.css): dashboard layout and status styling
-- [`vite.config.ts`](vite.config.ts): Vite build/dev configuration
-- [`tests/test_mock_smoke.py`](tests/test_mock_smoke.py): mock admin API smoke test
+- [`src/App.tsx`](docs/ko/app.md): crawl status dashboard UI
+- [`src/api/status.ts`](docs/ko/api-status.md): admin API client backed by `VITE_ADMIN_API_URL`
+- [`src/types/status.ts`](docs/ko/types-status.md): TypeScript types for Admin API responses
+- [`src/styles.css`](docs/ko/styles.md): dashboard layout and status styling
+- [`vite.config.ts`](docs/ko/vite-config.md): Vite build/dev configuration
+- [`tests/test_mock_smoke.py`](docs/ko/mock-smoke-test.md): mock admin API smoke test
 
 ## Runtime
 

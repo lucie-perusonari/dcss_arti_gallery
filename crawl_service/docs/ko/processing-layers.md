@@ -35,8 +35,8 @@ remote morgue
 - `CRAWL_START_DATE`: 대상 user/file 시작일. 기본값은 `2026-01-01`.
 - `MORGUE_REQUEST_DELAY_SECONDS`: HTTP 요청 사이 최소 delay. 기본값은 `1.0`.
 - `CRAWL_LOOP_INTERVAL_SECONDS`: worker pass 사이 대기 시간. 기본값은 `604800`초(7일).
-- `MORGUE_REQUEST_TIMEOUT_SECONDS`: HTTP 요청 timeout. 기본값은 fetcher 기본값.
-- `MORGUE_USER_AGENT`: remote morgue 요청 user agent.
+- `MORGUE_REQUEST_TIMEOUT_SECONDS`: HTTP 요청 timeout. 기본값은 `20.0`.
+- `MORGUE_USER_AGENT`: remote morgue 요청 user agent. 기본값은 `dcss-arti-gallery-crawler/0.1`.
 - `CRAWL_USER_SKIP_MODE`: `conservative` 또는 `modified_at`. 기본값은 `conservative`.
 - `CRAWL_LOG_LEVEL`: worker logging level. 기본값은 `INFO`.
 - `CRAWL_ONCE`: `1`, `true`, `yes`, `on`이면 한 번의 crawl pass만 실행하고 종료한다.

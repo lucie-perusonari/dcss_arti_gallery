@@ -11,10 +11,10 @@
 
 ## 환경 구분
 
-| 환경 | 경로 | 기본 컨테이너 | 기본 포트 | 기본 DB |
-| --- | --- | --- | --- | --- |
-| dev | `infra/dev` | `dcss-arti-gallery-mongo-dev` | `27018` | `dcss_arti_gallery` |
-| prod | `infra/prod` | `dcss-arti-gallery-mongo-prod` | `27017` | `dcss_arti_gallery` |
+| 환경 | 경로 | MongoDB endpoint | 기본 DB |
+| --- | --- | --- | --- |
+| dev | `infra/dev` | host `127.0.0.1:27018`, compose 내부 `mongo:27017` | `dcss_arti_gallery` |
+| prod | `infra/prod` | compose 내부 `mongo:27017` | `dcss_arti_gallery` |
 
 개발과 운영 실행은 Docker Compose 경로인 `infra/dev/docker-compose.yml` 또는
 `infra/prod/docker-compose.yml`만 기준으로 합니다.
@@ -32,6 +32,11 @@
   raw crawler와 artifact parser는 compose `jobs` profile의 one-shot service로만 실행합니다.
 - Admin API 테스트 유틸은 MongoDB lifecycle을 직접 관리하지 않습니다. 테스트 전에 compose dev MongoDB를
   올리거나 `MONGODB_URI`, `MONGODB_DATABASE`를 명시합니다.
+- 루트 `scripts/`에는 새 실행 스크립트나 mock 검증 로직을 추가하지 않습니다.
+- mock/fake server, smoke test helper, fixture 생성기는 테스트 자산으로 취급해 해당 서비스의 `tests/`
+  또는 테스트 패키지 아래에 둡니다.
+- 생성용 스크립트는 기본적으로 새로 만들지 않습니다. 운영 로직에 빠지면 안 되는 필수 생성기만
+  생성 산출물을 소유한 서비스 아래에 둘 수 있으며, 산출물과 유지 이유를 해당 README 또는 docs에 문서화합니다.
 
 ## Prod 정책
 
@@ -40,7 +45,7 @@
 - 운영 Admin frontend 정적 파일은 prod compose의 `admin-frontend` 이미지가 빌드해 host loopback에만 제공합니다.
 - prod MongoDB index DDL은 compose의 `mongo-indexes` service가 `infra/ensure_mongo_indexes.py`를 통해 수행합니다.
 - prod raw crawler와 artifact parser는 `jobs` profile의 one-shot service로 분리되어 cron 같은 외부 scheduler가 실행합니다.
-- Prometheus는 host `127.0.0.1:9090`에만 bind하고, reverse proxy는 `/metrics`, `/docs`, `/redoc`, `/openapi.json`을 외부에 노출하지 않습니다.
+- Prometheus는 host `127.0.0.1:9090`에만 bind하고, reverse proxy는 Gallery API의 `/api/metrics`, `/api/docs`, `/api/redoc`, `/api/openapi.json`을 외부에 노출하지 않습니다.
 - Admin API는 Prometheus HTTP API를 내부 network에서 read-only로 query하며, 기본 host bind는 `127.0.0.1:8001`입니다.
 - Grafana는 host `127.0.0.1:3000`에만 bind하고, Prometheus datasource와 Gallery API dashboard를 provisioning합니다.
 - 개발 스크립트와 테스트 유틸에서 `infra/prod`를 호출하면 안 됩니다.
@@ -86,3 +91,29 @@ infra/prod/run_pipeline_once.sh
 - Admin API: `http://127.0.0.1:18001`
 - Prometheus: `http://127.0.0.1:19090`
 - Grafana: `http://127.0.0.1:13000/d/dcss-gallery-api/dcss-gallery-api`
+
+## Compose override 환경 변수
+
+개발 compose는 다음 host bind port override를 지원합니다.
+
+| 환경 변수 | 기본값 | 대상 |
+| --- | --- | --- |
+| `DEV_MONGO_PORT` | `27018` | dev MongoDB host port |
+| `DEV_API_PORT` | `18000` | Gallery API host port |
+| `DEV_ADMIN_API_PORT` | `18001` | Admin API host port |
+| `DEV_FRONTEND_PORT` | `15173` | Gallery frontend host port |
+| `DEV_ADMIN_FRONTEND_PORT` | `15174` | Admin frontend host port |
+| `DEV_PROMETHEUS_PORT` | `19090` | Prometheus host port |
+| `DEV_GRAFANA_PORT` | `13000` | Grafana host port |
+
+운영 compose는 다음 배포 override를 지원합니다.
+
+| 환경 변수 | 기본값 | 대상 |
+| --- | --- | --- |
+| `PUBLIC_DOMAIN` | `perusonari.ddns.net` | Caddy public hostname |
+| `PUBLIC_HTTP_PORT` | `80` | reverse proxy HTTP host port |
+| `PUBLIC_HTTPS_PORT` | `443` | reverse proxy HTTPS host port |
+| `ADMIN_API_PORT` | `8001` | Admin API loopback host port |
+| `ADMIN_FRONTEND_PORT` | `5174` | Admin frontend loopback host port |
+| `GRAFANA_PORT` | `3000` | Grafana loopback host port |
+| `MONGO_VOLUME` | 환경별 `~/.local/var/dcss-arti-gallery/...` | MongoDB host data directory |
