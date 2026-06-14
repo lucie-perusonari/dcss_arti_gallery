@@ -23,9 +23,12 @@ artifact read model을 재생성하는 배치 처리 모듈입니다.
 ## 책임 범위
 
 - `raw_morgue_files`에서 `fetch_status: "fetched"`인 `.txt`, `.lst` 원본을 읽습니다.
+- raw morgue 원문에서 DCSS version을 추출하고 `0.29` 이상 정식 release/trunk만 처리합니다.
+- 변종 version suffix가 보이거나 version이 없으면 artifact 문서를 생성하지 않습니다.
 - morgue/lst 텍스트에서 랜덤 아티팩트 블록을 추출합니다.
 - 아이템 이름, enchantment, base item, property token, visible description을 파싱합니다.
 - unrandart와 일반 magic item을 제외하고 랜덤 아티팩트만 문서화합니다.
+- `cursed` randart는 접두사를 제거해 문서화하고, Ashenzari skill boost 속성은 ignored metadata로만 보존합니다.
 - base item intrinsic 속성과 랜덤 속성을 분리합니다.
 - 랜덤 속성 기준으로 artifact 평가 점수와 등급을 계산합니다.
 - `artifacts` 컬렉션에 갤러리/API가 읽는 canonical artifact document를 upsert합니다.
@@ -151,13 +154,16 @@ Compose job의 MongoDB 연결 환경 변수:
 - `occurrence_id`: raw source, line, display name 기반 occurrence 식별자입니다.
 - `canonical_key`: `id` 계산에 쓰는 normalized artifact signature입니다.
 - `name`, `base_item`, `base_subtype`: 표시 이름과 base item 정보입니다.
-- `item_class`, `item_subtype`, `weapon_subtype`, `armour_slot`, `jewellery_slot`: 갤러리 필터와 렌더링에 쓰는 분류 필드입니다.
+- `item_class`, `item_subtype`, `weapon_subtype`, `armour_subtype`, `armour_slot`, `jewellery_slot`: 갤러리 필터와 렌더링에 쓰는 분류 필드입니다.
+  `armour_subtype`은 `hat`, `helmet`, `pair of gloves`처럼 같은 armour slot 안의 원본 장비 타입입니다.
 - `attributes`: 파싱된 property token, normalized key/value, visible description입니다.
+- `ignored_attributes`: Ashenzari skill boost처럼 원문 근거만 보존하고 표시/평가하지 않는 속성입니다.
 - `all_attributes`, `base_attributes`, `random_attributes`: 전체 속성, base intrinsic 속성, 실제 랜덤 속성입니다.
 - `evaluation`: 총점, practical score, rarity score, grade, 세부 점수입니다.
 - `visible_item_description`, `visible_description_labels`, `raw_text_block`: UI 표시와 디버깅용 원문 근거입니다.
 - `item_location`, `item_source`: 대표 occurrence에서 확인한 위치/상점 정보입니다.
 - `source`: 대표 occurrence의 player, file, URL, line metadata입니다.
+- `source.version`: raw morgue 원문에서 추출한 DCSS version입니다.
 - `sources`, `occurrence_ids`, `source_count`, `first_source`, `first_discovered_by`, `known_seeds`, `updated_at`: canonical artifact에 누적된 source evidence metadata입니다.
 - `sources[].game_ended_at`, `latest_game_ended_at`: morgue 파일명(`morgue-<player>-YYYYMMDD-HHMMSS.*`)에서
   파싱한 게임 시각입니다. Gallery API의 최근 게임 범위 조회와 MongoDB 인덱스에 사용합니다.

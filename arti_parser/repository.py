@@ -19,7 +19,7 @@ DEFAULT_MONGO_ARTIFACT_PROCESSING_COLLECTION = "artifact_processing_files"
 FETCH_STATUS_FETCHED = "fetched"
 PROCESSING_STATUS_COMPLETED = "completed"
 PROCESSING_STATUS_FAILED = "failed"
-ARTIFACT_METADATA_VERSION = "game-ended-at-v1"
+ARTIFACT_METADATA_VERSION = "source-version-v1"
 MORGUE_FILE_DATE_RE = re.compile(r"-(?P<date>\d{8})-(?P<time>\d{6})(?:\.[^.]+)?$")
 RAW_FILE_METADATA_PROJECTION = {
     "_id": 0,
@@ -472,6 +472,7 @@ def _artifact_source_evidence(
         "game_ended_at": _game_ended_at_from_file(raw_file.name),
         "url": artifact.source.url,
         "line": artifact.source.line,
+        "version": artifact.source.version,
         "item_location": artifact.item_location,
         "item_source": artifact.item_source,
         "source_content_hash": raw_file.content_hash,
@@ -500,6 +501,7 @@ def _artifact_sources_from_document(document: dict) -> list[dict]:
                 "game_ended_at": source.get("game_ended_at") or document.get("latest_game_ended_at"),
                 "url": source.get("url"),
                 "line": source.get("line"),
+                "version": source.get("version") or document.get("source_version"),
                 "item_location": document.get("item_location"),
                 "item_source": document.get("item_source"),
                 "source_content_hash": document.get("source_content_hash", ""),
@@ -609,6 +611,7 @@ def _public_source_from_evidence(source: dict) -> dict:
         "file": source.get("file", ""),
         "url": source.get("url"),
         "line": source.get("line"),
+        "version": source.get("version"),
     }
 
 
@@ -618,6 +621,7 @@ def _apply_representative_source(document: dict, source: dict) -> None:
     document["item_location"] = source.get("item_location")
     document["item_source"] = source.get("item_source")
     document["source_content_hash"] = source.get("source_content_hash", "")
+    document["source_version"] = source.get("version")
 
 
 def _is_source_for_raw_file(source: dict, raw_file: RawMorgueSource) -> bool:

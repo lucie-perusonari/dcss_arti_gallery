@@ -36,5 +36,6 @@ artifact별 반복 regex/parse 비용을 줄입니다.
 - `cursed`와 `chaotic` prefix는 randart 정체성이 아니라 item status flag로 취급합니다.
   원문은 extractor의 `raw_text_block`에 남기고, randart 판정과 출력 이름에는 prefix를 제거한
   normalized name을 사용합니다.
+- 고정 아티팩트 제외 규칙은 `cursed`/`chaotic` prefix 여부와 무관하게 항상 적용합니다.
 - randart 제외 규칙은 `UNRANDART_NAME_KEYS`, `EXCLUDED_RANDOM_ARTIFACT_NAME_KEYS`,
   plain magic item 판정과 연결됩니다.

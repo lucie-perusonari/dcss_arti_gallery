@@ -14,13 +14,20 @@
 
 ## 처리 흐름
 
-1. raw 확장자에 따라 `.txt` 또는 `.lst` block을 찾습니다.
-2. block title에서 artifact 후보 이름을 얻습니다.
-3. `parser.py`로 display name, enchantment, base item, property token을 파싱합니다.
-4. `cursed`/`chaotic` 같은 item status prefix를 제거한 이름으로 unrandart와 일반 magic item을 제외합니다.
-5. `classifier.py`로 item metadata와 base/random attribute를 분리합니다.
-6. `evaluator.py`로 점수와 등급을 계산합니다.
-7. source metadata, visible description, raw block, 위치 정보를 포함한 문서를 만듭니다.
+1. raw text 앞부분에서 DCSS version을 추출하고 처리 대상 version인지 확인합니다.
+2. raw 확장자에 따라 `.txt` 또는 `.lst` block을 찾습니다.
+3. block title에서 artifact 후보 이름을 얻습니다.
+4. `parser.py`로 display name, enchantment, base item, property token을 파싱합니다.
+5. `cursed`/`chaotic` 같은 item status prefix를 제거한 이름으로 unrandart와 일반 magic item을 제외합니다.
+6. `classifier.py`로 item metadata와 base/random attribute를 분리합니다.
+7. `evaluator.py`로 점수와 등급을 계산합니다.
+8. source version metadata, visible description, raw block, 위치 정보를 포함한 문서를 만듭니다.
+
+## Version gate
+
+처리 대상은 DCSS `0.29` 이상 정식 release와 trunk morgue입니다. Version 문자열이 없거나
+`0.29` 미만이면 artifact 문서를 생성하지 않습니다. `bcrawl`, `bloatcrawl`, `hellcrawl`,
+`custom`, `fork` 같은 비표준 suffix가 보이면 변종 데이터로 보고 저장하지 않습니다.
 
 원문 title은 `raw_text_block`과 occurrence evidence에 유지하고, 저장 문서의 `name`에는
 출력용 normalized name을 사용합니다.

@@ -26,6 +26,7 @@ from arti_parser.parser import (
     artifact_base_item,
     artifact_display_name,
     artifact_enchantment_and_base_text,
+    artifact_ignored_attributes,
     artifact_status_prefixes,
     is_random_artifact,
     normalized_artifact_name,
@@ -48,13 +49,29 @@ class MorgueRawText(Protocol):
 
 ARTIFACT_ID_SLUG_RE = re.compile(r"[^a-z0-9]+")
 PLAYER_RE = re.compile(r"morgue-(?P<player>.+?)-\d{8}-\d{6}\.(?:txt|lst)$")
+DCSS_VERSION_RE = re.compile(r"Dungeon Crawl Stone Soup version (?P<version>\S+)")
+VERSION_NUMBER_RE = re.compile(r"^(?P<major>\d+)\.(?P<minor>\d+)")
+VARIANT_VERSION_MARKERS = {
+    "bcrawl",
+    "bloatcrawl",
+    "hellcrawl",
+    "custom",
+    "fork",
+}
 
 
 def extract_artifact_documents(raw_text: MorgueRawText) -> list[ArtifactDocument]:
     """Build storage-ready artifact documents from one raw morgue text."""
 
+    if raw_text.extension.lower() not in {"txt", "lst"}:
+        raise ValueError(f"unsupported morgue raw extension: {raw_text.extension!r}")
+
+    source_version = _source_version(raw_text.text)
+    if not _is_supported_source_version(source_version):
+        return []
+
     documents: list[ArtifactDocument] = []
-    for raw_artifact in _raw_artifacts(raw_text):
+    for raw_artifact in _raw_artifacts(raw_text, source_version=source_version):
         parsed = _parse_artifact(raw_artifact)
         if not is_random_artifact(
             display_name=parsed.display_name,
@@ -104,6 +121,7 @@ class _RawBlock:
 class _RawArtifact:
     source_name: str | None
     source_url: str | None
+    source_version: str | None
     line_no: int
     name: str
     raw_text_block: str
@@ -123,6 +141,7 @@ class _ParsedArtifact:
     enchantment: int | None
     base_item: str
     attributes: list[ArtifactDocumentAttribute]
+    ignored_attributes: list[ArtifactDocumentAttribute]
 
 
 @dataclass(frozen=True)
@@ -143,7 +162,11 @@ class _LstContext:
         return self
 
 
-def _raw_artifacts(raw: MorgueRawText) -> Iterator[_RawArtifact]:
+def _raw_artifacts(
+    raw: MorgueRawText,
+    *,
+    source_version: str | None,
+) -> Iterator[_RawArtifact]:
     extension = raw.extension.lower()
     if extension == "txt":
         blocks = _txt_blocks(raw.text.splitlines())
@@ -157,6 +180,7 @@ def _raw_artifacts(raw: MorgueRawText) -> Iterator[_RawArtifact]:
             block,
             source_name=raw.name,
             source_url=raw.url,
+            source_version=source_version,
         )
 
 
@@ -172,6 +196,7 @@ def _parse_artifact(raw: _RawArtifact) -> _ParsedArtifact:
         enchantment=enchantment,
         base_item=base_item,
         attributes=artifact_attributes(raw.name, raw.visible_item_description),
+        ignored_attributes=artifact_ignored_attributes(raw.name, raw.visible_item_description),
     )
 
 
@@ -256,11 +281,13 @@ def _raw_artifact_from_block(
     *,
     source_name: str | None,
     source_url: str | None,
+    source_version: str | None,
 ) -> _RawArtifact:
     descriptions, labels, subtype = _description_lines(block.lines[1:])
     return _RawArtifact(
         source_name=source_name,
         source_url=source_url,
+        source_version=source_version,
         line_no=block.line_no,
         name=block.title,
         raw_text_block="\n".join(block.lines),
@@ -364,12 +391,13 @@ def _artifact_document_from_parts(
         id=_artifact_id_from_key(parsed.display_name, canonical_key),
         occurrence_id=_artifact_id_from_key(parsed.raw.name, occurrence_key),
         canonical_key=canonical_key,
-        name=parsed.normalized_name,
+        name=_artifact_document_name(parsed, classification),
         base_item=parsed.base_item,
         base_subtype=parsed.raw.base_subtype,
         item_class=classification.item_class,
         item_subtype=classification.item_subtype,
         weapon_subtype=classification.weapon_subtype,
+        armour_subtype=classification.armour_subtype,
         armour_slot=classification.armour_slot,
         jewellery_slot=classification.jewellery_slot,
         enchantment=parsed.enchantment,
@@ -379,14 +407,16 @@ def _artifact_document_from_parts(
             file=source_file,
             url=parsed.raw.source_url,
             line=line_no,
+            version=parsed.raw.source_version,
         ),
         attributes=parsed.attributes,
+        ignored_attributes=parsed.ignored_attributes,
         all_attributes=classification.all_attributes,
         base_attributes=classification.base_attributes,
         random_attributes=classification.random_attributes,
-        all_attribute_text=", ".join(classification.all_attributes),
-        base_attribute_text=", ".join(classification.base_attributes),
-        random_attribute_text=", ".join(classification.random_attributes),
+        all_attribute_text=" ".join(classification.all_attributes),
+        base_attribute_text=" ".join(classification.base_attributes),
+        random_attribute_text=" ".join(classification.random_attributes),
         evaluation=evaluation,
         visible_item_description=parsed.raw.visible_item_description,
         visible_description_labels=parsed.raw.visible_description_labels,
@@ -400,6 +430,19 @@ def _artifact_id_from_key(name: str, key: str) -> str:
     digest = hashlib.sha1(key.encode("utf-8")).hexdigest()[:10]
     slug = ARTIFACT_ID_SLUG_RE.sub("-", name.lower()).strip("-")
     return f"{slug[:48]}-{digest}" if slug else digest
+
+
+def _artifact_document_name(
+    parsed: _ParsedArtifact,
+    classification: ArtifactClassification,
+) -> str:
+    article = "the " if parsed.raw.name.strip().casefold().startswith("the ") else ""
+    property_block = (
+        f" {{{' '.join(classification.all_attributes)}}}"
+        if classification.all_attributes
+        else ""
+    )
+    return f"{article}{parsed.display_name}{property_block}".strip()
 
 
 def _artifact_canonical_key(
@@ -426,6 +469,28 @@ def _artifact_canonical_key(
 
 def _normalize_key(value: str) -> str:
     return " ".join(value.casefold().split())
+
+
+def _source_version(raw_text: str) -> str | None:
+    for line in raw_text.splitlines()[:40]:
+        match = DCSS_VERSION_RE.search(line)
+        if match:
+            return match.group("version").strip()
+    return None
+
+
+def _is_supported_source_version(version: str | None) -> bool:
+    if not version:
+        return False
+    normalized = version.casefold()
+    if any(marker in normalized for marker in VARIANT_VERSION_MARKERS):
+        return False
+    match = VERSION_NUMBER_RE.match(version)
+    if match is None:
+        return False
+    major = int(match.group("major"))
+    minor = int(match.group("minor"))
+    return (major, minor) >= (0, 29)
 
 
 def _player_from_source(source_file: str) -> str:

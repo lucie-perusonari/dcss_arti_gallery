@@ -367,6 +367,7 @@ DCSS_ARMOUR_SLOTS = {'acid dragon scales': 'body_armour',
  'cloak': 'cloak',
  'crystal plate armour': 'body_armour',
  'fire dragon scales': 'body_armour',
+ 'gold dragon scales': 'body_armour',
  'gloves': 'gloves',
  'golden dragon scales': 'body_armour',
  'hat': 'helmet',
@@ -1079,6 +1080,7 @@ BASE_ITEM_ATTRIBUTES = {
 
 UNRANDART_NAMES = set(DCSS_UNRANDART_NAMES)
 UNRANDART_NAME_ALIASES = {
+    "hood of the Assassin",
     "pair of gauntlets of War",
     "pair of gloves of the gadgeteer",
     "partisan of Prune",

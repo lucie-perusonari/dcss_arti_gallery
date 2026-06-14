@@ -13,6 +13,7 @@
 - `item_class`: `weapon`, `armour`, `jewellery`, `staff`, `talisman`, `misc`, `unknown`.
 - `item_subtype`: class별 UI 표시와 필터에 쓰는 subtype입니다.
 - `weapon_subtype`: weapon일 때 `melee` 또는 `ranged`.
+- `armour_subtype`: armour일 때 `hat`, `helmet`, `pair of gloves`처럼 같은 slot 안의 원본 장비 타입입니다.
 - `armour_slot`: armour일 때 `shield`, `helmet`, `boots`, `gloves`, `cloak`, `orb`,
   `body armour` 등입니다.
 - `jewellery_slot`: jewellery일 때 `ring` 또는 `amulet`.

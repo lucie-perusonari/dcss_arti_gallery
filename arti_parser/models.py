@@ -14,6 +14,7 @@ class ArtifactDocumentSource(BaseModel):
     file: str
     url: str | None
     line: int
+    version: str | None = None
 
 
 class ArtifactDocumentAttribute(BaseModel):
@@ -58,12 +59,14 @@ class ArtifactDocument(BaseModel):
     item_class: str
     item_subtype: str
     weapon_subtype: str | None
+    armour_subtype: str | None = None
     armour_slot: str | None
     jewellery_slot: str | None
     enchantment: int | None
     brand: str | None
     source: ArtifactDocumentSource
     attributes: list[ArtifactDocumentAttribute]
+    ignored_attributes: list[ArtifactDocumentAttribute] = []
     all_attributes: list[str]
     base_attributes: list[str]
     random_attributes: list[str]

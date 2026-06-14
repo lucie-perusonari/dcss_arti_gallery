@@ -24,6 +24,7 @@ class ArtifactClassification:
     item_class: str
     item_subtype: str
     weapon_subtype: str | None
+    armour_subtype: str | None
     armour_slot: str | None
     jewellery_slot: str | None
     brand: str | None
@@ -42,7 +43,8 @@ def classify_artifact(
 ) -> ArtifactClassification:
     """Return all classification fields needed for document construction."""
 
-    armour_slot = _armour_slot_from_fields(display_name, base_item)
+    armour_subtype = _armour_subtype_from_fields(display_name, base_item)
+    armour_slot = _armour_slot_from_fields(display_name, base_item, armour_subtype)
     item_class = _item_class_from_fields(
         display_name=display_name,
         base_item=base_item,
@@ -51,6 +53,7 @@ def classify_artifact(
         armour_slot=armour_slot,
     )
     if item_class != "armour":
+        armour_subtype = None
         armour_slot = None
 
     visible_attributes = _dedupe([attribute.token for attribute in attributes])
@@ -72,6 +75,7 @@ def classify_artifact(
             armour_slot=armour_slot,
         ),
         weapon_subtype=_weapon_subtype(base_item, item_class),
+        armour_subtype=armour_subtype,
         armour_slot=armour_slot,
         jewellery_slot=_jewellery_slot_from_fields(item_class, base_item, base_subtype),
         brand=brand,
@@ -191,22 +195,41 @@ def _jewellery_slot_from_fields(
     return None
 
 
-def _armour_slot_from_fields(display_name: str, base_item: str) -> str | None:
+def _armour_subtype_from_fields(display_name: str, base_item: str) -> str | None:
     normalized_base_item = base_item.lower()
     normalized_display_name = display_name.lower()
-    if normalized_base_item in SHIELD_ITEMS:
+    if "pair of boots" in normalized_display_name:
+        return "pair of boots"
+    if "pair of gloves" in normalized_display_name:
+        return "pair of gloves"
+    return normalized_base_item
+
+
+def _armour_slot_from_fields(
+    display_name: str,
+    base_item: str,
+    armour_subtype: str | None,
+) -> str | None:
+    normalized_armour_subtype = (armour_subtype or "").lower()
+    normalized_base_item = base_item.lower()
+    normalized_display_name = display_name.lower()
+    if normalized_armour_subtype in SHIELD_ITEMS:
         return "shield"
-    if normalized_base_item in HELMET_ITEMS:
+    if normalized_armour_subtype in HELMET_ITEMS:
         return "helmet"
-    if normalized_base_item in BOOTS_ITEMS or "pair of boots" in normalized_display_name:
+    if normalized_armour_subtype in BOOTS_ITEMS or "pair of boots" in normalized_display_name:
         return "boots"
-    if normalized_base_item in GLOVES_ITEMS or "pair of gloves" in normalized_display_name or "fisticloak" in normalized_base_item:
+    if (
+        normalized_armour_subtype in GLOVES_ITEMS
+        or "pair of gloves" in normalized_display_name
+        or "fisticloak" in normalized_base_item
+    ):
         return "gloves"
-    if normalized_base_item in CLOAK_ITEMS:
+    if normalized_armour_subtype in CLOAK_ITEMS:
         return "cloak"
-    if normalized_base_item == "orb":
+    if normalized_armour_subtype == "orb":
         return "orb"
-    if any(marker in normalized_base_item for marker in BODY_ARMOUR_MARKERS):
+    if any(marker in normalized_armour_subtype for marker in BODY_ARMOUR_MARKERS):
         return "body armour"
     return None
 

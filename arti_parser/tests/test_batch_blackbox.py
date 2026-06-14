@@ -281,13 +281,137 @@ class ArtifactProcessingBlackBoxTest(unittest.TestCase):
         )
         self.assertTrue(any(document["id"] == "other-source" for document in artifacts.documents))
 
+    def test_batch_skips_unsupported_source_versions(self) -> None:
+        raw_files = _Collection()
+        artifacts = _Collection()
+        processing = _Collection()
+        repository = MongoArtifactProcessingRepository(
+            raw_file_collection=raw_files,
+            artifacts_collection=artifacts,
+            processing_collection=processing,
+        )
+        raw_files.documents.extend(
+            [
+                _raw_record(
+                    "old",
+                    "morgue-old-20260101-000001.txt",
+                    "\n".join(
+                        [
+                            "Dungeon Crawl Stone Soup version 0.28.0",
+                            "Inventory:",
+                            ' a - the ring "Old" {rF+}',
+                            "     [ring of protection from fire]",
+                            "   Skills:",
+                        ]
+                    ),
+                    "old-hash",
+                    add_version=False,
+                ).to_dict(),
+                _raw_record(
+                    "forked",
+                    "morgue-forked-20260101-000001.txt",
+                    "\n".join(
+                        [
+                            "Dungeon Crawl Stone Soup version 0.32-bcrawl",
+                            "Inventory:",
+                            ' a - the ring "Fork" {rF+}',
+                            "     [ring of protection from fire]",
+                            "   Skills:",
+                        ]
+                    ),
+                    "fork-hash",
+                    add_version=False,
+                ).to_dict(),
+            ]
+        )
+
+        summary = ArtifactProcessingBatchProcessor(repository).process_batch(limit=10)
+
+        self.assertEqual(summary.raw_files_processed, 2)
+        self.assertEqual(summary.artifacts_written, 0)
+        self.assertEqual(artifacts.documents, [])
+        self.assertEqual([record["artifact_count"] for record in processing.documents], [0, 0])
+
+    def test_batch_records_version_and_filters_cursed_ashenzari_boosts(self) -> None:
+        raw_files = _Collection()
+        artifacts = _Collection()
+        processing = _Collection()
+        repository = MongoArtifactProcessingRepository(
+            raw_file_collection=raw_files,
+            artifacts_collection=artifacts,
+            processing_collection=processing,
+        )
+        raw_files.documents.append(
+            _raw_record(
+                "ash",
+                "morgue-ash-20260101-000001.txt",
+                "\n".join(
+                    [
+                        "Inventory:",
+                        ' a - the cursed ring "Vision" {rElec rF+ Fighting+3 Long Blades+2 Str+2}',
+                        "     [ring of protection from fire]",
+                        "   Skills:",
+                    ]
+                ),
+                "ash-hash",
+            ).to_dict()
+        )
+
+        ArtifactProcessingBatchProcessor(repository).process_batch(limit=10)
+
+        artifact = artifacts.documents[0]
+        self.assertEqual(artifact["name"], 'the ring "Vision" {rElec rF+ Str+2}')
+        self.assertEqual(artifact["source"]["version"], "0.32.1")
+        self.assertEqual(artifact["sources"][0]["version"], "0.32.1")
+        self.assertEqual(
+            [attribute["token"] for attribute in artifact["ignored_attributes"]],
+            ["Fighting+3", "Long Blades+2"],
+        )
+        self.assertNotIn("Fighting+3", artifact["all_attributes"])
+        self.assertNotIn("Long Blades+2", artifact["all_attributes"])
+        self.assertIn("rF+", artifact["base_attributes"])
+        self.assertIn("rElec", artifact["random_attributes"])
+
+    def test_batch_excludes_unrandarts_even_when_cursed(self) -> None:
+        raw_files = _Collection()
+        artifacts = _Collection()
+        processing = _Collection()
+        repository = MongoArtifactProcessingRepository(
+            raw_file_collection=raw_files,
+            artifacts_collection=artifacts,
+            processing_collection=processing,
+        )
+        raw_files.documents.append(
+            _raw_record(
+                "fixed",
+                "morgue-fixed-20260101-000001.txt",
+                "\n".join(
+                    [
+                        "Inventory:",
+                        ' a - the cursed +9 sword of Zonguldrok {reap}',
+                        "   Skills:",
+                    ]
+                ),
+                "fixed-hash",
+            ).to_dict()
+        )
+
+        ArtifactProcessingBatchProcessor(repository).process_batch(limit=10)
+
+        self.assertEqual(artifacts.documents, [])
+        self.assertEqual(processing.documents[0]["artifact_count"], 0)
+
 
 def _raw_record(
     player: str,
     name: str,
     text: str,
     content_hash: str,
+    *,
+    add_version: bool = True,
 ) -> RawMorgueSource:
+    if add_version and name.rsplit(".", 1)[-1] in {"txt", "lst"}:
+        text = "Dungeon Crawl Stone Soup version 0.32.1\n" + text
     return RawMorgueSource(
         player=player,
         name=name,
