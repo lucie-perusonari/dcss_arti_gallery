@@ -67,11 +67,18 @@
 - 서비스별 실행 스크립트와 문서가 compose 기반 실행 경로와 중복되던 문제를 해결했습니다.
   - 서비스 루트의 개별 실행 `.sh`와 관련 상세 문서를 제거하고, 실행 기준을 compose 문서로 통일했습니다.
 
+- 장비 기준 문서에 게임 참고 정보와 `arti_parser` 정책이 섞여 있던 문제를 정리했습니다.
+  - DCSS 장비, morgue brand alias, Ashenzari curse group 같은 게임 정보는 equipment reference에 남겼습니다.
+  - parser 소유 분류, 후보 제외, brand alias 처리 정책은 `arti_parser/docs/classifier.md`에 반영했습니다.
+  - attribute 필드 계약과 Ashenzari `ignored_attributes` 보존 규칙은 `arti_parser/docs/models.md`에 반영했습니다.
+  - weapon stat과 최저 공격 delay 기준은 `arti_parser/docs/evaluator.md`에 반영했습니다.
+
 ### 추가된 기능
 
 - Admin API에서 crawl 처리 상태를 조회할 수 있는 repository 흐름을 추가했습니다.
 - DCSS item 검수용 에이전트 스킬과 Ashenzari morgue token 참고 자료를 추가했습니다.
-- `EQUIPS.md`를 추가해 장비 속성과 artifact token 검수 기준을 문서화했습니다.
+- DCSS 장비와 morgue 표기 참고 정보는 `.agents/skills/dcss-item-audit/references/equipment-reference.md`에 남기고,
+  parser 소유 분류/속성/평가 정책은 `arti_parser/docs/`의 모듈 문서에 반영했습니다.
 - Gallery API 응답에 `allAttributes`, `baseAttributes`, `discovery`를 추가했습니다.
 
 ### 운영 영향
@@ -83,11 +90,17 @@
 - 저장 metadata가 바뀌어 `artifact_processing_files.metadata_version` 기준 재처리 대상이 늘어날 수 있습니다.
 - 프론트엔드 배포 시 새 equipment tile 자산 경로가 함께 배포되어야 합니다.
 - 서비스 실행은 개별 서비스 `.sh`가 아니라 `infra/dev` 또는 `infra/prod`의 compose 경로를 기준으로 합니다.
+- 서비스 검증도 `infra/dev` 또는 `infra/prod` compose 경로를 기준으로 합니다.
+- reverse proxy에서는 Gallery API의 `/api/metrics`, `/api/docs`, `/api/redoc`, `/api/openapi.json` 외부 노출
+  차단 정책을 확인해야 합니다.
+- Admin API 배포 환경에서는 `PROMETHEUS_URL`, `PROMETHEUS_TIMEOUT_SECONDS`,
+  `PROMETHEUS_METRICS_WINDOW_SECONDS` 값을 확인해야 합니다.
 
 ### 알려진 이슈
 
 - beta 단계이므로 DCSS 버전별 오래된 morgue 표현과 일부 edge case artifact token은 추가 검수가 필요할 수 있습니다.
 - parser/scoring 결과는 원본 raw morgue 재처리 여부에 따라 기존 read model과 일시적으로 다를 수 있습니다.
+- API 테스트에서 기존 `MongoClient` ResourceWarning이 출력될 수 있지만 테스트는 정상 종료됩니다.
 
 ### 검증
 

@@ -38,6 +38,22 @@
 - `artifact_processing_files.metadata_version`: 저장 문서 보조 metadata가 추가될 때 기존 raw file을
   한 번 다시 처리하기 위한 processing record version입니다.
 
+## Attribute 필드 계약
+
+- `all_attributes`: visible token, weapon brand, base intrinsic attribute를 합친 표시 대상 전체 속성입니다.
+- `base_attributes`: base item 또는 base subtype이 원래 가지는 intrinsic 속성입니다.
+- `random_attributes`: 평가에 들어가는 실제 랜덤 속성입니다.
+- `ignored_attributes`: 원문 근거는 보존하지만 표시/평가하지 않는 속성입니다.
+
+`random_attributes`는 evaluator의 핵심 입력입니다. 원본 속성이 `random_attributes`에 섞이면 원본
+아이템 자체가 과평가될 수 있으므로 base intrinsic attribute와 random attribute를 분리해야 합니다.
+
+Ashenzari curse group token은 아이템 자체의 고유 속성이 아닙니다. Property block의 `Self`, `Melee`,
+`Range`, `Elem`, `Sorc`, `Comp`, `Bglg`, `Fort`, `Cun`, `Dev`, 구버전 `Evo`는 `ignored_attributes`에
+보존하고 `all_attributes`, `random_attributes`, 점수 평가, 필터, token display에는 포함하지 않습니다.
+설명문에 나오는 `Fighting`, `Spellcasting`, `Maces & Flails` 같은 skill 이름은 group token의 의미를
+설명하는 텍스트이며 artifact attribute로 추출하지 않습니다.
+
 ## 변경 시 주의점
 
 - 모델은 `ConfigDict(frozen=True)`로 불변에 가깝게 사용됩니다.

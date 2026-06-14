@@ -116,6 +116,10 @@ Weapon은 공격 도구로 평가합니다. 무기 자체의 가치는 `enchantm
 Weapon base item은 `damage * (10 / min_delay)`를 기준 power로 계산합니다. `min_delay`는 현재
 DCSS weapon speed에서 추정한 최저 공격 delay입니다.
 
+`DCSS_WEAPON_STATS`의 base damage, hit 보정, speed 값을 기준으로 하며, 최저 공격 delay는
+`max(3, speed // 2)`로 계산합니다. 같은 weapon skill 안의 damage 등급은 게임 정보 참고 문서인
+`.agents/skills/dcss-item-audit/references/equipment-reference.md`의 무기 표를 참고합니다.
+
 양손 무기는 같은 weapon skill의 한손 종결 weapon power를 기준점으로 삼습니다. 기준점보다 높은
 초과분은 절반만 인정하고, shield를 들 수 없는 opportunity cost로 별도 감점을 적용합니다.
 
