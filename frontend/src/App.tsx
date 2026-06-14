@@ -37,16 +37,20 @@ const weaponCategories: Record<string, string> = {
   bardiche: "polearms",
   battleaxe: "axes",
   "broad axe": "axes",
+  club: "maces & flails",
   dagger: "short blades",
   "demon blade": "long blades",
   "demon trident": "polearms",
   "demon whip": "maces & flails",
   "dire flail": "maces & flails",
   "double sword": "long blades",
+  "eudemon blade": "long blades",
   eveningstar: "maces & flails",
   "executioner's axe": "axes",
   falchion: "long blades",
   flail: "maces & flails",
+  "giant club": "maces & flails",
+  "giant spiked club": "maces & flails",
   glaive: "polearms",
   "great mace": "maces & flails",
   "great sword": "long blades",
@@ -62,15 +66,19 @@ const weaponCategories: Record<string, string> = {
   orcbow: "ranged",
   partisan: "polearms",
   quarterstaff: "staves",
+  "quick blade": "short blades",
   rapier: "short blades",
+  "sacred scourge": "maces & flails",
   scimitar: "long blades",
   "short sword": "short blades",
   shortbow: "ranged",
   sling: "ranged",
   spear: "polearms",
+  staff: "staves",
   trident: "polearms",
   "triple crossbow": "ranged",
   "triple sword": "long blades",
+  trishula: "polearms",
   "war axe": "axes",
   whip: "maces & flails",
 };
@@ -164,6 +172,17 @@ export function App() {
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const apiFilters = useMemo<ArtifactFilters>(
+    () => ({
+      search: filters.search,
+      type: filters.type,
+      slot: "all",
+      luxuryOnly: false,
+      player: filters.player,
+      timeRange: filters.timeRange,
+    }),
+    [filters.player, filters.search, filters.timeRange, filters.type],
+  );
 
   useEffect(() => {
     artifactApi
@@ -178,17 +197,10 @@ export function App() {
     setError(null);
 
     artifactApi
-      .listArtifacts(filters)
+      .listArtifacts(apiFilters)
       .then((items) => {
         if (!active) return;
         setArtifacts(items);
-        const visibleItems = artifactsMatchingFilters(items, filters);
-        setSelectedId((current) => {
-          if (visibleItems.length === 0) return null;
-          return current && visibleItems.some((item) => item.id === current)
-            ? current
-            : visibleItems[0].id;
-        });
       })
       .catch((reason: unknown) => {
         if (!active) return;
@@ -203,7 +215,7 @@ export function App() {
     return () => {
       active = false;
     };
-  }, [filters]);
+  }, [apiFilters]);
 
   const slotOptions = useMemo(
     () => slotOptionsForArtifacts(artifacts, filters.type, filters.luxuryOnly),
@@ -213,6 +225,16 @@ export function App() {
     () => artifactsMatchingFilters(artifacts, filters),
     [artifacts, filters],
   );
+
+  useEffect(() => {
+    setSelectedId((current) => {
+      if (displayedArtifacts.length === 0) return null;
+      return current && displayedArtifacts.some((item) => item.id === current)
+        ? current
+        : displayedArtifacts[0].id;
+    });
+  }, [displayedArtifacts]);
+
   const selectedArtifact = useMemo(
     () =>
       displayedArtifacts.find((artifact) => artifact.id === selectedId) ??

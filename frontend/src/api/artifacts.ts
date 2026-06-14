@@ -7,6 +7,7 @@ import type {
 const API_BASE_URL = (import.meta.env.VITE_ARTIFACT_API_URL ?? "").trim();
 const ARTIFACTS_PER_TYPE_LIMIT = 200;
 const ARTIFACTS_PAGE_LIMIT = 1000;
+const ARTIFACTS_RECENT_LOAD_LIMIT = 1000;
 
 type ArtifactResponse = {
   artifacts: Artifact[];
@@ -59,14 +60,26 @@ async function fetchArtifacts(
   return data.artifacts;
 }
 
-async function fetchAllArtifacts(params: URLSearchParams): Promise<Artifact[]> {
+async function fetchAllArtifacts(
+  params: URLSearchParams,
+  maxArtifacts?: number,
+): Promise<Artifact[]> {
   const artifacts: Artifact[] = [];
   let offset = 0;
 
   while (true) {
     const pageParams = new URLSearchParams(params);
     pageParams.set("offset", String(offset));
-    const page = await fetchArtifacts(pageParams, ARTIFACTS_PAGE_LIMIT);
+    const remainingArtifacts =
+      maxArtifacts === undefined
+        ? ARTIFACTS_PAGE_LIMIT
+        : maxArtifacts - artifacts.length;
+    if (remainingArtifacts <= 0) break;
+
+    const page = await fetchArtifacts(
+      pageParams,
+      Math.min(ARTIFACTS_PAGE_LIMIT, remainingArtifacts),
+    );
     artifacts.push(...page);
 
     if (page.length < ARTIFACTS_PAGE_LIMIT) break;
@@ -98,7 +111,7 @@ export const artifactApi = {
     if (filters.timeRange !== "all") {
       params.set("type", filters.type);
       if (filters.type === "all") params.delete("type");
-      return fetchAllArtifacts(params);
+      return fetchAllArtifacts(params, ARTIFACTS_RECENT_LOAD_LIMIT);
     }
 
     if (filters.type !== "all") {
