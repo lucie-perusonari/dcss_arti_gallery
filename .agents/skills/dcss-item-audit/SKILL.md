@@ -24,6 +24,10 @@ description: Audit DCSS item, artefact, property-token, equipment-stat, and morg
 
 For source-of-truth priority and reference URLs, read `references/source-of-truth.md`.
 
+For repository-specific equipment classification, weapon stats, base intrinsic attributes,
+weapon brand handling, and display/evaluation separation rules, read
+`references/equipment-reference.md`.
+
 Use `rg` first:
 
 ```bash
