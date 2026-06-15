@@ -33,6 +33,7 @@ const weaponCategoryOrder = [
 const luxuryMinimumEnchantment = 8;
 const luxuryWeaponMinimumScore = 45;
 const luxuryArmourMinimumScore = 55;
+const luxuryFallbackMinimumScore = 45;
 
 const weaponCategories: Record<string, string> = {
   arbalest: "ranged",
@@ -470,7 +471,7 @@ function weaponCategoryRank(category: string) {
 function isLuxuryArtifact(artifact: Artifact) {
   if (artifact.type === "weapon") return isLuxuryWeapon(artifact);
   if (artifact.type === "armour") return isLuxuryArmour(artifact);
-  return false;
+  return artifact.score.total >= luxuryFallbackMinimumScore;
 }
 
 function isLuxuryWeapon(artifact: Artifact) {

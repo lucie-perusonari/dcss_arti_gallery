@@ -18,6 +18,9 @@
   - `Found By @player datetime`과 `View original morgue.`를 하나의 source 묶음으로 표시합니다.
   - `@player`를 강조 표시하고, `Version`은 source 묶음 아래에 공백을 두고 별도 표시합니다.
 - 최상위 타입 필터에서 `All`을 제거하고, 표시 순서를 `Weapon`, `Armour`, `Jewellery`, `Staff`, `Talisman`으로 고정했습니다.
+- 명품 필터가 `weapon`, `armour` 외 타입을 모두 숨기던 문제를 완화했습니다.
+  - `jewellery`, `staff`, `talisman`은 임시로 `score.total >= 45` 기준을 사용합니다.
+  - 추후 타입별 명품 기준을 별도로 고도화해야 합니다.
 - Admin API가 `crawlActive`를 제공해 crawl 진행 여부를 dashboard에서 확인할 수 있게 했습니다.
 
 ### 구현 메모
