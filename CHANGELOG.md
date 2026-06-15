@@ -12,7 +12,7 @@
 
 - 전체 기간 또는 최근 30일 조회에서 특정 하위 카테고리의 artifact가 충분히 로드되지 않을 수 있던 문제를 해결했습니다.
   - Gallery API가 `displayCategory` query parameter와 `/filters.displayCategories`를 제공합니다.
-  - frontend는 30일/전체 기간 모두 타입별 하위 카테고리마다 200개씩 artifact를 로드합니다.
+  - frontend는 30일/전체 기간 모두 타입별 하위 카테고리마다 70개씩 artifact를 로드합니다.
   - 하위 필터 버튼은 `/filters.displayCategories`를 기준으로 만들기 때문에 DB에 존재하는 카테고리는 현재 로드된 목록 구성과 무관하게 표시됩니다.
 - artifact detail의 발견 정보가 source 링크와 분리되어 읽기 어려웠던 문제를 정리했습니다.
   - `Found By @player datetime`과 `View original morgue.`를 하나의 source 묶음으로 표시합니다.

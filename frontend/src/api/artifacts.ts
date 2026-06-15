@@ -6,7 +6,7 @@ import type {
 } from "../types/artifact";
 
 const API_BASE_URL = (import.meta.env.VITE_ARTIFACT_API_URL ?? "").trim();
-const ARTIFACTS_PER_DISPLAY_CATEGORY_LIMIT = 200;
+const ARTIFACTS_PER_DISPLAY_CATEGORY_LIMIT = 70;
 const ARTIFACTS_PAGE_LIMIT = 1000;
 
 type ArtifactResponse = {
