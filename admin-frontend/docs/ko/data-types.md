@@ -36,6 +36,7 @@
 - 정의 위치: `admin-frontend/src/types/status.ts`
 - 필드:
   - `artifactCount: number`
+  - `crawlActive: boolean`
   - `rawFiles: RawFileStatus`
   - `crawlFiles: Record<string, number>`
   - `crawlUsers: Record<string, number>`

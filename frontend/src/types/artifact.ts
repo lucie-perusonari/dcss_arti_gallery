@@ -49,3 +49,8 @@ export type ArtifactFilters = {
   player: string;
   timeRange: '30d' | 'all';
 };
+
+export type ArtifactFiltersMetadata = {
+  types: Array<ArtifactType | 'all'>;
+  displayCategories: Partial<Record<ArtifactType, string[]>>;
+};

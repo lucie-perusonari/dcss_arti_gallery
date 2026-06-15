@@ -18,10 +18,10 @@ and the API-owned Pydantic DTOs.
 
 ## Endpoints
 
-- `GET /artifacts`: list artifacts with `q`, `type`, `player`, `since`, `limit`, and `offset` filters
+- `GET /artifacts`: list artifacts with `q`, `type`, `displayCategory`, `player`, `since`, `limit`, and `offset` filters
 - `GET /artifacts/{artifact_id}`: read a single artifact
 - `GET /artifact-types`: list available artifact types
-- `GET /filters`: gallery filter metadata
+- `GET /filters`: gallery filter metadata, including available `types` and per-type `displayCategories`
 - `GET /metrics`: Prometheus scrape endpoint, disabled when `ARTIFACT_API_METRICS_ENABLED=0`
 
 ## Runtime

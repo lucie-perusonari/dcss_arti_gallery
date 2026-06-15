@@ -10,11 +10,15 @@
 - 용도: admin dashboard 상태 응답
 - 필드:
   - `artifactCount: int`
+  - `crawlActive: bool`
   - `rawFiles: RawFileStatus`
   - `crawlFiles: dict[str, int]`
   - `crawlUsers: dict[str, int]`
   - `latest: LatestActivity`
   - `recentErrors: list[CrawlError]`
+
+`crawlActive`는 admin API 프로세스가 관측한 `raw_morgue_files` 총 개수를 3분 이상 지난 샘플과 비교해
+증가했으면 `true`로 계산합니다. 별도 crawl service 내부 상태나 Docker 상태를 읽지 않습니다.
 
 ## `RawFileStatus`
 

@@ -132,6 +132,7 @@ export function App() {
         </Panel>
 
         <Panel title="Worker State">
+          <KeyValue label="Crawl active" value={status?.crawlActive ? 'yes' : 'no'} />
           <StatusCounts title="Users" values={status?.crawlUsers ?? {}} />
           <StatusCounts title="Files" values={status?.crawlFiles ?? {}} />
         </Panel>
@@ -206,6 +207,7 @@ function statusHealth(status: CrawlStatus | null): { label: string; tone: 'ok' |
   if (status.rawFiles.fetchFailed > 0 || status.rawFiles.processFailed > 0) {
     return { label: 'Needs attention', tone: 'bad' };
   }
+  if (status.crawlActive) return { label: 'Crawling', tone: 'ok' };
   if (status.rawFiles.processPending > 0) {
     return { label: 'Processing backlog', tone: 'warn' };
   }

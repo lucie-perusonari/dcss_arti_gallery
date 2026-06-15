@@ -6,16 +6,19 @@ import { ArtifactDetail } from "./components/ArtifactDetail";
 import { FilterBar } from "./components/FilterBar";
 import { NicknameCrawler } from "./components/NicknameCrawler";
 import { WebtilesShell } from "./components/WebtilesShell";
-import type { Artifact, ArtifactFilters, ArtifactType } from "./types/artifact";
+import type {
+  Artifact,
+  ArtifactFilters,
+  ArtifactFiltersMetadata,
+  ArtifactType,
+} from "./types/artifact";
 
-const artifactTypes: Array<ArtifactType | "all"> = [
-  "all",
+const artifactTypes: ArtifactType[] = [
   "weapon",
   "armour",
   "jewellery",
-  "talisman",
   "staff",
-  "misc",
+  "talisman",
 ];
 const weaponCategoryOrder = [
   "short blades",
@@ -139,6 +142,10 @@ const luxuryShieldBases = new Set([
   "shield",
   "tower shield",
 ]);
+const fallbackFiltersMetadata: ArtifactFiltersMetadata = {
+  types: artifactTypes,
+  displayCategories: {},
+};
 
 const getInitialFilters = (): ArtifactFilters => {
   const params = new URLSearchParams(window.location.search);
@@ -146,9 +153,9 @@ const getInitialFilters = (): ArtifactFilters => {
 
   return {
     search: params.get("search") ?? "",
-    type: artifactTypes.includes(type as ArtifactType | "all")
-      ? (type as ArtifactType | "all")
-      : "all",
+    type: artifactTypes.includes(type as ArtifactType)
+      ? (type as ArtifactType)
+      : "weapon",
     slot: params.get("slot") ?? "all",
     luxuryOnly: params.get("luxury") === "1",
     player: params.get("player") ?? "",
@@ -165,7 +172,9 @@ export function App() {
     getInitialFilters(),
   );
   const [artifacts, setArtifacts] = useState<Artifact[]>([]);
-  const [types, setTypes] = useState<Array<ArtifactType | "all">>(["all"]);
+  const [filtersMetadata, setFiltersMetadata] = useState<ArtifactFiltersMetadata>(
+    fallbackFiltersMetadata,
+  );
   const [selectedId, setSelectedId] = useState<string | null>(() =>
     getInitialSelectedId(),
   );
@@ -186,9 +195,14 @@ export function App() {
 
   useEffect(() => {
     artifactApi
-      .listTypes()
-      .then(setTypes)
-      .catch(() => setTypes(["all", "weapon", "armour", "jewellery", "misc"]));
+      .listFilters()
+      .then((metadata) =>
+        setFiltersMetadata({
+          ...metadata,
+          types: artifactTypes,
+        }),
+      )
+      .catch(() => setFiltersMetadata(fallbackFiltersMetadata));
   }, []);
 
   useEffect(() => {
@@ -218,8 +232,8 @@ export function App() {
   }, [apiFilters]);
 
   const slotOptions = useMemo(
-    () => slotOptionsForArtifacts(artifacts, filters.type, filters.luxuryOnly),
-    [artifacts, filters.type, filters.luxuryOnly],
+    () => slotOptionsForMetadata(filtersMetadata, filters.type),
+    [filters.type, filtersMetadata],
   );
   const displayedArtifacts = useMemo(
     () => artifactsMatchingFilters(artifacts, filters),
@@ -316,7 +330,7 @@ export function App() {
 
           <FilterBar
             filters={filters}
-            types={types}
+            types={artifactTypes}
             slots={slotOptions}
             onChange={setFilters}
           />
@@ -387,27 +401,20 @@ export function App() {
   );
 }
 
-function slotOptionsForArtifacts(
-  artifacts: Artifact[],
+function slotOptionsForMetadata(
+  filtersMetadata: ArtifactFiltersMetadata,
   type: ArtifactFilters["type"],
-  luxuryOnly: boolean,
 ) {
   if (type === "all") return ["all"];
-  const slots = new Set<string>();
-  artifacts.forEach((artifact) => {
-    if (artifact.type !== type) return;
-    if (luxuryOnly && !isLuxuryArtifact(artifact)) return;
-    const slot = slotForArtifact(artifact);
-    if (slot) slots.add(slot);
-  });
+  const slots = filtersMetadata.displayCategories[type] ?? [];
   const sortedSlots =
     type === "weapon"
-      ? Array.from(slots).sort(
+      ? [...slots].sort(
           (left, right) =>
             weaponCategoryRank(left) - weaponCategoryRank(right) ||
             left.localeCompare(right),
         )
-      : Array.from(slots).sort();
+      : [...slots].sort();
   return ["all", ...sortedSlots];
 }
 

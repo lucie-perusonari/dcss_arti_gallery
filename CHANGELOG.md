@@ -1,5 +1,75 @@
 # Changelog
 
+## beta-v3 - 2026-06-16
+
+### 요약
+
+- Gallery API와 frontend의 하위 카테고리 로딩 계약을 확장했습니다.
+- Admin API가 최근 raw morgue 증가 여부로 crawl 진행 상태를 표시하도록 했습니다.
+- artifact detail의 source/discovery 표시와 최상위 타입 필터 표시 순서를 정리했습니다.
+
+### 해결된 이슈
+
+- 전체 기간 또는 최근 30일 조회에서 특정 하위 카테고리의 artifact가 충분히 로드되지 않을 수 있던 문제를 해결했습니다.
+  - Gallery API가 `displayCategory` query parameter와 `/filters.displayCategories`를 제공합니다.
+  - frontend는 30일/전체 기간 모두 타입별 하위 카테고리마다 200개씩 artifact를 로드합니다.
+  - 하위 필터 버튼은 `/filters.displayCategories`를 기준으로 만들기 때문에 DB에 존재하는 카테고리는 현재 로드된 목록 구성과 무관하게 표시됩니다.
+- artifact detail의 발견 정보가 source 링크와 분리되어 읽기 어려웠던 문제를 정리했습니다.
+  - `Found By @player datetime`과 `View original morgue.`를 하나의 source 묶음으로 표시합니다.
+  - `@player`를 강조 표시하고, `Version`은 source 묶음 아래에 공백을 두고 별도 표시합니다.
+- 최상위 타입 필터에서 `All`을 제거하고, 표시 순서를 `Weapon`, `Armour`, `Jewellery`, `Staff`, `Talisman`으로 고정했습니다.
+- Admin API가 `crawlActive`를 제공해 crawl 진행 여부를 dashboard에서 확인할 수 있게 했습니다.
+
+### 구현 메모
+
+- 현재 `display_category` 저장 필드는 없습니다. API가 기존 `item_class`, `item_subtype`,
+  `armour_slot`, `jewellery_slot`, `weapon_subtype`, `base_item`에서 fallback 계산합니다.
+- 향후 read model에 `display_category`를 도입하면 API는 저장 필드를 우선 사용할 수 있습니다.
+- `crawlActive`는 Admin API 프로세스가 관측한 `raw_morgue_files` 총 개수를 3분 이상 지난 샘플과 비교해 증가 여부로 계산합니다.
+
+### 운영 영향
+
+- MongoDB schema migration은 포함하지 않습니다.
+- 기존 `artifacts` read model 재처리는 필요하지 않습니다.
+- 운영 배포는 `beta-v3` tag 기준으로 prod compose stack을 재빌드해 반영합니다.
+
+### 검증
+
+- 로컬 dev compose stack에서 Gallery API `/filters`, `displayCategory` 조회, Admin API `/admin/crawl-status` smoke 확인을 수행했습니다.
+- 프론트엔드 dev server HMR로 detail/source 표시와 타입 필터 변경을 확인했습니다.
+
+## beta-v2 - 2026-06-16
+
+### 요약
+
+- 운영 서버에 `beta-v2`를 배포하고, 갤러리에 표시되면 안 되는 운영 read model 문서를 정리했습니다.
+- `hammer`와 `scythe` 삭제 기준을 정정하고, 관련 raw file 재처리로 잘못 삭제된 문서를 복구했습니다.
+
+### 해결된 이슈
+
+- beta-v2 운영 데이터에서 갤러리에 표시되면 안 되는 read model 문서를 정리했습니다.
+  - `item_class: "unknown"`으로 분류된 문서 13개를 삭제했습니다.
+  - parser의 `UNRANDART_NAME_KEYS`와 같은 normalized name key 기준으로 고정 아티팩트 159개를 삭제했습니다.
+  - `hand crossbow`, `hunting sling`, `large shield`, `blowgun`, `fustibalus`, `sabre`, `cutlass`,
+    `bow`, `crossbow`, 구버전 `dragon armour` 표기처럼 현행 장비 기준에서 제외할 구버전 base item 문서를 삭제했습니다.
+  - `hammer`와 `scythe`는 각각 `mace`, `halberd` 계열로 취급해야 하므로 구버전 삭제 대상에서 제외하도록 정정했습니다.
+  - 잘못 삭제된 `hammer`/`scythe` 문서를 복구하기 위해 관련 raw file 4,004개를 `arti-parser`로 재처리했고,
+    재처리 후 되살아난 실제 구버전 제외 대상 19개를 다시 삭제했습니다.
+
+### 운영 영향
+
+- 운영 `artifacts` read model을 수동 정리한 경우, raw file을 강제 재처리하면 삭제한 문서가 다시 생성될 수 있습니다.
+  parser 제외 규칙이 반영되기 전에는 재처리 후 운영 데이터 정리 쿼리를 다시 적용해야 합니다.
+
+### 검증
+
+- 2026-06-16 운영 서버 beta-v2 배포 후 데이터 정리를 수행했습니다.
+  - `beta-v2` tag 기준 서버 repository 갱신과 `infra/prod/docker-compose.yml` 재빌드를 완료했습니다.
+  - `item_class: "unknown"` 문서 13개, 고정 아티팩트 159개, 구버전 base item 문서 1,601개를 삭제했습니다.
+  - 이후 `hammer`/`scythe` 삭제 기준을 정정하고 관련 raw file 4,004개를 재처리했습니다.
+  - 재처리 후 `hammer` 1,388개와 `scythe` 20개가 read model에 남아 있음을 확인했습니다.
+  - 재처리로 되살아난 실제 구버전 제외 대상 19개를 다시 삭제했고, `hand crossbow`/`hunting sling` 잔여 0개를 확인했습니다.
+
 ## beta - 2026-06-15
 
 ### 요약

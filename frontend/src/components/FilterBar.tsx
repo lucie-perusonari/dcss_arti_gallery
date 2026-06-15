@@ -2,13 +2,12 @@ import type { ArtifactFilters, ArtifactType } from '../types/artifact';
 
 type FilterBarProps = {
   filters: ArtifactFilters;
-  types: Array<ArtifactType | 'all'>;
+  types: ArtifactType[];
   slots: string[];
   onChange: (filters: ArtifactFilters) => void;
 };
 
-const typeLabels: Record<ArtifactType | 'all', string> = {
-  all: 'All',
+const typeLabels: Record<ArtifactType, string> = {
   weapon: 'Weapon',
   armour: 'Armour',
   jewellery: 'Jewellery',

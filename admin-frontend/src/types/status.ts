@@ -23,6 +23,7 @@ export type CrawlError = {
 
 export type CrawlStatus = {
   artifactCount: number;
+  crawlActive: boolean;
   rawFiles: RawFileStatus;
   crawlFiles: Record<string, number>;
   crawlUsers: Record<string, number>;

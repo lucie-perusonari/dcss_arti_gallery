@@ -38,6 +38,7 @@ class CrawlStatus(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     artifactCount: int
+    crawlActive: bool = False
     rawFiles: RawFileStatus
     crawlFiles: dict[str, int]
     crawlUsers: dict[str, int]

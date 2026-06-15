@@ -7,6 +7,11 @@ import re
 from datetime import UTC, datetime, timedelta
 from typing import Any, Protocol
 
+from api.display_category import (
+    display_category_filter,
+    display_category_for_document,
+    display_category_sort_key,
+)
 from api.models import ArtifactDocument
 from api.presenter import present_artifact_document
 
@@ -26,6 +31,7 @@ class ArtifactReadRepository(Protocol):
         self,
         query: str | None = None,
         item_type: str | None = None,
+        display_category: str | None = None,
         player: str | None = None,
         since_days: int | None = DEFAULT_RECENT_DAYS,
         limit: int = DEFAULT_ARTIFACT_LIMIT,
@@ -39,6 +45,9 @@ class ArtifactReadRepository(Protocol):
     def list_artifact_types(self) -> list[str]:
         ...
 
+    def list_display_categories(self) -> dict[str, list[str]]:
+        ...
+
 
 class MongoArtifactReadRepository:
     """MongoDB-backed read repository for the Gallery API."""
@@ -50,6 +59,7 @@ class MongoArtifactReadRepository:
         self,
         query: str | None = None,
         item_type: str | None = None,
+        display_category: str | None = None,
         player: str | None = None,
         since_days: int | None = DEFAULT_RECENT_DAYS,
         limit: int = DEFAULT_ARTIFACT_LIMIT,
@@ -58,6 +68,7 @@ class MongoArtifactReadRepository:
         mongo_filter = _artifact_query_filter(
             query=query,
             item_type=item_type,
+            display_category=display_category,
             player=player,
             since_days=since_days,
         )
@@ -75,11 +86,37 @@ class MongoArtifactReadRepository:
         types = sorted(type_name for type_name in self.collection.distinct("item_class") if type_name)
         return ["all", *types]
 
+    def list_display_categories(self) -> dict[str, list[str]]:
+        projection = {
+            "_id": False,
+            "display_category": True,
+            "item_class": True,
+            "item_subtype": True,
+            "base_item": True,
+            "weapon_subtype": True,
+            "armour_slot": True,
+            "jewellery_slot": True,
+        }
+        categories: dict[str, set[str]] = {}
+        for document in self.collection.find({}, projection):
+            item_class = str(document.get("item_class") or "").strip()
+            category = display_category_for_document(document)
+            if item_class and category:
+                categories.setdefault(item_class, set()).add(category)
+        return {
+            item_class: sorted(
+                values,
+                key=lambda category: display_category_sort_key(item_class, category),
+            )
+            for item_class, values in sorted(categories.items())
+        }
+
 
 def _artifact_query_filter(
     *,
     query: str | None,
     item_type: str | None,
+    display_category: str | None,
     player: str | None,
     since_days: int | None,
 ) -> dict[str, Any]:
@@ -87,6 +124,9 @@ def _artifact_query_filter(
 
     if item_type and item_type != "all":
         conditions.append({"item_class": item_type})
+
+    if display_category and display_category.strip() and display_category != "all":
+        conditions.append(display_category_filter(display_category))
 
     if since_days is not None:
         cutoff = datetime.now(UTC) - timedelta(days=max(since_days, 0))

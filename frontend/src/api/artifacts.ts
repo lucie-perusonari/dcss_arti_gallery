@@ -1,13 +1,13 @@
 import type {
   Artifact,
   ArtifactFilters,
+  ArtifactFiltersMetadata,
   ArtifactType,
 } from "../types/artifact";
 
 const API_BASE_URL = (import.meta.env.VITE_ARTIFACT_API_URL ?? "").trim();
-const ARTIFACTS_PER_TYPE_LIMIT = 200;
+const ARTIFACTS_PER_DISPLAY_CATEGORY_LIMIT = 200;
 const ARTIFACTS_PAGE_LIMIT = 1000;
-const ARTIFACTS_RECENT_LOAD_LIMIT = 1000;
 
 type ArtifactResponse = {
   artifacts: Artifact[];
@@ -47,7 +47,7 @@ async function apiError(response: Response, fallback: string) {
 
 async function fetchArtifacts(
   params: URLSearchParams,
-  limit = ARTIFACTS_PER_TYPE_LIMIT,
+  limit = ARTIFACTS_PER_DISPLAY_CATEGORY_LIMIT,
 ): Promise<Artifact[]> {
   params.set("limit", String(limit));
 
@@ -108,26 +108,21 @@ export const artifactApi = {
     if (filters.player.trim()) params.set("player", filters.player.trim());
     params.set("since", filters.timeRange);
 
-    if (filters.timeRange !== "all") {
-      params.set("type", filters.type);
-      if (filters.type === "all") params.delete("type");
-      return fetchAllArtifacts(params, ARTIFACTS_RECENT_LOAD_LIMIT);
-    }
-
-    if (filters.type !== "all") {
-      params.set("type", filters.type);
-      return fetchArtifacts(params, ARTIFACTS_PER_TYPE_LIMIT);
-    }
-
-    const types = (await this.listTypes()).filter(
+    const filtersMetadata = await this.listFilters();
+    const types = (
+      filters.type === "all" ? filtersMetadata.types : [filters.type]
+    ).filter(
       (type): type is ArtifactType => type !== "all",
     );
     const artifactGroups = await Promise.all(
-      types.map((type) => {
-        const typedParams = new URLSearchParams(params);
-        typedParams.set("type", type);
-        return fetchArtifacts(typedParams);
-      }),
+      types.flatMap((type) =>
+        displayCategoriesForType(filtersMetadata, type).map((displayCategory) => {
+          const typedParams = new URLSearchParams(params);
+          typedParams.set("type", type);
+          typedParams.set("displayCategory", displayCategory);
+          return fetchArtifacts(typedParams, ARTIFACTS_PER_DISPLAY_CATEGORY_LIMIT);
+        }),
+      ),
     );
     return uniqueArtifacts(artifactGroups);
   },
@@ -145,14 +140,22 @@ export const artifactApi = {
   },
 
   async listTypes(): Promise<Array<ArtifactType | "all">> {
+    return (await this.listFilters()).types;
+  },
+
+  async listFilters(): Promise<ArtifactFiltersMetadata> {
     requireApiBaseUrl();
 
-    const response = await fetch(apiUrl("/artifact-types"));
+    const response = await fetch(apiUrl("/filters"));
     if (!response.ok) {
-      throw await apiError(response, "Artifact type API failed");
+      throw await apiError(response, "Artifact filter API failed");
     }
 
-    return (await response.json()) as Array<ArtifactType | "all">;
+    const data = (await response.json()) as Partial<ArtifactFiltersMetadata>;
+    return {
+      types: data.types ?? ["all"],
+      displayCategories: data.displayCategories ?? {},
+    };
   },
 
   async listPlayerArtifacts(
@@ -175,3 +178,11 @@ export const artifactApi = {
     };
   },
 };
+
+function displayCategoriesForType(
+  filtersMetadata: ArtifactFiltersMetadata,
+  type: ArtifactType,
+) {
+  const categories = filtersMetadata.displayCategories[type] ?? [];
+  return categories.length > 0 ? categories : ["all"];
+}

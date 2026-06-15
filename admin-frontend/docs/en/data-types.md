@@ -36,6 +36,7 @@ This document defines the status types consumed by the crawl operations dashboar
 - Defined in: `admin-frontend/src/types/status.ts`
 - Fields:
   - `artifactCount: number`
+  - `crawlActive: boolean`
   - `rawFiles: RawFileStatus`
   - `crawlFiles: Record<string, number>`
   - `crawlUsers: Record<string, number>`

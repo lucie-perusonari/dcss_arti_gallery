@@ -10,11 +10,15 @@ This document defines the public response DTOs owned by `admin_api`.
 - Purpose: admin dashboard status response
 - Fields:
   - `artifactCount: int`
+  - `crawlActive: bool`
   - `rawFiles: RawFileStatus`
   - `crawlFiles: dict[str, int]`
   - `crawlUsers: dict[str, int]`
   - `latest: LatestActivity`
   - `recentErrors: list[CrawlError]`
+
+`crawlActive` is computed by comparing the current `raw_morgue_files` total with a sample observed at least three
+minutes earlier by the admin API process. It does not read crawl service internals or Docker state.
 
 ## `RawFileStatus`
 

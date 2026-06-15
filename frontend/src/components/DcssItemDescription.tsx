@@ -34,23 +34,8 @@ export function DcssItemDescription({ artifact }: DcssItemDescriptionProps) {
         </div>
       </div>
 
-      {artifact.source.url ? (
-        <div className="actions fg11">
-          <a
-            href={artifact.source.url}
-            target="_blank"
-            rel="noreferrer"
-            data-source-link
-            aria-label={`Open original morgue for ${artifact.name}`}
-          >
-            View original morgue
-          </a>
-          .
-        </div>
-      ) : null}
-      <div className="describe-item__discovery fg7">
-        {discoveryText(artifact)}
-      </div>
+      <SourceBlock artifact={artifact} />
+      <VersionText artifact={artifact} />
     </div>
   );
 }
@@ -93,16 +78,53 @@ function menuColouringPrefixes(artifact: Artifact) {
   return `identified artefact ${typeName}`;
 }
 
-function discoveryText(artifact: Artifact) {
-  const parts = [];
-  if (artifact.discovery.version) {
-    parts.push(`Version ${artifact.discovery.version}`);
-  }
+function SourceBlock({ artifact }: { artifact: Artifact }) {
   const datetime = formattedDiscoveryDatetime(artifact.discovery.datetime);
-  if (datetime) {
-    parts.push(`Found ${datetime}`);
-  }
-  return parts.join(' / ');
+  const foundBy = artifact.source.player.trim();
+
+  if (!foundBy && !datetime && !artifact.source.url) return null;
+
+  return (
+    <div className="describe-item__source-block">
+      {foundBy || datetime ? (
+        <div className="describe-item__discovery describe-item__found-by fg7">
+          {foundBy ? (
+            <>
+              <span>Found By </span>
+              <span className="describe-item__found-player">@{foundBy}</span>
+              {datetime ? <span> {datetime}</span> : null}
+            </>
+          ) : (
+            <span>Found {datetime}</span>
+          )}
+        </div>
+      ) : null}
+      {artifact.source.url ? (
+        <div className="actions fg11">
+          <a
+            href={artifact.source.url}
+            target="_blank"
+            rel="noreferrer"
+            data-source-link
+            aria-label={`Open original morgue for ${artifact.name}`}
+          >
+            View original morgue
+          </a>
+          .
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function VersionText({ artifact }: { artifact: Artifact }) {
+  if (!artifact.discovery.version) return null;
+
+  return (
+    <div className="describe-item__discovery describe-item__version fg7">
+      Version {artifact.discovery.version}
+    </div>
+  );
 }
 
 function formattedDiscoveryDatetime(value?: string | null) {

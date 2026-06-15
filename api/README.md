@@ -27,7 +27,7 @@ English version: [README.en.md](README.en.md)
 
 ## 엔드포인트
 
-- `GET /artifacts`: 아티팩트 목록 조회 (`q`, `type`, `player`, `since`, `limit`, `offset` 필터 지원)
+- `GET /artifacts`: 아티팩트 목록 조회 (`q`, `type`, `displayCategory`, `player`, `since`, `limit`, `offset` 필터 지원)
 - `GET /artifacts/{artifact_id}`: 단일 아티팩트 조회
 - `GET /artifact-types`: 사용 가능한 아티팩트 타입 목록
 - `GET /filters`: 갤러리 필터 메타데이터

@@ -17,6 +17,7 @@ DEFAULT_MONGO_CRAWL_USERS_COLLECTION = "crawl_users"
 DEFAULT_MONGO_RAW_FILES_COLLECTION = "raw_morgue_files"
 DEFAULT_MONGO_ARTIFACT_PROCESSING_COLLECTION = "artifact_processing_files"
 DEFAULT_CRAWL_STATUS_CACHE_SECONDS = 5.0
+CRAWL_ACTIVE_COMPARE_SECONDS = 180.0
 
 RAW_FILE_STATUS_PROJECTION = {
     "_id": False,
@@ -79,6 +80,7 @@ class MongoCrawlStatusRepository:
         self.cache_ttl_seconds = cache_ttl_seconds
         self._cached_status: CrawlStatus | None = None
         self._cached_at = 0.0
+        self._raw_file_count_samples: list[tuple[float, int]] = []
 
     def get_crawl_status(self) -> CrawlStatus:
         now = time.monotonic()
@@ -105,6 +107,10 @@ class MongoCrawlStatusRepository:
         )
         status = CrawlStatus(
             artifactCount=self.artifacts_collection.count_documents({}),
+            crawlActive=self._raw_file_count_increased_since_comparison_window(
+                now,
+                raw_file_status.total,
+            ),
             rawFiles=raw_file_status,
             crawlFiles=crawl_file_counts,
             crawlUsers=crawl_user_counts,
@@ -118,6 +124,27 @@ class MongoCrawlStatusRepository:
         self._cached_status = status
         self._cached_at = now
         return status
+
+    def _raw_file_count_increased_since_comparison_window(
+        self,
+        now: float,
+        current_total: int,
+    ) -> bool:
+        self._raw_file_count_samples.append((now, current_total))
+        comparison_samples = [
+            (sampled_at, total)
+            for sampled_at, total in self._raw_file_count_samples
+            if now - sampled_at >= CRAWL_ACTIVE_COMPARE_SECONDS
+        ]
+        self._raw_file_count_samples = [
+            (sampled_at, total)
+            for sampled_at, total in self._raw_file_count_samples
+            if now - sampled_at <= CRAWL_ACTIVE_COMPARE_SECONDS * 2
+        ]
+        if not comparison_samples:
+            return False
+        _, comparison_total = max(comparison_samples, key=lambda sample: sample[0])
+        return current_total > comparison_total
 
 
 def repository_from_env() -> MongoCrawlStatusRepository:

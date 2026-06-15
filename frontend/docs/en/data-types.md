@@ -45,7 +45,7 @@ The TypeScript types must stay aligned with the Gallery API response shape.
   - `score`
   - `dcssDescription`
 
-The subtype/slot fields support type-specific secondary filters. When they are missing,
+The subtype/slot fields support type-specific secondary filters and rendering details. When they are missing,
 the UI falls back to `subtype`.
 `armourSubtype` preserves the original armour base type within a slot, such as `hat`, `helmet`, or `pair of gloves`,
 and is used for armour card labels and tile selection.
@@ -69,9 +69,9 @@ attributes. `discovery` is rendered at the bottom of the item description popup.
 `timeRange` is sent as the Gallery API `since` query parameter. The default `30d` limits the view to recent games,
 while `all` removes the date range.
 
-`slot` is a frontend display filter, not a Gallery API query parameter. The frontend keeps the API result list for the
-current type/search/player filters and derives the displayed list with `slot`, so selecting one secondary filter does
-not remove the other secondary filter buttons for the same type.
+`slot` is a frontend display filter computed with the same fallback category rules as the Gallery API. The frontend
+keeps the API result list for the current type/search/player filters and derives the displayed list with `slot`, so
+selecting one secondary filter does not remove the other secondary filter buttons for the same type.
 
 Weapon `slot` values follow DCSS weapon skill categories: `short blades`, `long blades`, `axes`,
 `maces & flails`, `polearms`, `staves`, and `ranged`. For example, `giant club` and `giant spiked club`
