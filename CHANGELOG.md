@@ -21,6 +21,10 @@
 - 명품 필터가 `weapon`, `armour` 외 타입을 모두 숨기던 문제를 완화했습니다.
   - `jewellery`, `staff`, `talisman`은 임시로 `score.total >= 45` 기준을 사용합니다.
   - 추후 타입별 명품 기준을 별도로 고도화해야 합니다.
+- Gallery frontend의 talisman 하위 필터가 개별 talisman subtype을 길게 나열하던 문제를 정리했습니다.
+  - Talisman 하위 필터는 form tier 단위로 표시합니다.
+  - `spore talisman`은 Tier 2, `eel talisman`은 Tier 3, `talisman of death`는 Tier 5로 분류합니다.
+  - `Recent 30d`와 `All time` 기간 필터를 하위 필터 아래 별도 구분선 섹션으로 이동했습니다.
 - Admin API가 `crawlActive`를 제공해 crawl 진행 여부를 dashboard에서 확인할 수 있게 했습니다.
 
 ### 구현 메모
@@ -35,11 +39,14 @@
 - MongoDB schema migration은 포함하지 않습니다.
 - 기존 `artifacts` read model 재처리는 필요하지 않습니다.
 - 운영 배포는 `beta-v3` tag 기준으로 prod compose stack을 재빌드해 반영합니다.
+- Talisman 필터 hotfix는 frontend 정적 파일만 바뀌므로 운영 `reverse-proxy` 재빌드로 반영할 수 있습니다.
 
 ### 검증
 
 - 로컬 dev compose stack에서 Gallery API `/filters`, `displayCategory` 조회, Admin API `/admin/crawl-status` smoke 확인을 수행했습니다.
 - 프론트엔드 dev server HMR로 detail/source 표시와 타입 필터 변경을 확인했습니다.
+- 2026-06-16 운영 서버에서 `reverse-proxy` production build와 컨테이너 재생성을 수행했고,
+  `https://perusonari.ddns.net/` HTTP 200 응답을 확인했습니다.
 
 ## beta-v2 - 2026-06-16
 

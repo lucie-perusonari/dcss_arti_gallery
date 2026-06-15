@@ -79,6 +79,9 @@ belong to `maces & flails`, while `quick blade` belongs to `short blades`.
 
 Jewellery `slot` values are normalized to `ring` or `amulet`.
 
+Talisman `slot` values group individual subtypes by form tier. The UI uses `tier 1 talismans`
+through `tier 5 talismans`, plus `other talismans`.
+
 ## Related Docs
 
 - [Frontend Processing Layers](./processing-layers.md)

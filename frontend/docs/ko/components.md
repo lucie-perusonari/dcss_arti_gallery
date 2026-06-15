@@ -13,6 +13,7 @@
 - `FilterBar`는 기본 최근 30일과 전체 기간을 전환하는 `timeRange` control도 렌더링합니다.
 - 하위 slot/subtype 옵션은 Gallery API의 `/filters.displayCategories` 메타데이터에서 계산하고,
   실제 표시 목록만 slot으로 필터링합니다. 장신구 하위 필터는 `Ring`과 `Amulet`만 표시합니다.
+- Talisman 하위 필터는 개별 subtype 버튼 대신 form tier 버튼으로 표시합니다.
 
 ## UI 기준
 

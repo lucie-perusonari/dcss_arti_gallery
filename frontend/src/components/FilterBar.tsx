@@ -17,7 +17,12 @@ const typeLabels: Record<ArtifactType, string> = {
 };
 
 export function FilterBar({ filters, types, slots, onChange }: FilterBarProps) {
-  const subtypeFilterLabel = filters.type === 'weapon' ? 'Weapon type filter' : 'Artifact slot filter';
+  const subtypeFilterLabel =
+    filters.type === 'weapon'
+      ? 'Weapon type filter'
+      : filters.type === 'talisman'
+        ? 'Talisman tier filter'
+        : 'Artifact slot filter';
 
   return (
     <div className="filter-bar">
@@ -53,7 +58,25 @@ export function FilterBar({ filters, types, slots, onChange }: FilterBarProps) {
         </button>
       </div>
 
-      <div className="segmented segmented--secondary" aria-label="Game date filter">
+      {filters.type !== 'all' && slots.length > 1 && (
+        <div className="segmented segmented--secondary" aria-label={subtypeFilterLabel}>
+          {slots.map((slot) => (
+            <button
+              className={filters.slot === slot ? 'is-active' : ''}
+              key={slot}
+              type="button"
+              onClick={() => onChange({ ...filters, slot })}
+            >
+              {slotLabel(slot, filters.type)}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div
+        className="segmented segmented--secondary filter-bar__date-filter"
+        aria-label="Game date filter"
+      >
         <button
           className={filters.timeRange === '30d' ? 'is-active' : ''}
           type="button"
@@ -69,21 +92,6 @@ export function FilterBar({ filters, types, slots, onChange }: FilterBarProps) {
           All time
         </button>
       </div>
-
-      {filters.type !== 'all' && slots.length > 1 && (
-        <div className="segmented segmented--secondary" aria-label={subtypeFilterLabel}>
-          {slots.map((slot) => (
-            <button
-              className={filters.slot === slot ? 'is-active' : ''}
-              key={slot}
-              type="button"
-              onClick={() => onChange({ ...filters, slot })}
-            >
-              {slotLabel(slot, filters.type)}
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -93,10 +101,12 @@ function slotLabel(slot: string, type: ArtifactFilters['type']) {
     if (type === 'weapon') return 'All weapons';
     if (type === 'armour') return 'All armour';
     if (type === 'jewellery') return 'All jewellery';
+    if (type === 'talisman') return 'All talismans';
     return 'All';
   }
   if (type === 'weapon') return weaponCategoryLabel(slot);
   if (type === 'jewellery') return jewellerySlotLabel(slot);
+  if (type === 'talisman') return talismanTierLabel(slot);
   return slot;
 }
 
@@ -118,6 +128,18 @@ function weaponCategoryLabel(slot: string) {
     staves: 'Staves',
     ranged: 'Ranged',
     'other weapons': 'Other weapons',
+  };
+  return labels[slot] ?? slot;
+}
+
+function talismanTierLabel(slot: string) {
+  const labels: Record<string, string> = {
+    'tier 1 talismans': 'Tier 1',
+    'tier 2 talismans': 'Tier 2',
+    'tier 3 talismans': 'Tier 3',
+    'tier 4 talismans': 'Tier 4',
+    'tier 5 talismans': 'Tier 5',
+    'other talismans': 'Other',
   };
   return labels[slot] ?? slot;
 }

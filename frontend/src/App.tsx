@@ -87,6 +87,46 @@ const weaponCategories: Record<string, string> = {
   whip: "maces & flails",
 };
 
+const talismanTierOrder = [
+  "tier 1 talismans",
+  "tier 2 talismans",
+  "tier 3 talismans",
+  "tier 4 talismans",
+  "tier 5 talismans",
+  "other talismans",
+];
+
+const talismanTiers: Record<string, string> = {
+  "beast talisman": "tier 1 talismans",
+  "inkwell talisman": "tier 1 talismans",
+  "quill talisman": "tier 1 talismans",
+  "flux talisman": "tier 2 talismans",
+  "maw talisman": "tier 2 talismans",
+  "medusa talisman": "tier 2 talismans",
+  "protean talisman": "tier 2 talismans",
+  "rimehorn talisman": "tier 2 talismans",
+  "scarab talisman": "tier 2 talismans",
+  "serpent talisman": "tier 2 talismans",
+  "spore talisman": "tier 2 talismans",
+  "blade talisman": "tier 3 talismans",
+  "eel talisman": "tier 3 talismans",
+  "fortress talisman": "tier 3 talismans",
+  "lupine talisman": "tier 3 talismans",
+  "spider talisman": "tier 3 talismans",
+  "wellspring talisman": "tier 3 talismans",
+  "dragon-blood talisman": "tier 4 talismans",
+  "dragon-coil talisman": "tier 4 talismans",
+  "granite talisman": "tier 4 talismans",
+  "hive talisman": "tier 4 talismans",
+  "riddle talisman": "tier 4 talismans",
+  "sanguine talisman": "tier 4 talismans",
+  "sphinx talisman": "tier 4 talismans",
+  "statue talisman": "tier 4 talismans",
+  "vampire talisman": "tier 4 talismans",
+  "storm talisman": "tier 5 talismans",
+  "talisman of death": "tier 5 talismans",
+};
+
 const luxuryWeaponBases = new Set([
   "arbalest",
   "bardiche",
@@ -408,6 +448,7 @@ function slotOptionsForMetadata(
 ) {
   if (type === "all") return ["all"];
   const slots = filtersMetadata.displayCategories[type] ?? [];
+  if (type === "talisman") return talismanTierOptionsForMetadata(slots);
   const sortedSlots =
     type === "weapon"
       ? [...slots].sort(
@@ -439,6 +480,7 @@ function slotForArtifact(artifact: Artifact) {
     return artifact.armourSlot ?? artifact.subtype;
   if (artifact.type === "jewellery") return jewellerySlotForArtifact(artifact);
   if (artifact.type === "staff") return artifact.subtype;
+  if (artifact.type === "talisman") return talismanTierForArtifact(artifact);
   return artifact.subtype;
 }
 
@@ -466,6 +508,30 @@ function weaponCategoryForArtifact(artifact: Artifact) {
 function weaponCategoryRank(category: string) {
   const index = weaponCategoryOrder.indexOf(category);
   return index === -1 ? weaponCategoryOrder.length : index;
+}
+
+function talismanTierOptionsForMetadata(slots: string[]) {
+  const tiers = new Set(
+    slots
+      .filter((slot) => slot !== "all")
+      .map((slot) => talismanTierForName(slot) ?? "other talismans"),
+  );
+  const sortedTiers = talismanTierOrder.filter((tier) => tiers.has(tier));
+  return ["all", ...(sortedTiers.length > 0 ? sortedTiers : talismanTierOrder)];
+}
+
+function talismanTierForArtifact(artifact: Artifact) {
+  return (
+    talismanTierForName(artifact.subtype) ??
+    talismanTierForName(artifact.baseItem) ??
+    "other talismans"
+  );
+}
+
+function talismanTierForName(name: string) {
+  const normalized = name.trim().toLowerCase();
+  if (talismanTierOrder.includes(normalized)) return normalized;
+  return talismanTiers[normalized];
 }
 
 function isLuxuryArtifact(artifact: Artifact) {

@@ -81,6 +81,9 @@ TypeScript 타입은 Gallery API 응답과 정렬되어야 합니다.
 
 장신구의 `slot`은 세부 subtype이 아니라 `ring` 또는 `amulet`으로 단순화합니다.
 
+Talisman의 `slot`은 개별 subtype 대신 form tier 단위로 묶습니다. 현재 UI는 `tier 1 talismans`부터
+`tier 5 talismans`, `other talismans`를 표시 필터로 사용합니다.
+
 ## 연계 문서
 
 - [Frontend Processing Layers](./processing-layers.md)

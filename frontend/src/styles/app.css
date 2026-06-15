@@ -315,6 +315,12 @@ h1 {
   margin-top: 0.35em;
 }
 
+.filter-bar__date-filter {
+  margin-top: 0.5em;
+  padding-top: 0.55em;
+  border-top: 1px solid #222;
+}
+
 .segmented button,
 #ui-stack button {
   display: flex;
