@@ -60,7 +60,6 @@ attributes. `discovery` is rendered at the bottom of the item description popup.
   - `search: string`
   - `type: ArtifactType | 'all'`
   - `slot: string`
-  - `luxuryOnly: boolean`
   - `player: string`
   - `timeRange: '30d' | 'all'`
 

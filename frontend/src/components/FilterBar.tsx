@@ -48,16 +48,6 @@ export function FilterBar({ filters, types, slots, onChange }: FilterBarProps) {
         ))}
       </div>
 
-      <div className="segmented segmented--secondary" aria-label="Luxury filter">
-        <button
-          className={filters.luxuryOnly ? 'is-active' : ''}
-          type="button"
-          onClick={() => onChange({ ...filters, luxuryOnly: !filters.luxuryOnly })}
-        >
-          명품
-        </button>
-      </div>
-
       {filters.type !== 'all' && slots.length > 1 && (
         <div className="segmented segmented--secondary" aria-label={subtypeFilterLabel}>
           {slots.map((slot) => (

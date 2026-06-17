@@ -30,11 +30,6 @@ const weaponCategoryOrder = [
   "ranged",
   "other weapons",
 ];
-const luxuryMinimumEnchantment = 8;
-const luxuryWeaponMinimumScore = 45;
-const luxuryArmourMinimumScore = 55;
-const luxuryFallbackMinimumScore = 45;
-
 const weaponCategories: Record<string, string> = {
   arbalest: "ranged",
   athame: "short blades",
@@ -128,62 +123,6 @@ const talismanTiers: Record<string, string> = {
   "talisman of death": "tier 5 talismans",
 };
 
-const luxuryWeaponBases = new Set([
-  "arbalest",
-  "bardiche",
-  "battleaxe",
-  "broad axe",
-  "demon blade",
-  "demon trident",
-  "demon whip",
-  "double sword",
-  "eveningstar",
-  "eudemon blade",
-  "executioner's axe",
-  "glaive",
-  "great mace",
-  "great sword",
-  "hand cannon",
-  "lajatang",
-  "longbow",
-  "morningstar",
-  "orcbow",
-  "partisan",
-  "quarterstaff",
-  "quick blade",
-  "rapier",
-  "sacred scourge",
-  "scimitar",
-  "trident",
-  "triple crossbow",
-  "triple sword",
-  "war axe",
-]);
-
-const luxuryBodyArmourBases = new Set([
-  "acid dragon scales",
-  "chain mail",
-  "crystal plate armour",
-  "fire dragon scales",
-  "gold dragon scales",
-  "golden dragon scales",
-  "ice dragon scales",
-  "pearl dragon scales",
-  "plate armour",
-  "quicksilver dragon scales",
-  "shadow dragon scales",
-  "storm dragon scales",
-  "swamp dragon scales",
-  "troll leather armour",
-]);
-
-const luxuryArmourSlots = new Set(["boots", "cloak", "gloves", "helmet"]);
-const luxuryShieldBases = new Set([
-  "buckler",
-  "kite shield",
-  "shield",
-  "tower shield",
-]);
 const fallbackFiltersMetadata: ArtifactFiltersMetadata = {
   types: artifactTypes,
   displayCategories: {},
@@ -199,7 +138,6 @@ const getInitialFilters = (): ArtifactFilters => {
       ? (type as ArtifactType)
       : "weapon",
     slot: params.get("slot") ?? "all",
-    luxuryOnly: params.get("luxury") === "1",
     player: params.get("player") ?? "",
     timeRange: params.get("since") === "all" ? "all" : "30d",
   };
@@ -228,7 +166,6 @@ export function App() {
       search: filters.search,
       type: filters.type,
       slot: "all",
-      luxuryOnly: false,
       player: filters.player,
       timeRange: filters.timeRange,
     }),
@@ -309,7 +246,6 @@ export function App() {
   useEffect(() => {
     rowVirtualizer.scrollToOffset(0);
   }, [
-    filters.luxuryOnly,
     filters.player,
     filters.search,
     filters.slot,
@@ -470,9 +406,7 @@ function artifactsMatchingFilters(
   artifacts: Artifact[],
   filters: ArtifactFilters,
 ) {
-  const slotMatched = artifactsMatchingSlot(artifacts, filters.slot);
-  if (!filters.luxuryOnly) return slotMatched;
-  return slotMatched.filter(isLuxuryArtifact);
+  return artifactsMatchingSlot(artifacts, filters.slot);
 }
 
 function slotForArtifact(artifact: Artifact) {
@@ -535,43 +469,4 @@ function talismanTierForName(name: string) {
   const normalized = name.trim().toLowerCase();
   if (talismanTierOrder.includes(normalized)) return normalized;
   return talismanTiers[normalized];
-}
-
-function isLuxuryArtifact(artifact: Artifact) {
-  if (artifact.type === "weapon") return isLuxuryWeapon(artifact);
-  if (artifact.type === "armour") return isLuxuryArmour(artifact);
-  return artifact.score.total >= luxuryFallbackMinimumScore;
-}
-
-function isLuxuryWeapon(artifact: Artifact) {
-  return (
-    artifactEnchantment(artifact) >= luxuryMinimumEnchantment &&
-    luxuryWeaponBases.has(normalizedBaseItem(artifact)) &&
-    artifact.score.total >= luxuryWeaponMinimumScore
-  );
-}
-
-function isLuxuryArmour(artifact: Artifact) {
-  const baseItem = normalizedBaseItem(artifact);
-  const slot = artifact.armourSlot ?? "";
-  if (luxuryArmourSlots.has(slot)) {
-    return artifact.score.total >= luxuryArmourMinimumScore;
-  }
-  if (luxuryShieldBases.has(baseItem)) {
-    return artifact.score.total >= luxuryArmourMinimumScore;
-  }
-  return (
-    artifactEnchantment(artifact) >= luxuryMinimumEnchantment &&
-    luxuryBodyArmourBases.has(baseItem) &&
-    artifact.score.total >= luxuryArmourMinimumScore
-  );
-}
-
-function artifactEnchantment(artifact: Artifact) {
-  const match = artifact.name.match(/(?:^|\s)([+-]\d+)(?=\s)/);
-  return match ? Number.parseInt(match[1], 10) : 0;
-}
-
-function normalizedBaseItem(artifact: Artifact) {
-  return artifact.baseItem.trim().toLowerCase();
 }

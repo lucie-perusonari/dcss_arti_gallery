@@ -45,7 +45,6 @@ export type ArtifactFilters = {
   search: string;
   type: ArtifactType | 'all';
   slot: string;
-  luxuryOnly: boolean;
   player: string;
   timeRange: '30d' | 'all';
 };

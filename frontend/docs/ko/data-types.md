@@ -61,7 +61,6 @@ TypeScript 타입은 Gallery API 응답과 정렬되어야 합니다.
   - `search: string`
   - `type: ArtifactType | 'all'`
   - `slot: string`
-  - `luxuryOnly: boolean`
   - `player: string`
   - `timeRange: '30d' | 'all'`
 
