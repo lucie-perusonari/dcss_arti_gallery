@@ -36,14 +36,14 @@ class MongoArtifactReadRepositoryTest(unittest.TestCase):
         collection = _ReadOnlyCollection()
         repository = MongoArtifactReadRepository(collection)
 
-        repository.list_artifacts(player="WiiWiwi", since_days=None)
+        repository.list_artifacts(player="WiiWiWi", since_days=None)
 
         self.assertEqual(
             collection.find_queries[0],
             {
                 "$or": [
-                    {"source.player": {"$regex": "^wiiwiwi$", "$options": "i"}},
-                    {"sources.player": {"$regex": "^wiiwiwi$", "$options": "i"}},
+                    {"source.player": "WiiWiWi"},
+                    {"sources.player": "WiiWiWi"},
                 ]
             },
         )

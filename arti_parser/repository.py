@@ -81,7 +81,7 @@ class ArtifactProcessingRecord:
 
     def to_dict(self) -> dict:
         return {
-            "player": _player_key(self.player),
+            "player": self.player,
             "name": self.name,
             "content_hash": self.content_hash,
             "status": self.status,
@@ -259,7 +259,7 @@ class MongoArtifactProcessingRepository:
         processing_records = self._processing_records_for_raw_files(batch)
         pending: list[RawMorgueSource] = []
         for raw_file in batch:
-            record = processing_records.get((_player_key(raw_file.player), raw_file.name))
+            record = processing_records.get((raw_file.player, raw_file.name))
             if record is None or _should_process(raw_file, record):
                 pending.append(raw_file)
         return pending
@@ -271,10 +271,10 @@ class MongoArtifactProcessingRepository:
         if self.processing_collection is None or not raw_files:
             return {}
         documents = self.processing_collection.find(
-            _raw_file_pair_query(raw_files, normalize_player=True)
+            _raw_file_pair_query(raw_files)
         )
         records = [_processing_record_from_mongo(document) for document in documents]
-        return {(_player_key(record.player), record.name): record for record in records}
+        return {(record.player, record.name): record for record in records}
 
     def _raw_files_with_text(
         self,
@@ -283,7 +283,7 @@ class MongoArtifactProcessingRepository:
         if self.raw_file_collection is None or not raw_files:
             return raw_files
         documents = self.raw_file_collection.find(
-            _raw_file_pair_query(raw_files, normalize_player=False),
+            _raw_file_pair_query(raw_files),
             RAW_FILE_TEXT_PROJECTION,
         )
         records = {
@@ -417,7 +417,7 @@ def _artifact_mongo_document(
     raw_file: RawMorgueSource,
 ) -> dict:
     document = artifact.to_dict()
-    document["source"]["player"] = _player_key(raw_file.player)
+    document["source"]["player"] = raw_file.player
     document["source_content_hash"] = raw_file.content_hash
     return document
 
@@ -467,7 +467,7 @@ def _artifact_source_evidence(
 ) -> dict:
     return {
         "occurrence_id": artifact.occurrence_id,
-        "player": _player_key(raw_file.player),
+        "player": raw_file.player,
         "file": raw_file.name,
         "game_ended_at": _game_ended_at_from_file(raw_file.name),
         "url": artifact.source.url,
@@ -496,7 +496,7 @@ def _artifact_sources_from_document(document: dict) -> list[dict]:
         _artifact_source_with_game_time(
             {
                 "occurrence_id": document.get("occurrence_id", document.get("id", "")),
-                "player": _player_key(source.get("player", "")),
+                "player": source.get("player", ""),
                 "file": source.get("file", ""),
                 "game_ended_at": source.get("game_ended_at") or document.get("latest_game_ended_at"),
                 "url": source.get("url"),
@@ -511,26 +511,18 @@ def _artifact_sources_from_document(document: dict) -> list[dict]:
 
 
 def _artifact_source_query(raw_file: RawMorgueSource) -> dict:
-    player = _player_key(raw_file.player)
     return {
         "$or": [
-            {"sources": {"$elemMatch": {"player": player, "file": raw_file.name}}},
-            {"source.player": player, "source.file": raw_file.name},
+            {"sources": {"$elemMatch": {"player": raw_file.player, "file": raw_file.name}}},
+            {"source.player": raw_file.player, "source.file": raw_file.name},
         ]
     }
 
 
-def _raw_file_pair_query(
-    raw_files: list[RawMorgueSource],
-    *,
-    normalize_player: bool,
-) -> dict:
+def _raw_file_pair_query(raw_files: list[RawMorgueSource]) -> dict:
     pairs = sorted(
         {
-            (
-                _player_key(raw_file.player) if normalize_player else raw_file.player,
-                raw_file.name,
-            )
+            (raw_file.player, raw_file.name)
             for raw_file in raw_files
         }
     )
@@ -626,7 +618,7 @@ def _apply_representative_source(document: dict, source: dict) -> None:
 
 def _is_source_for_raw_file(source: dict, raw_file: RawMorgueSource) -> bool:
     return (
-        _player_key(str(source.get("player", ""))) == _player_key(raw_file.player)
+        source.get("player") == raw_file.player
         and source.get("file") == raw_file.name
     )
 
@@ -727,7 +719,3 @@ def _game_ended_at_from_file(file_name: str) -> str | None:
     except ValueError:
         return None
     return ended_at.isoformat()
-
-
-def _player_key(player: str) -> str:
-    return player.strip().lower()

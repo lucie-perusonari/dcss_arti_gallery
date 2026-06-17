@@ -133,10 +133,7 @@ def _artifact_query_filter(
         conditions.append({"latest_game_ended_at": {"$gte": cutoff.isoformat()}})
 
     if player and player.strip():
-        player_filter = {
-            "$regex": f"^{_escape_regex(player.strip().lower())}$",
-            "$options": "i",
-        }
+        player_filter = player.strip()
         conditions.append(
             {
                 "$or": [

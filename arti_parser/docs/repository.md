@@ -44,6 +44,6 @@ stale source 삭제는 현재 raw file의 `sources.player`/`sources.file` 또는
 
 ## 변경 시 주의점
 
-- `_player_key`는 player 값을 trim/lowercase하여 저장 key를 안정화합니다.
+- player 값은 morgue 원문 식별자이므로 대소문자를 변형하지 않고 보존합니다.
 - repository는 artifact 파싱 로직을 가져서는 안 됩니다.
 - MongoDB collection 이름과 기본값은 서비스 README의 환경 변수 설명과 맞아야 합니다.
