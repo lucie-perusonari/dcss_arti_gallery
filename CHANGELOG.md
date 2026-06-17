@@ -1,5 +1,38 @@
 # Changelog
 
+## beta-v3-hotfix4 - 2026-06-18
+
+### 요약
+
+- player 식별자를 morgue 원문 파일명 기준 대소문자로 보존하도록 저장/조회 경로를 정리했습니다.
+- 운영 MongoDB의 기존 player casing 데이터를 복구하는 마이그레이션 도구를 추가했습니다.
+- crawl worker를 one-shot raw ingest job으로 단순화하고, crawl 실패 관측을 `crawl_errors` 이벤트 로그로 통합했습니다.
+
+### 해결된 이슈
+
+- Gallery API player 필터와 `arti_parser` read model 저장 경로가 player 값을 lowercase로 정규화해 원문 nickname 대소문자를 잃던 문제를 정리했습니다.
+  - `raw_morgue_files`, `artifact_processing_files`, `artifacts.source`, `artifacts.sources`, `first_source`, `first_discovered_by`가 morgue 파일명에서 복원한 player casing을 사용할 수 있습니다.
+  - 운영 적용 전 기존 문서를 감사하고, blocking risk가 없을 때만 적용하는 `infra/prod/migrate_player_casing.py`를 추가했습니다.
+- crawl worker의 장기 loop, user/file cache 상태, failed raw placeholder 저장을 제거하고, one-shot job이 새 raw file과 실패 이벤트만 기록하도록 단순화했습니다.
+- Admin API와 admin frontend의 crawl 상태 계약에서 제거된 `crawl_files`/`crawl_users` 집계와 `scannedAt` 표시를 정리했습니다.
+
+### 운영 영향
+
+- 운영 MongoDB에 player casing 마이그레이션이 필요합니다.
+  - 적용 전 `raw_morgue_files`, `artifact_processing_files`, `artifacts` 백업을 생성해야 합니다.
+  - dry-run audit에서 collision/blocking risk가 없어야 `--apply`를 실행합니다.
+- 운영 compose pull 후 `mongo-indexes`, `api`, `admin-api`, `crawl-service` 관련 이미지는 새 코드 기준으로 갱신해야 합니다.
+- crawler는 더 이상 `--once` 옵션을 받지 않고 기본 실행이 one-shot입니다.
+
+### 검증
+
+- 로컬 dev MongoDB에서 기존 player casing 백업을 별도 테스트 DB로 복사한 뒤 dry-run, apply, 재 dry-run을 수행했습니다.
+  - dry-run 수정 대상: `raw_morgue_files` 91,110건, `artifact_processing_files` 1,468건, `artifacts` 47,690문서.
+  - apply 후 수정 대상 0건과 collision/blocking risk 없음으로 수렴했습니다.
+- Gallery API 테스트와 Admin API 테스트를 실행했습니다.
+  - `python3 -m unittest discover -s api/tests -t .`
+  - `python3 -m unittest discover -s admin_api/tests -t .`
+
 ## beta-v3-hotfix3 - 2026-06-17
 
 ### 요약
