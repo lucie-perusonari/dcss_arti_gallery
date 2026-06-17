@@ -51,21 +51,5 @@ class FetcherBlackBoxTest(unittest.TestCase):
         )
         self.assertEqual(files[0].extension, "lst")
 
-    def test_select_morgue_files_by_name_normalizes_hidden_and_url_names(self) -> None:
-        files = [
-            fetcher.MorgueFile(
-                "morgue-wiiwiwi-20260101-000001.txt",
-                "https://example.test/morgue-wiiwiwi-20260101-000001.txt",
-            )
-        ]
-
-        selected = fetcher.select_morgue_files_by_name(
-            files,
-            ["https://mirror.test/.morgue-wiiwiwi-20260101-000001.txt"],
-        )
-
-        self.assertEqual(selected, files)
-
-
 if __name__ == "__main__":
     unittest.main()

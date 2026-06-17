@@ -4,9 +4,8 @@
 
 ## 책임
 
-- `raw_morgue_files`에 fetched/failed raw source record를 저장합니다.
-- `crawl_files`에 파일 단위 crawl 상태를 저장합니다.
-- `crawl_users`에 user directory scan 상태를 저장합니다.
+- `raw_morgue_files`에 fetched raw source record를 저장합니다.
+- `crawl_errors`에 fetch 실패 이벤트를 append-only로 저장합니다.
 - worker가 중복 다운로드를 피하는 데 필요한 최소 조회를 제공합니다.
 
 ## 비소유 책임

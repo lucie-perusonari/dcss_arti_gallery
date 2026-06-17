@@ -11,4 +11,4 @@ RUN python -m pip install --no-cache-dir --upgrade pip \
 
 COPY crawl_service ./crawl_service
 
-CMD ["python", "-m", "crawl_service.worker", "--once"]
+CMD ["python", "-m", "crawl_service.worker"]

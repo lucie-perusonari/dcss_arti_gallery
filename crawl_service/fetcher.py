@@ -5,7 +5,6 @@ from __future__ import annotations
 import posixpath
 import re
 import urllib.parse
-from collections.abc import Iterable
 from dataclasses import dataclass
 
 import requests
@@ -16,7 +15,6 @@ DEFAULT_USER_AGENT = "dcss-arti-gallery-crawler/0.1"
 MORGUE_FILE_RE = re.compile(
     r"^\.?morgue-(?P<player>.+?)-(?P<stamp>\d{8}-\d{6})\.(?P<ext>txt|lst)$"
 )
-
 
 
 @dataclass(frozen=True)
@@ -40,25 +38,15 @@ class MorgueFile:
         return self.name.rsplit(".", 1)[-1]
 
 
-def _normalized_morgue_file_name(name: str) -> str:
-    """Normalize local/remote morgue names so hidden fixture files match archive entries."""
-
-    file_name = posixpath.basename(urllib.parse.urlparse(name).path)
-    return urllib.parse.unquote(file_name).lstrip(".")
-
-
 def _get(
     url: str,
-    timeout: float = DEFAULT_TIMEOUT,
-    verify_tls: bool = True,
-    user_agent: str = DEFAULT_USER_AGENT,
 ) -> requests.Response:
     try:
         response = requests.get(
             url,
-            headers={"User-Agent": user_agent},
-            timeout=timeout,
-            verify=verify_tls,
+            headers={"User-Agent": DEFAULT_USER_AGENT},
+            timeout=DEFAULT_TIMEOUT,
+            verify=True,
         )
         response.raise_for_status()
 
@@ -69,51 +57,27 @@ def _get(
 
 def fetch_morgue_file_text(
     url: str,
-    timeout: float = DEFAULT_TIMEOUT,
-    verify_tls: bool = True,
-    user_agent: str = DEFAULT_USER_AGENT,
 ) -> str:
     """Fetch the text body for one remote morgue txt/lst file URL."""
 
-    return _get(
-        url,
-        timeout=timeout,
-        verify_tls=verify_tls,
-        user_agent=user_agent,
-    ).text
+    return _get(url).text
 
 
 def fetch_morgue_files(
     morgue_url: str,
-    timeout: float = DEFAULT_TIMEOUT,
-    verify_tls: bool = True,
-    user_agent: str = DEFAULT_USER_AGENT,
 ) -> list[MorgueFile]:
     """Fetch a remote remote morgue directory HTML page and return txt/lst file entries."""
 
-    html = _get(
-        morgue_url,
-        timeout=timeout,
-        verify_tls=verify_tls,
-        user_agent=user_agent,
-    ).text
+    html = _get(morgue_url).text
     return _parse_morgue_index(html, base_url=morgue_url)
 
 
 def fetch_morgue_users(
     morgue_root_url: str,
-    timeout: float = DEFAULT_TIMEOUT,
-    verify_tls: bool = True,
-    user_agent: str = DEFAULT_USER_AGENT,
 ) -> list[MorgueUser]:
     """Fetch the root remote remote morgue directory and return player directory entries."""
 
-    html = _get(
-        morgue_root_url,
-        timeout=timeout,
-        verify_tls=verify_tls,
-        user_agent=user_agent,
-    ).text
+    html = _get(morgue_root_url).text
     return _parse_morgue_user_index(html, base_url=morgue_root_url)
 
 
@@ -171,41 +135,3 @@ def _parse_morgue_index(html: str, base_url: str) -> list[MorgueFile]:
             MorgueFile(name=file_name, url=urllib.parse.urljoin(base_url, href))
         )
     return sorted(entries, key=lambda entry: entry.name)
-
-
-def select_morgue_files_by_name(
-    files: Iterable[MorgueFile],
-    names: Iterable[str],
-    require_all: bool = True,
-) -> list[MorgueFile]:
-    """Select remote morgue files whose names match the requested local/remote names."""
-
-    requested = [_normalized_morgue_file_name(name) for name in names]
-    by_name = {_normalized_morgue_file_name(file.name): file for file in files}
-    selected: list[MorgueFile] = []
-    missing: list[str] = []
-    for name in requested:
-        file = by_name.get(name)
-        if file is None:
-            missing.append(name)
-            continue
-        selected.append(file)
-
-    if require_all and missing:
-        raise RuntimeError(f"missing morgue files: {', '.join(missing)}")
-    return selected
-
-
-def select_recent_morgue_files(
-    files: Iterable[MorgueFile],
-    file_limit: int | None,
-) -> list[MorgueFile]:
-    """Return the most recent morgue entries while preserving fetch order."""
-
-    entries = list(files)
-    if file_limit is None:
-        return entries
-    if file_limit < 1:
-        raise ValueError("file_limit must be greater than 0")
-    return entries[-file_limit:]
-

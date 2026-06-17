@@ -25,7 +25,7 @@ A player directory discovered in a remote morgue root directory fetched over HTT
 
 ## `RawMorgueFileRecord`
 
-The raw morgue source or fetch-failure record stored by `crawl_service` in MongoDB `raw_morgue_files`.
+The raw morgue source stored by `crawl_service` in MongoDB `raw_morgue_files`.
 This record supports duplicate-download checks and can be used as input for downstream artifact processing.
 
 - Defined in: `crawl_service.repository`
@@ -34,37 +34,24 @@ This record supports duplicate-download checks and can be used as input for down
   - `name: str`
   - `url: str`
   - `extension: str`: currently `txt` or `lst`
-  - `text: str`: file body; empty on fetch failure
-  - `content_hash: str`: SHA-256 hash of the file body; empty on fetch failure
-  - `fetch_status: str`: currently `fetched` or `failed`
+  - `text: str`: file body
+  - `content_hash: str`: SHA-256 hash of the file body
+  - `fetch_status: str`: currently `fetched`
   - `fetched_at: str | None`: successful fetch timestamp
-  - `fetch_error: str | None`: network/source fetch failure reason
 
-## `CrawlFileRecord`
+## `CrawlErrorRecord`
 
-The cache record that stores ingest completion or failure state for each remote morgue file.
-The raw body belongs to `RawMorgueFileRecord`; this record is for operational status.
-
-- Defined in: `crawl_service.repository`
-- Fields:
-  - `player: str`
-  - `name: str`
-  - `url: str`
-  - `status: str`
-  - `fetched_at: str | None`
-  - `error: str | None`
-
-## `CrawlUserRecord`
-
-The cache record that stores the root-index `Date` and scan result for each user directory.
-It is used for duplicate user scan prevention when `CRAWL_USER_SKIP_MODE=modified_at`.
+The append-only record that stores fetch failure events in `crawl_errors`.
+It is used only for operations visibility, not for success or retry decisions.
 
 - Defined in: `crawl_service.repository`
 - Fields:
   - `player: str`
-  - `url: str`
-  - `observed_at: str`
-  - `status: str`
-  - `scanned_at: str | None`
-  - `stored_files: int`: number of newly stored raw files in that scan
-  - `error: str | None`
+  - `stage: str`: failure stage, such as `fetch_user_directory` or `fetch_file`
+  - `message: str`
+  - `occurred_at: str`
+  - `name: str | None`
+  - `url: str | None`
+  - `extension: str | None`
+  - `error_type: str | None`
+  - `user_url: str | None`
