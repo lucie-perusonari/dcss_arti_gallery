@@ -1,5 +1,43 @@
 # Changelog
 
+## beta-v3-hotfix3 - 2026-06-17
+
+### 요약
+
+- 구버전 morgue에서 남는 무기 이름의 Gallery API/frontend 표시 fallback을 보강했습니다.
+- Gallery frontend의 `명품` 필터를 제거했습니다.
+- 구버전 무기 감사 기준과 릴리즈 기록 작성 기준을 문서화했습니다.
+
+### 해결된 이슈
+
+- `scythe`가 무기 하위 카테고리와 tile fallback에서 일반 fallback으로 떨어질 수 있던 문제를 정리했습니다.
+  - API와 frontend 모두 `scythe`를 `polearms`로 분류합니다.
+  - API와 frontend tile fallback은 알려지지 않은 `* sword` 계열 이름을 `long sword` tile/category 기준으로 표시합니다.
+- `명품` 필터가 임시 기준과 타입별 예외를 유지해야 하던 부담을 제거했습니다.
+  - frontend filter state, query 초기화, 버튼 UI, 타입 문서에서 `luxuryOnly`를 제거했습니다.
+
+### 구현 메모
+
+- parser read model schema 변경은 없습니다.
+- `hammer`와 `scythe`는 구버전/특수 base item으로 보존해야 한다는 감사 기준을
+  `.agents/skills/dcss-item-audit/references/equipment-reference.md`에 기록했습니다.
+- `CHANGELOG.md`는 날짜별 릴리즈 섹션을 분리해 작성하도록 `AGENTS.md` 작업 규칙을 보강했습니다.
+
+### 운영 영향
+
+- MongoDB schema migration과 read model 재처리는 필요하지 않습니다.
+- Gallery API와 Gallery frontend 정적 파일이 바뀌므로 운영 `api`와 `reverse-proxy` 이미지를 재빌드해 반영합니다.
+
+### 알려진 이슈
+
+- `barding` 계열 armour가 frontend/API fallback category에서 `boots`처럼 취급될 수 있습니다.
+  - armour slot/category 계산에서 `barding`을 별도 하위 카테고리로 다룰지, boots 계열로 통합할지 후속 정리가 필요합니다.
+
+### 검증
+
+- 저장소 정책에 따라 로컬 테스트는 실행하지 않았습니다.
+- 운영 배포 후 `https://perusonari.ddns.net/` HTTP 응답으로 smoke 확인합니다.
+
 ## beta-v3 - 2026-06-16
 
 ### 요약
