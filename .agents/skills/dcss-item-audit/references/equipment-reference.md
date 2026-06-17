@@ -23,6 +23,21 @@ DCSS 장비 artifact는 크게 다음 계열로 나눌 수 있습니다.
 `DCSS_WEAPON_STATS`의 base damage, hit 보정, speed 값입니다. `최소 공속`은 evaluator 기준인
 `max(3, speed // 2)`로 계산합니다. 등급은 같은 weapon skill 안에서 damage를 기준으로 나눈 상대 등급입니다.
 
+### 구버전 base item 호환 주의
+
+구버전 morgue에는 현행 `DCSS_WEAPON_STATS`에 별도 key로 없거나, 현행 base item으로 통합된 이름이
+artifact base item처럼 남아 있을 수 있습니다. 이런 이름을 단순히 "현행 상수에 없음" 기준으로 삭제하면
+정상 randart를 잃을 수 있습니다.
+
+| 구버전/특수 표기 | 현행 처리 기준 | 감사 기준 |
+| --- | --- | --- |
+| `hammer` | `mace` 계열 | 삭제하지 않습니다. CrawlWiki 기준으로 mace와 같은 stat 계열로 보고 `maces & flails`로 분류합니다. |
+| `scythe` | `halberd` 계열 | 삭제하지 않습니다. Sigmund drop과 unrand `Finisher`의 base shape로 남을 수 있으며, halberd와 같은 stat 계열로 보고 `polearms`로 분류합니다. |
+
+구버전 제거 작업을 할 때 `hammer`와 `scythe`는 `hand crossbow`, `hunting sling`, `sabre`, `blowgun`,
+`fustibalus` 같은 실제 제거 후보와 분리해서 다룹니다. 삭제 전에는 원문 item line, parser 출력의
+`base_item`/`item_subtype`, 그리고 현행 계열 매핑 가능성을 함께 확인해야 합니다.
+
 ### Short Blades
 
 | 무기 | Damage | 명중 | 기본 공속 | 최소 공속 | Damage 등급 |
