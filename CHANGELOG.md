@@ -1,5 +1,33 @@
 # Changelog
 
+## beta-v3-hotfix5 - 2026-06-18
+
+### 요약
+
+- dragon scales 같은 base intrinsic 속성이 artifact 표시 속성과 중복 출력되는 문제를 수정했습니다.
+
+### 해결된 이슈
+
+- `golden dragon scales`의 base `rF+`와 artifact visible token `rF+++`가 서로 다른 문자열로 취급되어
+  이름과 token row에 `rF+++ ... rF+`처럼 중복 표시되던 문제를 해결했습니다.
+  - `all_attributes`는 같은 key가 visible token에 이미 있으면 base intrinsic token을 추가하지 않습니다.
+  - `random_attributes`는 단계형 base intrinsic 값을 visible total에서 차감한 delta token으로 저장합니다.
+  - 예: base `rF+`, visible `rF+++`이면 random delta는 `rF++`입니다.
+
+### 운영 영향
+
+- `artifact_processing_files.metadata_version`을 `attribute-delta-v1`로 올렸습니다.
+- 운영 적용 후 `arti-parser` job을 실행해 기존 `artifacts` read model을 재처리해야 합니다.
+- Gallery API는 저장된 read model을 읽기 때문에 재처리 완료 후 중복 표시가 사라집니다.
+
+### 검증
+
+- 문제 raw file `morgue-lkydig-20260610-023722.txt`를 로컬 dev DB에서 재처리해
+  `the +15 golden dragon scales of Alimpaim {rPois rF+++ rC+ rCorr Str+3 Dex-2}`로 저장되는 것을 확인했습니다.
+- `random_attributes`가 `["rF++", "rCorr", "Str+3", "Dex-2"]`로 저장되는 것을 확인했습니다.
+- `python3 -m unittest discover -s arti_parser/tests -t .`
+- `python3 -m unittest discover -s api/tests -t .`
+
 ## beta-v3-hotfix4 - 2026-06-18
 
 ### 요약

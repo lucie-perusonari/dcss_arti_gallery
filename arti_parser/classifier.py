@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from arti_parser.models import ArtifactDocumentAttribute
+from arti_parser.parser import NUMERIC_STEP_KEYS, RESISTANCE_STEP_KEYS, parse_property_token
 from arti_parser.constants import (
     BASE_ITEM_ATTRIBUTES,
     BASE_SUBTYPE_ATTRIBUTES,
@@ -59,13 +60,7 @@ def classify_artifact(
     visible_attributes = _dedupe([attribute.token for attribute in attributes])
     brand = _brand(display_name, visible_attributes)
     base_attributes = _base_attributes(attributes, base_subtype, base_item)
-    all_attributes = _dedupe(
-        [
-            *visible_attributes,
-            *([] if brand is None or brand in visible_attributes else [brand]),
-            *base_attributes,
-        ]
-    )
+    all_attributes = _all_attributes(visible_attributes, brand, base_attributes)
     return ArtifactClassification(
         item_class=item_class,
         item_subtype=_item_subtype_from_fields(
@@ -106,8 +101,57 @@ def _random_attributes(
     all_attributes: list[str],
     base_attributes: list[str],
 ) -> list[str]:
-    base_attribute_set = set(base_attributes)
-    return [token for token in all_attributes if token not in base_attribute_set]
+    base_by_key = {
+        key: value
+        for key, value in (parse_property_token(token) for token in base_attributes)
+    }
+    random: list[str] = []
+    for token in all_attributes:
+        key, value = parse_property_token(token)
+        base_value = base_by_key.get(key)
+        if base_value is None:
+            random.append(token)
+            continue
+        if _is_int_step(value) and _is_int_step(base_value):
+            delta = value - base_value
+            if delta:
+                random.append(_property_token_from_delta(key, delta))
+            continue
+        if value != base_value:
+            random.append(token)
+    return random
+
+
+def _all_attributes(
+    visible_attributes: list[str],
+    brand: str | None,
+    base_attributes: list[str],
+) -> list[str]:
+    attributes = [*visible_attributes]
+    if brand is not None and brand not in attributes:
+        attributes.append(brand)
+
+    represented_keys = {
+        parse_property_token(token)[0]
+        for token in attributes
+    }
+    for token in base_attributes:
+        key, _value = parse_property_token(token)
+        if key not in represented_keys:
+            attributes.append(token)
+            represented_keys.add(key)
+    return _dedupe(attributes)
+
+
+def _property_token_from_delta(key: str, delta: int) -> str:
+    if key in RESISTANCE_STEP_KEYS or key in NUMERIC_STEP_KEYS:
+        sign = "+" if delta > 0 else "-"
+        return f"{key}{sign * abs(delta)}"
+    return f"{key}{delta:+d}"
+
+
+def _is_int_step(value: int | bool | None) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
 
 
 def _brand(display_name: str, tokens: list[str]) -> str | None:

@@ -18,9 +18,11 @@
   `body armour` 등입니다.
 - `jewellery_slot`: jewellery일 때 `ring` 또는 `amulet`.
 - `brand`: property token이나 이름에서 추론한 weapon brand입니다.
-- `all_attributes`: visible token, brand, base intrinsic attribute를 합친 전체 속성입니다.
+- `all_attributes`: visible token, brand, base intrinsic attribute를 합친 전체 속성입니다. 같은 key가
+  visible token에 이미 있으면 base intrinsic token을 중복 추가하지 않습니다.
 - `base_attributes`: base subtype/item이 원래 가지는 intrinsic 속성입니다.
-- `random_attributes`: 평가에 들어가는 실제 랜덤 속성입니다.
+- `random_attributes`: 평가에 들어가는 실제 랜덤 속성입니다. `rF`, `rC`, `Will`, `Stlth`처럼 단계 값이
+  있는 base intrinsic 속성은 visible total에서 base 값을 차감한 delta token으로 저장합니다.
 
 ## 장비 분류 정책
 

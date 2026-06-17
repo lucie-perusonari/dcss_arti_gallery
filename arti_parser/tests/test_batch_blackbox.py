@@ -167,6 +167,56 @@ class ArtifactProcessingBlackBoxTest(unittest.TestCase):
         self.assertEqual(second_summary.raw_files_seen, 0)
         self.assertEqual(len(artifacts.documents), 1)
 
+    def test_batch_does_not_duplicate_dragon_scales_intrinsic_resistance_in_name(self) -> None:
+        raw_files = _Collection()
+        artifacts = _Collection()
+        processing = _Collection()
+        repository = MongoArtifactProcessingRepository(
+            raw_file_collection=raw_files,
+            artifacts_collection=artifacts,
+            processing_collection=processing,
+        )
+        raw_files.documents.append(
+            _raw_record(
+                "lkydig",
+                "morgue-lkydig-20260610-023722.txt",
+                "\n".join(
+                    [
+                        "Inventory:",
+                        " o - the +15 golden dragon scales of Alimpaim (worn) {rPois rF+++ rC+ rCorr Str+3 Dex-2}",
+                        "   (You acquired it on level 14 of the Dungeon)",
+                        "",
+                        "   rPois:     It protects you from poison.",
+                        "   rF+++:     It renders you almost immune to fire.",
+                        "   rC+:       It protects you from cold.",
+                        "   rCorr:     It protects you from acid and corrosion.",
+                        "   Str+3:     It affects your strength (+3).",
+                        "   Dex-2:     It affects your dexterity (-2).",
+                        "   Skills:",
+                    ]
+                ),
+                "hash-gds",
+            ).to_dict()
+        )
+
+        summary = ArtifactProcessingBatchProcessor(repository).process_batch(limit=10)
+
+        self.assertEqual(summary.artifacts_written, 1)
+        artifact = artifacts.documents[0]
+        self.assertEqual(
+            artifact["name"],
+            "the +15 golden dragon scales of Alimpaim {rPois rF+++ rC+ rCorr Str+3 Dex-2}",
+        )
+        self.assertEqual(artifact["base_attributes"], ["rF+", "rC+", "rPois"])
+        self.assertEqual(
+            artifact["all_attributes"],
+            ["rPois", "rF+++", "rC+", "rCorr", "Str+3", "Dex-2"],
+        )
+        self.assertEqual(
+            artifact["random_attributes"],
+            ["rF++", "rCorr", "Str+3", "Dex-2"],
+        )
+
     def test_batch_merges_same_signature_artifacts_into_canonical_document(self) -> None:
         raw_files = _Collection()
         artifacts = _Collection()

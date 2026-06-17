@@ -19,7 +19,7 @@ DEFAULT_MONGO_ARTIFACT_PROCESSING_COLLECTION = "artifact_processing_files"
 FETCH_STATUS_FETCHED = "fetched"
 PROCESSING_STATUS_COMPLETED = "completed"
 PROCESSING_STATUS_FAILED = "failed"
-ARTIFACT_METADATA_VERSION = "source-version-v1"
+ARTIFACT_METADATA_VERSION = "attribute-delta-v1"
 MORGUE_FILE_DATE_RE = re.compile(r"-(?P<date>\d{8})-(?P<time>\d{6})(?:\.[^.]+)?$")
 RAW_FILE_METADATA_PROJECTION = {
     "_id": 0,
