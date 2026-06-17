@@ -12,8 +12,6 @@
   - `artifactCount: int`
   - `crawlActive: bool`
   - `rawFiles: RawFileStatus`
-  - `crawlFiles: dict[str, int]`
-  - `crawlUsers: dict[str, int]`
   - `latest: LatestActivity`
   - `recentErrors: list[CrawlError]`
 
@@ -37,7 +35,6 @@
 - 필드:
   - `fetchedAt: str | None`
   - `processedAt: str | None`
-  - `scannedAt: str | None`
 
 ## `CrawlError`
 

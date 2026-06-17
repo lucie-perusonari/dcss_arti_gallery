@@ -49,30 +49,14 @@ class AdminCrawlStatusApiTest(unittest.TestCase):
                 },
             ]
         )
-        self.repository.crawl_files_collection.insert_many(
-            [
-                {"player": "wiiwiwi", "name": "ok.txt", "status": "completed"},
-                {
-                    "player": "bad",
-                    "name": "bad.txt",
-                    "status": "failed",
-                    "error": "file failed",
-                    "processed_at": "2026-01-01T00:04:00+00:00",
-                },
-            ]
-        )
-        self.repository.crawl_users_collection.insert_many(
+        self.repository.crawl_errors_collection.insert_many(
             [
                 {
-                    "player": "wiiwiwi",
-                    "status": "completed",
-                    "scanned_at": "2026-01-01T00:05:00+00:00",
-                },
-                {
                     "player": "bad",
-                    "status": "failed",
-                    "error": "directory failed",
-                    "scanned_at": "2026-01-01T00:06:00+00:00",
+                    "name": "morgue-bad-20260101-000001.txt",
+                    "stage": "fetch_file",
+                    "message": "network down",
+                    "occurred_at": "2026-01-01T00:06:00+00:00",
                 },
             ]
         )
@@ -89,15 +73,12 @@ class AdminCrawlStatusApiTest(unittest.TestCase):
         self.assertEqual(data["rawFiles"]["processPending"], 1)
         self.assertEqual(data["rawFiles"]["processProcessed"], 1)
         self.assertEqual(data["rawFiles"]["processFailed"], 1)
-        self.assertEqual(data["crawlFiles"], {"completed": 1, "failed": 1})
-        self.assertEqual(data["crawlUsers"], {"completed": 1, "failed": 1})
         self.assertEqual(data["latest"]["fetchedAt"], "2026-01-01T00:02:00+00:00")
         self.assertEqual(data["latest"]["processedAt"], "2026-01-01T00:03:00+00:00")
-        self.assertEqual(data["latest"]["scannedAt"], "2026-01-01T00:06:00+00:00")
-        self.assertEqual(data["recentErrors"][0]["message"], "directory failed")
+        self.assertEqual(data["recentErrors"][0]["message"], "network down")
         self.assertEqual(
             {error["kind"] for error in data["recentErrors"]},
-            {"fetch", "process", "file", "user"},
+            {"fetch", "process", "fetch_file"},
         )
 
 
@@ -112,6 +93,7 @@ class MockCrawlStatusApiTest(unittest.TestCase):
             response.json(),
             {
                 "artifactCount": 7,
+                "crawlActive": False,
                 "rawFiles": {
                     "total": 9,
                     "fetched": 8,
@@ -120,12 +102,9 @@ class MockCrawlStatusApiTest(unittest.TestCase):
                     "processProcessed": 6,
                     "processFailed": 1,
                 },
-                "crawlFiles": {"completed": 6, "failed": 1},
-                "crawlUsers": {"completed": 3, "pending": 2},
                 "latest": {
                     "fetchedAt": "2026-01-01T00:02:00+00:00",
                     "processedAt": "2026-01-01T00:03:00+00:00",
-                    "scannedAt": "2026-01-01T00:04:00+00:00",
                 },
                 "recentErrors": [],
             },
@@ -165,12 +144,9 @@ class MockCrawlStatusRepository:
                 processProcessed=6,
                 processFailed=1,
             ),
-            crawlFiles={"completed": 6, "failed": 1},
-            crawlUsers={"completed": 3, "pending": 2},
             latest=LatestActivity(
                 fetchedAt="2026-01-01T00:02:00+00:00",
                 processedAt="2026-01-01T00:03:00+00:00",
-                scannedAt="2026-01-01T00:04:00+00:00",
             ),
             recentErrors=[],
         )

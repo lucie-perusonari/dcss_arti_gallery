@@ -59,8 +59,7 @@ Key MongoDB environment variables:
 | `MONGODB_DATABASE` | `dcss_arti_gallery` | Database name. |
 | `MONGODB_COLLECTION` | `artifacts` | Collection used for artifact counts. |
 | `MONGODB_RAW_FILES_COLLECTION` | `raw_morgue_files` | Collection read for raw fetch/process status. |
-| `MONGODB_CRAWL_FILES_COLLECTION` | `crawl_files` | File-level crawl status collection. |
-| `MONGODB_CRAWL_USERS_COLLECTION` | `crawl_users` | User scan status collection. |
+| `MONGODB_CRAWL_ERRORS_COLLECTION` | `crawl_errors` | Crawl failure event log collection. |
 | `MONGODB_ARTIFACT_PROCESSING_COLLECTION` | `artifact_processing_files` | Artifact processing status collection. |
 
 ## Tests

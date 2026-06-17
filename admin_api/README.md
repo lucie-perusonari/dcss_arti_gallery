@@ -68,8 +68,7 @@ Artifact 처리 상태는 `MONGODB_ARTIFACT_PROCESSING_COLLECTION`에서 읽고,
 | `MONGODB_DATABASE` | `dcss_arti_gallery` | 사용할 database 이름입니다. |
 | `MONGODB_COLLECTION` | `artifacts` | artifact count를 읽는 컬렉션입니다. |
 | `MONGODB_RAW_FILES_COLLECTION` | `raw_morgue_files` | raw fetch/process 상태를 읽는 컬렉션입니다. |
-| `MONGODB_CRAWL_FILES_COLLECTION` | `crawl_files` | 파일별 crawl 상태 컬렉션입니다. |
-| `MONGODB_CRAWL_USERS_COLLECTION` | `crawl_users` | user scan 상태 컬렉션입니다. |
+| `MONGODB_CRAWL_ERRORS_COLLECTION` | `crawl_errors` | crawl 실패 이벤트 로그 컬렉션입니다. |
 | `MONGODB_ARTIFACT_PROCESSING_COLLECTION` | `artifact_processing_files` | artifact 처리 상태 컬렉션입니다. |
 
 ## 테스트

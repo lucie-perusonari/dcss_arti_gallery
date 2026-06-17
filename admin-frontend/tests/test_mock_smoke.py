@@ -29,12 +29,9 @@ MOCK_STATUS = {
         "processProcessed": 6,
         "processFailed": 1,
     },
-    "crawlFiles": {"completed": 6, "failed": 1},
-    "crawlUsers": {"completed": 3, "pending": 2},
     "latest": {
         "fetchedAt": "2026-01-01T00:02:00+00:00",
         "processedAt": "2026-01-01T00:03:00+00:00",
-        "scannedAt": "2026-01-01T00:04:00+00:00",
     },
     "recentErrors": [
         {

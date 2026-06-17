@@ -19,7 +19,6 @@
 - 필드:
   - `fetchedAt?: string | null`
   - `processedAt?: string | null`
-  - `scannedAt?: string | null`
 
 ## `CrawlError`
 
@@ -38,8 +37,6 @@
   - `artifactCount: number`
   - `crawlActive: boolean`
   - `rawFiles: RawFileStatus`
-  - `crawlFiles: Record<string, number>`
-  - `crawlUsers: Record<string, number>`
   - `latest: LatestActivity`
   - `recentErrors: CrawlError[]`
 

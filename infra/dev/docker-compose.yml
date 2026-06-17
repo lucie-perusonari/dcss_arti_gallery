@@ -23,8 +23,7 @@ services:
       MONGODB_URI: mongodb://mongo:27017
       MONGODB_DATABASE: ${MONGODB_DATABASE:-dcss_arti_gallery}
       MONGODB_COLLECTION: ${MONGODB_COLLECTION:-artifacts}
-      MONGODB_CRAWL_FILES_COLLECTION: ${MONGODB_CRAWL_FILES_COLLECTION:-crawl_files}
-      MONGODB_CRAWL_USERS_COLLECTION: ${MONGODB_CRAWL_USERS_COLLECTION:-crawl_users}
+      MONGODB_CRAWL_ERRORS_COLLECTION: ${MONGODB_CRAWL_ERRORS_COLLECTION:-crawl_errors}
       MONGODB_RAW_FILES_COLLECTION: ${MONGODB_RAW_FILES_COLLECTION:-raw_morgue_files}
       MONGODB_ARTIFACT_PROCESSING_COLLECTION: ${MONGODB_ARTIFACT_PROCESSING_COLLECTION:-artifact_processing_files}
     command: >
@@ -68,8 +67,7 @@ services:
       MONGODB_DATABASE: ${MONGODB_DATABASE:-dcss_arti_gallery}
       MONGODB_COLLECTION: ${MONGODB_COLLECTION:-artifacts}
       MONGODB_RAW_FILES_COLLECTION: ${MONGODB_RAW_FILES_COLLECTION:-raw_morgue_files}
-      MONGODB_CRAWL_FILES_COLLECTION: ${MONGODB_CRAWL_FILES_COLLECTION:-crawl_files}
-      MONGODB_CRAWL_USERS_COLLECTION: ${MONGODB_CRAWL_USERS_COLLECTION:-crawl_users}
+      MONGODB_CRAWL_ERRORS_COLLECTION: ${MONGODB_CRAWL_ERRORS_COLLECTION:-crawl_errors}
       MONGODB_ARTIFACT_PROCESSING_COLLECTION: ${MONGODB_ARTIFACT_PROCESSING_COLLECTION:-artifact_processing_files}
       ADMIN_API_CORS_ORIGINS: ${ADMIN_API_CORS_ORIGINS:-http://localhost:15174,http://127.0.0.1:15174}
       PROMETHEUS_URL: http://prometheus:9090
@@ -96,17 +94,9 @@ services:
       - python_cache:/root/.cache/pip
     environment:
       MONGODB_URI: mongodb://mongo:27017
-      MONGODB_DATABASE: ${MONGODB_DATABASE:-dcss_arti_gallery}
-      MONGODB_RAW_FILES_COLLECTION: ${MONGODB_RAW_FILES_COLLECTION:-raw_morgue_files}
-      MONGODB_CRAWL_FILES_COLLECTION: ${MONGODB_CRAWL_FILES_COLLECTION:-crawl_files}
-      MONGODB_CRAWL_USERS_COLLECTION: ${MONGODB_CRAWL_USERS_COLLECTION:-crawl_users}
-      CRAWL_USER_SKIP_MODE: ${CRAWL_USER_SKIP_MODE:-modified_at}
-      CRAWL_LOG_LEVEL: ${CRAWL_LOG_LEVEL:-INFO}
-      MORGUE_REQUEST_DELAY_SECONDS: ${MORGUE_REQUEST_DELAY_SECONDS:-1}
-      MORGUE_REQUEST_TIMEOUT_SECONDS: ${MORGUE_REQUEST_TIMEOUT_SECONDS:-10}
     command: >
       sh -c "python -m pip install --no-cache-dir -r requirements.txt
-      && python -m crawl_service.worker --once"
+      && python -m crawl_service.worker"
     depends_on:
       mongo-indexes:
         condition: service_completed_successfully

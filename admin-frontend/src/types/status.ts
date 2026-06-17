@@ -10,7 +10,6 @@ export type RawFileStatus = {
 export type LatestActivity = {
   fetchedAt?: string | null;
   processedAt?: string | null;
-  scannedAt?: string | null;
 };
 
 export type CrawlError = {
@@ -25,8 +24,6 @@ export type CrawlStatus = {
   artifactCount: number;
   crawlActive: boolean;
   rawFiles: RawFileStatus;
-  crawlFiles: Record<string, number>;
-  crawlUsers: Record<string, number>;
   latest: LatestActivity;
   recentErrors: CrawlError[];
 };

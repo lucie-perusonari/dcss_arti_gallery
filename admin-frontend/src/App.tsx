@@ -128,13 +128,10 @@ export function App() {
         <Panel title="Latest Activity">
           <KeyValue label="Fetched" value={status?.latest.fetchedAt} />
           <KeyValue label="Processed" value={status?.latest.processedAt} />
-          <KeyValue label="User scanned" value={status?.latest.scannedAt} />
         </Panel>
 
         <Panel title="Worker State">
           <KeyValue label="Crawl active" value={status?.crawlActive ? 'yes' : 'no'} />
-          <StatusCounts title="Users" values={status?.crawlUsers ?? {}} />
-          <StatusCounts title="Files" values={status?.crawlFiles ?? {}} />
         </Panel>
 
         <Panel title="Recent Errors" wide>
@@ -184,20 +181,6 @@ function KeyValue({ label, value }: { label: string; value?: string | null }) {
     <div className="key-value">
       <span>{label}</span>
       <strong>{value ?? '-'}</strong>
-    </div>
-  );
-}
-
-function StatusCounts({ title, values }: { title: string; values: Record<string, number> }) {
-  const entries = Object.entries(values);
-  return (
-    <div className="status-counts">
-      <h3>{title}</h3>
-      {entries.length > 0 ? (
-        entries.map(([key, value]) => <KeyValue key={key} label={key} value={value.toLocaleString()} />)
-      ) : (
-        <p className="empty">No records.</p>
-      )}
     </div>
   );
 }

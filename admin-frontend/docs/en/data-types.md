@@ -19,7 +19,6 @@ This document defines the status types consumed by the crawl operations dashboar
 - Fields:
   - `fetchedAt?: string | null`
   - `processedAt?: string | null`
-  - `scannedAt?: string | null`
 
 ## `CrawlError`
 
@@ -38,8 +37,6 @@ This document defines the status types consumed by the crawl operations dashboar
   - `artifactCount: number`
   - `crawlActive: boolean`
   - `rawFiles: RawFileStatus`
-  - `crawlFiles: Record<string, number>`
-  - `crawlUsers: Record<string, number>`
   - `latest: LatestActivity`
   - `recentErrors: CrawlError[]`
 

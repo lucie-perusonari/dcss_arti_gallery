@@ -12,8 +12,6 @@ This document defines the public response DTOs owned by `admin_api`.
   - `artifactCount: int`
   - `crawlActive: bool`
   - `rawFiles: RawFileStatus`
-  - `crawlFiles: dict[str, int]`
-  - `crawlUsers: dict[str, int]`
   - `latest: LatestActivity`
   - `recentErrors: list[CrawlError]`
 
@@ -37,7 +35,6 @@ minutes earlier by the admin API process. It does not read crawl service interna
 - Fields:
   - `fetchedAt: str | None`
   - `processedAt: str | None`
-  - `scannedAt: str | None`
 
 ## `CrawlError`
 

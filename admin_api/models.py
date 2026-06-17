@@ -21,7 +21,6 @@ class LatestActivity(BaseModel):
 
     fetchedAt: str | None = None
     processedAt: str | None = None
-    scannedAt: str | None = None
 
 
 class CrawlError(BaseModel):
@@ -40,8 +39,6 @@ class CrawlStatus(BaseModel):
     artifactCount: int
     crawlActive: bool = False
     rawFiles: RawFileStatus
-    crawlFiles: dict[str, int]
-    crawlUsers: dict[str, int]
     latest: LatestActivity
     recentErrors: list[CrawlError]
 

@@ -14,8 +14,7 @@ from pymongo.errors import PyMongoError, ServerSelectionTimeoutError
 DEFAULT_MONGO_URI = "mongodb://localhost:27018"
 DEFAULT_MONGO_DATABASE = "dcss_arti_gallery"
 DEFAULT_MONGO_COLLECTION = "artifacts"
-DEFAULT_MONGO_CRAWL_FILES_COLLECTION = "crawl_files"
-DEFAULT_MONGO_CRAWL_USERS_COLLECTION = "crawl_users"
+DEFAULT_MONGO_CRAWL_ERRORS_COLLECTION = "crawl_errors"
 DEFAULT_MONGO_RAW_FILES_COLLECTION = "raw_morgue_files"
 DEFAULT_MONGO_ARTIFACT_PROCESSING_COLLECTION = "artifact_processing_files"
 CONNECT_TIMEOUT_MS = 1000
@@ -57,11 +56,8 @@ def _wait_for_mongo(client: MongoClient) -> None:
 
 def _ensure_indexes(database: Any) -> None:
     artifacts = database[os.environ.get("MONGODB_COLLECTION", DEFAULT_MONGO_COLLECTION)]
-    crawl_files = database[
-        os.environ.get("MONGODB_CRAWL_FILES_COLLECTION", DEFAULT_MONGO_CRAWL_FILES_COLLECTION)
-    ]
-    crawl_users = database[
-        os.environ.get("MONGODB_CRAWL_USERS_COLLECTION", DEFAULT_MONGO_CRAWL_USERS_COLLECTION)
+    crawl_errors = database[
+        os.environ.get("MONGODB_CRAWL_ERRORS_COLLECTION", DEFAULT_MONGO_CRAWL_ERRORS_COLLECTION)
     ]
     raw_files = database[
         os.environ.get("MONGODB_RAW_FILES_COLLECTION", DEFAULT_MONGO_RAW_FILES_COLLECTION)
@@ -73,23 +69,9 @@ def _ensure_indexes(database: Any) -> None:
         )
     ]
 
-    crawl_files.create_index([("player", 1), ("name", 1)], unique=True)
-    crawl_files.create_index("status")
-    crawl_files.create_index(
-        [("processed_at", -1)],
-        name="crawl_file_errors_processed_at_desc",
-        partialFilterExpression={"error": {"$type": "string"}},
-    )
-
-    crawl_users.create_index("player", unique=True)
-    crawl_users.create_index("observed_at")
-    crawl_users.create_index("status")
-    crawl_users.create_index("scanned_at")
-    crawl_users.create_index(
-        [("scanned_at", -1)],
-        name="crawl_user_errors_scanned_at_desc",
-        partialFilterExpression={"error": {"$type": "string"}},
-    )
+    crawl_errors.create_index([("occurred_at", -1)])
+    crawl_errors.create_index("stage")
+    crawl_errors.create_index([("player", 1), ("name", 1)])
 
     raw_files.create_index([("player", 1), ("name", 1)], unique=True)
     raw_files.create_index("content_hash")
