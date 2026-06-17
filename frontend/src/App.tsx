@@ -74,6 +74,7 @@ const weaponCategories: Record<string, string> = {
   rapier: "short blades",
   "sacred scourge": "maces & flails",
   scimitar: "long blades",
+  scythe: "polearms",
   "short sword": "short blades",
   shortbow: "ranged",
   sling: "ranged",
@@ -502,6 +503,8 @@ function weaponCategoryForArtifact(artifact: Artifact) {
   const baseItem = artifact.baseItem.trim().toLowerCase();
   if (weaponCategories[subtype]) return weaponCategories[subtype];
   if (weaponCategories[baseItem]) return weaponCategories[baseItem];
+  if (subtype.endsWith(" sword") || baseItem.endsWith(" sword"))
+    return "long blades";
   return artifact.weaponSubtype === "ranged" ? "ranged" : "other weapons";
 }
 

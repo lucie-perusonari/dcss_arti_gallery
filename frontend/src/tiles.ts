@@ -42,6 +42,7 @@ const weaponTiles: Record<string, string> = {
   rapier: '/tiles/equipment/artifact/weapon/rapier3.png',
   'sacred scourge': '/tiles/equipment/artifact/weapon/demon_whip3.png',
   scimitar: '/tiles/equipment/artifact/weapon/scimitar3.png',
+  scythe: '/tiles/equipment/artifact/weapon/scythe3.png',
   'short sword': '/tiles/equipment/artifact/weapon/short_sword3.png',
   shortbow: '/tiles/equipment/artifact/weapon/ranged/shortbow3.png',
   sling: '/tiles/equipment/artifact/weapon/ranged/sling3.png',
@@ -143,6 +144,13 @@ function fallbackTileForArtifact(artifact: Artifact): string | null {
   const subtype = artifact.subtype.trim().toLowerCase();
 
   if (artifact.type === 'weapon') {
+    if (
+      !weaponTiles[baseItem] &&
+      !weaponTiles[subtype] &&
+      (subtype.endsWith(' sword') || baseItem.endsWith(' sword'))
+    ) {
+      return weaponTiles['long sword'];
+    }
     return weaponTiles[baseItem] ?? weaponTiles[subtype] ?? '/tiles/equipment/artifact/weapon/dagger3.png';
   }
   if (artifact.type === 'armour') {

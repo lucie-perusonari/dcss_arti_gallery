@@ -68,6 +68,7 @@ RANDART_WEAPON_TILES = {
     "rapier": _equipment_paths("artifact", "weapon/rapier3"),
     "sacred scourge": _equipment_paths("artifact", "weapon/demon_whip3"),
     "scimitar": _equipment_paths("artifact", "weapon/scimitar3"),
+    "scythe": _equipment_paths("artifact", "weapon/scythe3"),
     "short sword": _equipment_paths("artifact", "weapon/short_sword3"),
     "shortbow": _equipment_paths("artifact", "weapon/ranged/shortbow3"),
     "sling": _equipment_paths("artifact", "weapon/ranged/sling3"),
@@ -384,6 +385,10 @@ def _tile_for(document: dict[str, Any]) -> str:
     if item_class == "weapon":
         if base_item in RANDART_WEAPON_TILES:
             return _pick_variant(RANDART_WEAPON_TILES[base_item], document)
+        if subtype not in RANDART_WEAPON_TILES and (
+            subtype.endswith(" sword") or base_item.endswith(" sword")
+        ):
+            return _pick_variant(RANDART_WEAPON_TILES["long sword"], document)
         return _pick_variant(FALLBACK_RANDART_WEAPON_TILES, document)
     if item_class == "jewellery":
         if document.get("jewellery_slot") == "amulet" or subtype.startswith("amulet of "):

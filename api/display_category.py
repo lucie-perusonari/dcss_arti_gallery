@@ -55,6 +55,7 @@ WEAPON_CATEGORIES: dict[str, str] = {
     "rapier": "short blades",
     "sacred scourge": "maces & flails",
     "scimitar": "long blades",
+    "scythe": "polearms",
     "short sword": "short blades",
     "shortbow": "ranged",
     "sling": "ranged",
@@ -86,6 +87,8 @@ def display_category_for_document(document: dict[str, Any]) -> str:
         return (
             WEAPON_CATEGORIES.get(item_subtype)
             or WEAPON_CATEGORIES.get(base_item)
+            or _legacy_weapon_category(item_subtype)
+            or _legacy_weapon_category(base_item)
             or ("ranged" if document.get("weapon_subtype") == "ranged" else "other weapons")
         )
     if item_class == "armour":
@@ -135,8 +138,14 @@ def _weapon_category_filter(category: str) -> dict[str, Any]:
             "weapon_subtype": {"$ne": "ranged"},
             "item_subtype": {"$nin": KNOWN_WEAPON_ITEMS},
             "base_item": {"$nin": KNOWN_WEAPON_ITEMS},
+            "$and": [
+                {"item_subtype": {"$not": {"$regex": " sword$", "$options": "i"}}},
+                {"base_item": {"$not": {"$regex": " sword$", "$options": "i"}}},
+            ],
         }
     item_filters = _weapon_item_filters(category)
+    if category == "long blades":
+        item_filters.extend(_legacy_sword_filters())
     return {"item_class": "weapon", "$or": item_filters} if item_filters else {}
 
 
@@ -145,6 +154,29 @@ def _weapon_item_filters(category: str) -> list[dict[str, Any]]:
     return [
         {"item_subtype": {"$in": item_names}},
         {"base_item": {"$in": item_names}},
+    ]
+
+
+def _legacy_weapon_category(item_name: str) -> str | None:
+    if item_name and item_name not in KNOWN_WEAPON_ITEMS and item_name.endswith(" sword"):
+        return "long blades"
+    return None
+
+
+def _legacy_sword_filters() -> list[dict[str, Any]]:
+    return [
+        {
+            "$and": [
+                {"item_subtype": {"$regex": " sword$", "$options": "i"}},
+                {"item_subtype": {"$nin": KNOWN_WEAPON_ITEMS}},
+            ],
+        },
+        {
+            "$and": [
+                {"base_item": {"$regex": " sword$", "$options": "i"}},
+                {"base_item": {"$nin": KNOWN_WEAPON_ITEMS}},
+            ],
+        },
     ]
 
 
