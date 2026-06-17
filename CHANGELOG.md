@@ -41,6 +41,11 @@
 - 운영 배포는 `beta-v3` tag 기준으로 prod compose stack을 재빌드해 반영합니다.
 - Talisman 필터 hotfix는 frontend 정적 파일만 바뀌므로 운영 `reverse-proxy` 재빌드로 반영할 수 있습니다.
 
+### 알려진 이슈
+
+- `barding` 계열 armour가 frontend/API fallback category에서 `boots`처럼 취급될 수 있습니다.
+  - armour slot/category 계산에서 `barding`을 별도 하위 카테고리로 다룰지, boots 계열로 통합할지 후속 정리가 필요합니다.
+
 ### 검증
 
 - 로컬 dev compose stack에서 Gallery API `/filters`, `displayCategory` 조회, Admin API `/admin/crawl-status` smoke 확인을 수행했습니다.
