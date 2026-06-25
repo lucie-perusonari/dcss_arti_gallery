@@ -47,6 +47,7 @@ export type ArtifactFilters = {
   slot: string;
   player: string;
   timeRange: '30d' | 'all';
+  sort: 'recent' | 'score';
 };
 
 export type ArtifactFiltersMetadata = {

@@ -10,6 +10,7 @@
   - `displayCategory`: 타입 안의 UI 표시 하위 카테고리입니다. 현재는 저장 필드가 아니라 API fallback 계산 규칙으로 필터링합니다.
   - `player`: 대표 source 또는 누적 source evidence의 player exact match입니다.
   - `since`: 기본값 `30d`입니다. `all`이면 날짜 범위를 제한하지 않습니다.
+  - `sort`: `recent` 또는 `score`입니다. 기본값 `recent`는 최신 게임 기록 우선입니다.
   - `limit`: 기본값 `200`, 최대 `1000`입니다.
   - `offset`: 정렬된 결과에서 건너뛸 개수입니다.
 - `GET /artifacts/{artifact_id}` 단건 조회를 제공합니다.

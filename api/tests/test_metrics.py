@@ -57,6 +57,7 @@ class MetricsRepository:
         since_days: int | None = 30,
         limit: int = 200,
         offset: int = 0,
+        sort_by: str = "recent",
     ) -> list[ArtifactDocument]:
         return []
 

@@ -10,7 +10,8 @@
 - `DcssItemDescription`은 상세 팝업 하단에 최초 발견 version/datetime을 표시합니다.
 - 플레이어 입력 UI는 `player` 필터를 갱신해 Gallery API에서 해당 플레이어의 저장된 랜다트를 불러옵니다.
 - `FilterBar`는 type segmented control과 type별 하위 slot/subtype segmented control을 렌더링합니다.
-- `FilterBar`는 기본 최근 30일과 전체 기간을 전환하는 `timeRange` control도 렌더링합니다.
+- `FilterBar`는 기본 최근 30일과 전체 기간을 전환하는 `timeRange` control, 최신순/점수순을
+  전환하는 `sort` control도 렌더링합니다.
 - 하위 slot/subtype 옵션은 Gallery API의 `/filters.displayCategories` 메타데이터에서 계산하고,
   실제 표시 목록만 slot으로 필터링합니다. 장신구 하위 필터는 `Ring`과 `Amulet`만 표시합니다.
 - Talisman 하위 필터는 개별 subtype 버튼 대신 form tier 버튼으로 표시합니다.

@@ -82,6 +82,26 @@ export function FilterBar({ filters, types, slots, onChange }: FilterBarProps) {
           All time
         </button>
       </div>
+
+      <div
+        className="segmented segmented--secondary"
+        aria-label="Artifact sort order"
+      >
+        <button
+          className={filters.sort === 'recent' ? 'is-active' : ''}
+          type="button"
+          onClick={() => onChange({ ...filters, sort: 'recent' })}
+        >
+          Recent
+        </button>
+        <button
+          className={filters.sort === 'score' ? 'is-active' : ''}
+          type="button"
+          onClick={() => onChange({ ...filters, sort: 'score' })}
+        >
+          Score
+        </button>
+      </div>
     </div>
   );
 }

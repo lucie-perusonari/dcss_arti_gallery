@@ -140,6 +140,7 @@ const getInitialFilters = (): ArtifactFilters => {
     slot: params.get("slot") ?? "all",
     player: params.get("player") ?? "",
     timeRange: params.get("since") === "all" ? "all" : "30d",
+    sort: params.get("sort") === "score" ? "score" : "recent",
   };
 };
 
@@ -168,8 +169,15 @@ export function App() {
       slot: "all",
       player: filters.player,
       timeRange: filters.timeRange,
+      sort: filters.sort,
     }),
-    [filters.player, filters.search, filters.timeRange, filters.type],
+    [
+      filters.player,
+      filters.search,
+      filters.sort,
+      filters.timeRange,
+      filters.type,
+    ],
   );
 
   useEffect(() => {
@@ -249,6 +257,7 @@ export function App() {
     filters.player,
     filters.search,
     filters.slot,
+    filters.sort,
     filters.timeRange,
     filters.type,
     rowVirtualizer,

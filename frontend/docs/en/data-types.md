@@ -62,11 +62,15 @@ attributes. `discovery` is rendered at the bottom of the item description popup.
   - `slot: string`
   - `player: string`
   - `timeRange: '30d' | 'all'`
+  - `sort: 'recent' | 'score'`
 
 `player` is sent as the Gallery API `player` query parameter.
 
 `timeRange` is sent as the Gallery API `since` query parameter. The default `30d` limits the view to recent games,
 while `all` removes the date range.
+
+`sort` is sent as the Gallery API `sort` query parameter. The default `recent` prioritizes latest game records,
+while `score` prioritizes artifact evaluation score.
 
 `slot` is a frontend display filter computed with the same fallback category rules as the Gallery API. The frontend
 keeps the API result list for the current type/search/player filters and derives the displayed list with `slot`, so

@@ -89,13 +89,16 @@ async function fetchAllArtifacts(
   return artifacts;
 }
 
-function uniqueArtifacts(artifactGroups: Artifact[][]): Artifact[] {
+function uniqueArtifacts(
+  artifactGroups: Artifact[][],
+  sort: ArtifactFilters["sort"],
+): Artifact[] {
   const byId = new Map<string, Artifact>();
   for (const artifact of artifactGroups.flat()) {
     byId.set(artifact.id, artifact);
   }
-  return Array.from(byId.values()).sort(
-    (left, right) => right.score.total - left.score.total,
+  return Array.from(byId.values()).sort((left, right) =>
+    compareArtifacts(left, right, sort),
   );
 }
 
@@ -107,6 +110,7 @@ export const artifactApi = {
     if (filters.search.trim()) params.set("q", filters.search.trim());
     if (filters.player.trim()) params.set("player", filters.player.trim());
     params.set("since", filters.timeRange);
+    params.set("sort", filters.sort);
 
     const filtersMetadata = await this.listFilters();
     const types = (
@@ -124,7 +128,7 @@ export const artifactApi = {
         }),
       ),
     );
-    return uniqueArtifacts(artifactGroups);
+    return uniqueArtifacts(artifactGroups, filters.sort);
   },
 
   async getArtifact(id: string): Promise<Artifact | null> {
@@ -178,6 +182,28 @@ export const artifactApi = {
     };
   },
 };
+
+function compareArtifacts(
+  left: Artifact,
+  right: Artifact,
+  sort: ArtifactFilters["sort"],
+) {
+  if (sort === "score") {
+    return (
+      right.score.total - left.score.total ||
+      discoveryTime(right) - discoveryTime(left)
+    );
+  }
+  return (
+    discoveryTime(right) - discoveryTime(left) ||
+    right.score.total - left.score.total
+  );
+}
+
+function discoveryTime(artifact: Artifact) {
+  const value = artifact.discovery.datetime;
+  return value ? Date.parse(value) || 0 : 0;
+}
 
 function displayCategoriesForType(
   filtersMetadata: ArtifactFiltersMetadata,

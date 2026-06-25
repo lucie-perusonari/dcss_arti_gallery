@@ -63,12 +63,16 @@ TypeScript 타입은 Gallery API 응답과 정렬되어야 합니다.
   - `slot: string`
   - `player: string`
   - `timeRange: '30d' | 'all'`
+  - `sort: 'recent' | 'score'`
 
 `player`는 Gallery API의 `player` query parameter로 전달해 특정 플레이어가 얻은 랜다트 목록을
 불러오는 데 사용합니다.
 
 `timeRange`는 Gallery API의 `since` query parameter로 전달합니다. 기본값 `30d`는 최근 30일 게임만
 조회하고, `all`은 날짜 범위를 제한하지 않습니다.
+
+`sort`는 Gallery API의 `sort` query parameter로 전달합니다. 기본값 `recent`는 최신 게임 기록을
+우선 표시하고, `score`는 평가 점수를 우선 표시합니다.
 
 `slot`은 frontend 표시 필터이며, API와 같은 fallback 분류 규칙으로 계산합니다. API에서 받은 타입/검색/player 기준 원본
 목록은 유지하고, 화면에 표시할 목록만 `slot`으로 파생 필터링합니다. 이렇게 해야 하위 필터 버튼을

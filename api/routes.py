@@ -22,6 +22,7 @@ def create_router(artifact_repository: ArtifactReadRepository) -> APIRouter:
         displayCategory: str | None = Query(default=None),
         player: str | None = Query(default=None),
         since: str = Query(default=f"{DEFAULT_RECENT_DAYS}d"),
+        sort: str = Query(default="recent"),
         limit: int = Query(default=DEFAULT_ARTIFACT_LIMIT, ge=1, le=MAX_ARTIFACT_LIMIT),
         offset: int = Query(default=0, ge=0),
     ) -> dict:
@@ -32,6 +33,7 @@ def create_router(artifact_repository: ArtifactReadRepository) -> APIRouter:
             "since_days": _since_days(since),
             "limit": limit,
             "offset": offset,
+            "sort_by": _sort_by(sort),
         }
         if displayCategory is not None:
             list_kwargs["display_category"] = displayCategory
@@ -71,3 +73,8 @@ def _since_days(value: str) -> int | None:
     except ValueError:
         return DEFAULT_RECENT_DAYS
     return max(days, 0)
+
+
+def _sort_by(value: str) -> str:
+    normalized = value.strip().lower()
+    return "score" if normalized == "score" else "recent"

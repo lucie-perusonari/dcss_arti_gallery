@@ -36,6 +36,7 @@ class ArtifactReadRepository(Protocol):
         since_days: int | None = DEFAULT_RECENT_DAYS,
         limit: int = DEFAULT_ARTIFACT_LIMIT,
         offset: int = 0,
+        sort_by: str = "recent",
     ) -> list[ArtifactDocument]:
         ...
 
@@ -64,6 +65,7 @@ class MongoArtifactReadRepository:
         since_days: int | None = DEFAULT_RECENT_DAYS,
         limit: int = DEFAULT_ARTIFACT_LIMIT,
         offset: int = 0,
+        sort_by: str = "recent",
     ) -> list[ArtifactDocument]:
         mongo_filter = _artifact_query_filter(
             query=query,
@@ -75,7 +77,12 @@ class MongoArtifactReadRepository:
         bounded_limit = _bounded_limit(limit)
         bounded_offset = max(offset, 0)
         cursor = self.collection.find(mongo_filter)
-        cursor = _apply_cursor_options(cursor, limit=bounded_limit, offset=bounded_offset)
+        cursor = _apply_cursor_options(
+            cursor,
+            limit=bounded_limit,
+            offset=bounded_offset,
+            sort_by=sort_by,
+        )
         return [_document_from_mongo(document) for document in cursor]
 
     def get_artifact(self, artifact_id: str) -> ArtifactDocument | None:
@@ -167,19 +174,40 @@ def _bounded_limit(limit: int) -> int:
     return min(max(limit, 1), MAX_ARTIFACT_LIMIT)
 
 
-def _apply_cursor_options(cursor: Any, *, limit: int, offset: int) -> Any:
+def _apply_cursor_options(
+    cursor: Any,
+    *,
+    limit: int,
+    offset: int,
+    sort_by: str,
+) -> Any:
+    sort_spec = _sort_spec(sort_by)
     if hasattr(cursor, "sort") and hasattr(cursor, "limit"):
-        sorted_cursor = cursor.sort("evaluation.total", -1)
+        sorted_cursor = cursor.sort(sort_spec)
         if offset and hasattr(sorted_cursor, "skip"):
             sorted_cursor = sorted_cursor.skip(offset)
         return sorted_cursor.limit(limit)
 
     documents = sorted(
         list(cursor),
-        key=lambda document: int(document.get("evaluation", {}).get("total", 0)),
+        key=lambda document: _sort_key(document, sort_by),
         reverse=True,
     )
     return documents[offset : offset + limit]
+
+
+def _sort_spec(sort_by: str) -> list[tuple[str, int]]:
+    if sort_by == "score":
+        return [("evaluation.total", -1), ("latest_game_ended_at", -1)]
+    return [("latest_game_ended_at", -1), ("evaluation.total", -1)]
+
+
+def _sort_key(document: dict, sort_by: str) -> tuple:
+    score = int(document.get("evaluation", {}).get("total", 0))
+    ended_at = str(document.get("latest_game_ended_at") or "")
+    if sort_by == "score":
+        return (score, ended_at)
+    return (ended_at, score)
 
 
 def _escape_regex(value: str) -> str:
