@@ -124,6 +124,27 @@ When the user asks Codex to push, prepare release notes before pushing:
 7. Do not stage, commit, or push the release note change unless the user asked for staging/committing/pushing as part of the same task.
 8. If the user asks to push immediately and `CHANGELOG.md` has uncommitted changes, report that the release notes need to be included or explicitly excluded before pushing.
 
+## Release Workflow
+
+When preparing a release, do not collapse all release work into one broad commit. Build the release history in this order:
+
+1. Commit completed work by logical feature or fix unit first.
+2. Keep documentation, policy, tests, API contract, UI, parser, infra, and tooling changes in separate commits when they are independently understandable.
+3. Run the requested or release-relevant verification before the release commit.
+4. Create the final release commit only after all work-unit commits are complete.
+5. Limit the final release commit to release notes, changelog updates, version metadata, or other release bookkeeping.
+6. Confirm `git status --short --branch` shows a clean worktree before tagging.
+7. Create an annotated tag on the final release commit, not on an earlier feature commit and not on an uncommitted worktree state.
+8. Create or update the GitHub Release from that annotated tag.
+9. Deploy only from the tagged final release commit.
+
+Rules:
+
+- The final release commit may be named `release: <tag>` when it only records release bookkeeping.
+- Do not put feature implementation, bug fixes, policy changes, and release notes into the same `release:` commit.
+- If a release was already made from a broad commit, rewrite or repair the branch history only when the user explicitly asks for that correction and branch protection permits it.
+- If branch protection blocks rewriting an already-published release history, report the blocker and the safest available recovery path before proceeding.
+
 ## Reporting
 
 When reporting git state to the user:
