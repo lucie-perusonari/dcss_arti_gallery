@@ -1,6 +1,36 @@
 # Changelog
 
-## beta-v3-hotfix5 - 2026-06-18
+## beta-v5 - 2026-06-25
+
+### 요약
+
+- Gallery 목록 기본 정렬을 최신 발견순으로 제공하고, 점수순 정렬을 선택할 수 있게 했습니다.
+- 운영 배포 전 `develop` 개발 서버 확인 후 `main`으로 fast-forward하는 배포 흐름을 문서화했습니다.
+
+### 해결된 이슈
+
+- 최근 발견된 artifact를 우선 확인하기 어려웠던 Gallery 목록 정렬을 개선했습니다.
+  - Gallery API는 `/api/artifacts`에서 `sort=recent|score` query parameter를 받습니다.
+  - 기본값은 `recent`이며, `recent`는 `latest_game_ended_at` 내림차순 뒤 `evaluation.total` 내림차순으로 정렬합니다.
+  - `score`는 기존 점수순 정렬을 유지하고 같은 점수에서는 최신 발견순으로 정렬합니다.
+  - frontend는 `Recent`/`Score` 토글과 URL query를 통해 정렬 상태를 유지합니다.
+- 운영 배포 절차가 문서상 명확하지 않아, 운영 반영 전 개발 서버에서 같은 commit을 먼저 확인하는 기준을
+  `infra` 문서에 추가했습니다.
+
+### 운영 영향
+
+- MongoDB schema migration과 read model 재처리는 필요하지 않습니다.
+- Gallery API와 Gallery frontend 정적 파일이 바뀌므로 운영 `api`와 `reverse-proxy` 이미지를 재빌드해 반영합니다.
+- `crawl-service`와 `arti-parser` job 실행은 필요하지 않습니다.
+
+### 검증
+
+- `python3 -m unittest discover -s api/tests -t .`
+- `cd frontend && npm run build`
+- 운영 배포 후 `https://perusonari.ddns.net/` HTTP 응답과 `/api/artifacts?sort=recent`,
+  `/api/artifacts?sort=score` 응답을 smoke 확인합니다.
+
+## beta-v4 - 2026-06-18
 
 ### 요약
 
