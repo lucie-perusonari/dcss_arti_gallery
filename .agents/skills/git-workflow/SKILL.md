@@ -126,22 +126,24 @@ When the user asks Codex to push, prepare release notes before pushing:
 
 ## Release Workflow
 
-When preparing a release, do not collapse all release work into one broad commit. Build the release history in this order:
+When preparing a release, do not use a tag as a substitute for proper work-unit commits. Build the release history in this order:
 
 1. Commit completed work by logical feature or fix unit first.
 2. Keep documentation, policy, tests, API contract, UI, parser, infra, and tooling changes in separate commits when they are independently understandable.
-3. Run the requested or release-relevant verification before the release commit.
-4. Create the final release commit only after all work-unit commits are complete.
-5. Limit the final release commit to release notes, changelog updates, version metadata, or other release bookkeeping.
+3. Run the requested or release-relevant verification after work-unit commits are complete.
+4. Add a final `release: <tag>` commit only when release notes, changelog updates, version metadata, or other release bookkeeping still need to be committed.
+5. If there is no remaining release bookkeeping, do not create an empty or artificial release commit.
 6. Confirm `git status --short --branch` shows a clean worktree before tagging.
-7. Create an annotated tag on the final release commit, not on an earlier feature commit and not on an uncommitted worktree state.
+7. Create an annotated tag on the final clean release snapshot commit, not on an earlier partial commit and not on an uncommitted worktree state.
 8. Create or update the GitHub Release from that annotated tag.
 9. Deploy only from the tagged final release commit.
 
 Rules:
 
-- The final release commit may be named `release: <tag>` when it only records release bookkeeping.
-- Do not put feature implementation, bug fixes, policy changes, and release notes into the same `release:` commit.
+- A tag marks the exact source snapshot being released; it is not a way to bundle unstructured or uncommitted work.
+- The final release commit may be named `release: <tag>` only when it records release bookkeeping.
+- Do not put feature implementation, bug fixes, policy changes, and release notes into the same broad `release:` commit.
+- If release notes or version metadata are already included in a proper work-unit commit, tag that final work-unit commit instead of creating a separate release commit.
 - If a release was already made from a broad commit, rewrite or repair the branch history only when the user explicitly asks for that correction and branch protection permits it.
 - If branch protection blocks rewriting an already-published release history, report the blocker and the safest available recovery path before proceeding.
 
