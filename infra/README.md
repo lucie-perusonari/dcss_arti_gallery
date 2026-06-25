@@ -19,6 +19,17 @@
 개발과 운영 실행은 Docker Compose 경로인 `infra/dev/docker-compose.yml` 또는
 `infra/prod/docker-compose.yml`만 기준으로 합니다.
 
+## 브랜치 배포 흐름
+
+- `develop`: 개발 서버 배포 기준 브랜치입니다. 운영 배포 전 변경사항은 먼저 `develop`에서 개발 서버에 배포합니다.
+- `main`: 운영 서버 배포 기준 브랜치입니다. `develop`에서 개발 서버 배포가 끝난 같은 commit만 `main`으로 fast-forward한 뒤 운영 배포합니다.
+- `origin/develop`과 `origin/main`은 모두 유지합니다. 일반 작업은 `develop`에만 커밋하고, `main`은 릴리즈할 때만 fast-forward합니다.
+- 개발 서버 배포는 `develop` 브랜치에서 `infra/dev/docker-compose.yml`을 사용합니다.
+- 운영 서버 배포는 `main` 브랜치에서 `infra/prod/docker-compose.yml`을 사용합니다.
+- 운영 배포 전에는 개발 서버에서 같은 commit을 먼저 확인하고, 그 commit을 `main`으로 fast-forward한 뒤 태그를 답니다.
+- 작업트리 변경이 남아 있는 상태로 운영 compose를 빌드하지 않습니다.
+- 릴리즈 순서는 작업 단위 commit, release note commit, clean tree 확인, annotated tag, GitHub Release, 운영 compose build입니다.
+
 ## 개발 정책
 
 - 개발 실행, 로컬 테스트, mock이 아닌 로컬 API 확인은 `infra/dev/docker-compose.yml`을 사용합니다.
@@ -69,6 +80,14 @@ docker compose -f infra/dev/docker-compose.yml up -d mongo mongo-indexes
 운영 compose:
 
 ```sh
+git switch develop
+docker compose -f infra/dev/docker-compose.yml up -d --build --force-recreate
+git status --short
+git switch main
+git merge --ff-only develop
+git status --short
+git tag -a <release-tag> -m "<release-tag>"
+gh release create <release-tag> --title <release-tag> --notes-file <release-notes-file>
 docker compose -f infra/prod/docker-compose.yml up -d --build
 ssh -L 9090:127.0.0.1:9090 <server>
 ssh -L 3000:127.0.0.1:3000 <server>

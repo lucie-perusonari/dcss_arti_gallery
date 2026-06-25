@@ -29,6 +29,23 @@ docker compose -f infra/dev/docker-compose.yml up
 
 Grafana는 개발용 compose에서 anonymous Viewer를 활성화하므로 로그인 없이 dashboard를 볼 수 있습니다.
 
+## 개발 서버 배포
+
+운영 배포 전 변경사항은 먼저 `develop` 브랜치에서 개발 서버에 배포합니다.
+
+```sh
+git switch develop
+docker compose -f infra/dev/docker-compose.yml up -d --build --force-recreate
+```
+
+개발 서버 배포 전후에는 다음을 확인합니다.
+
+- 현재 브랜치가 `develop`이어야 합니다.
+- `develop`은 `origin/develop`을 upstream으로 추적해야 하며, 일반 작업은 `main`에 직접 커밋하지 않습니다.
+- 운영 배포 예정 commit이 개발 서버에 먼저 올라가야 합니다.
+- dev compose stack 재생성 뒤 Gallery API, Admin API, frontend, admin frontend endpoint가 HTTP 200을 반환해야 합니다.
+- 확인이 끝난 같은 commit만 `main`으로 fast-forward해 운영 배포합니다.
+
 ## Job 실행
 
 raw crawler와 artifact parser는 기본 stack에 포함되지 않습니다. 개발 MongoDB에 raw morgue 원본을 수집하고
