@@ -132,11 +132,13 @@ class WorkerBlackBoxTest(unittest.TestCase):
 
         self.assertEqual(fetched_urls, [])
 
-    def test_worker_records_fetch_failures(self) -> None:
+    def test_worker_records_fetch_failures_and_continues_with_next_file(self) -> None:
         repository = _Repository()
 
-        def fail_fetch(*args, **kwargs):
-            raise RuntimeError("network down")
+        def fetch_text(url: str) -> str:
+            if url == "https://example.test/bad.txt":
+                raise RuntimeError("network down")
+            return "good raw"
 
         with (
             patch("crawl_service.worker.time.sleep"),
@@ -153,15 +155,20 @@ class WorkerBlackBoxTest(unittest.TestCase):
             patch(
                 "crawl_service.worker.fetch_morgue_files",
                 return_value=[
-                    MorgueFile("morgue-bad-20260101-000001.txt", "https://example.test/bad.txt")
+                    MorgueFile("morgue-bad-20260101-000001.txt", "https://example.test/bad.txt"),
+                    MorgueFile("morgue-bad-20260101-000002.txt", "https://example.test/good.txt"),
                 ],
             ),
-            patch("crawl_service.worker.fetch_morgue_file_text", side_effect=fail_fetch),
+            patch("crawl_service.worker.fetch_morgue_file_text", side_effect=fetch_text),
         ):
             worker = CrawlWorker(repository, base_url="https://example.test/morgue")
             worker.run_once()
 
         self.assertNotIn(("bad", "morgue-bad-20260101-000001.txt"), repository.raw_files)
+        self.assertEqual(
+            repository.raw_files[("bad", "morgue-bad-20260101-000002.txt")].text,
+            "good raw",
+        )
         self.assertEqual(len(repository.crawl_errors), 1)
         self.assertEqual(repository.crawl_errors[0].player, "bad")
         self.assertEqual(repository.crawl_errors[0].name, "morgue-bad-20260101-000001.txt")

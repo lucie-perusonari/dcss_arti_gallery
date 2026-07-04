@@ -45,7 +45,6 @@ class CrawlWorker:
         users = fetch_morgue_users(self.base_url)
 
         for user in users:
-            error_recorded = False
             try:
                 time.sleep(DEFAULT_REQUEST_DELAY_SECONDS)
                 files = fetch_morgue_files(user.url)
@@ -82,8 +81,7 @@ class CrawlWorker:
                                 file=file,
                             )
                         )
-                        error_recorded = True
-                        raise
+                        continue
 
                     self.repository.save_raw_morgue_file(
                         RawMorgueFileRecord(
@@ -96,14 +94,13 @@ class CrawlWorker:
                         )
                     )
             except Exception as exc:
-                if not error_recorded:
-                    self.repository.save_crawl_error_record(
-                        _crawl_error_record(
-                            user,
-                            stage="fetch_user_directory",
-                            error=exc,
-                        )
+                self.repository.save_crawl_error_record(
+                    _crawl_error_record(
+                        user,
+                        stage="fetch_user_directory",
+                        error=exc,
                     )
+                )
                 continue
 
 

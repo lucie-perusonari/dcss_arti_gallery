@@ -9,6 +9,7 @@
 - 이미 fetched 상태로 저장된 파일을 건너뜁니다.
 - HTTP 요청 pacing, 날짜 필터, user skip mode를 적용합니다.
 - fetch 결과와 실패 상태를 repository에 기록합니다.
+- 개별 file fetch가 실패해도 같은 user의 다음 후보 파일은 계속 시도합니다.
 
 ## 비소유 책임
 
